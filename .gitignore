@@ -1,0 +1,77 @@
+*~
+*.swp
+*.orig
+
+######################
+# Compilation files
+######################
+
+*transcript
+*make_*
+*_history
+_autogen/
+_dep/
+_xilinx/
+*.o
+*.d
+*.bit
+*.bit
+*.elf
+*.elf.size
+
+######################
+# Modelsim
+######################
+
+*.wlf
+work/
+
+######################
+# Temporary files
+######################
+
+*#*
+
+######################
+# Repo-specific files
+######################
+
+# Keep only source file, not generated products
+/gateware/platform/xilinx/zu28/evrGTY
+!/gateware/platform/xilinx/zu28/evrGTY/evrGTY.xci
+/gateware/platform/xilinx/zu28/prbsMMCM
+!/gateware/platform/xilinx/zu28/prbsMMCM/prbsMMCM.xci
+/gateware/platform/xilinx/zu28/system
+!/gateware/platform/xilinx/zu28/system/system.bd
+
+/gateware/modules/evr_axi/PacketMem/
+!/gateware/modules/evr_axi/PacketMem/PacketMem.xci
+/gateware/modules/evr_axi/MappingRam/
+!/gateware/modules/evr_axi/MappingRam/MappingRam.xci
+/gateware/modules/evr_axi/timeStampFIFO/
+!/gateware/modules/evr_axi/timeStampFIFO/timeStampFIFO.xci
+
+# generated IP-cores directories
+/gateware/platform/xilinx/zu28/axi_lite_generic_reg/
+/gateware/platform/xilinx/zu28/evr_axi/
+
+######################
+# Vivado files
+######################
+
+*.jou
+*.log
+*.str
+*.xpr
+*.edif
+*.mif
+.Xil/
+
+######################
+# Impact files
+######################
+
+*impact.xsl
+*impact_impact.xwbt
+*usage_statistics_webtalk.html
+*webtalk_impact.xml

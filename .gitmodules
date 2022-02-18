@@ -1,0 +1,3 @@
+[submodule "ip_cores/bedrock"]
+	path = gateware/ip_cores/bedrock
+	url = https://gitlab.lbl.gov/hdl-libraries/bedrock.git
