@@ -36,14 +36,13 @@ __SRC_FILES = \
 	platform_zynqmp.c \
 	rfadc.c \
 	rfclk.c \
-	st7789v.c \
 	sysmon.c \
 	sysref.c \
-	systemFont.c \
 	systemParameters.c \
 	tftp.c \
 	user_mgt_refclk.c \
 	util.c
+SRC_FILES = $(addprefix $(SW_HSD_SRC_DIR)/, $(__SRC_FILES))
 
 __HDR_FILES = \
 	acquisition.h \
@@ -70,31 +69,34 @@ __HDR_FILES = \
 	platform_config.h \
 	rfadc.h \
 	rfclk.h \
-	st7789v.h \
 	sysmon.h \
 	sysref.h \
 	systemParameters.h \
 	tftp.h \
 	user_mgt_refclk.h \
 	util.h
+HDR_FILES = $(addprefix $(SW_HSD_SRC_DIR)/, $(__HDR_FILES))
 
 __HDR_GEN_FILES = \
 	softwareBuildDate.h \
 	lmk04208.h \
 	lmx2594.h
-
-SRC_FILES = $(addprefix $(SW_HSD_SRC_DIR)/, $(__SRC_FILES))
-OBJ_FILES = $(SRC_FILES:.c=.o)
-HDR_FILES = $(addprefix $(SW_HSD_SRC_DIR)/, $(__HDR_FILES))
 HDR_GEN_FILES = $(addprefix $(SW_HSD_SRC_DIR)/, $(__HDR_GEN_FILES))
+HDR_FILES += $(HDR_GEN_FILES)
 
 ST7789V_DIR = libs/st7789v
 __ST7789V_SRC_FILES = \
 	systemFont.c \
 	st7789v.c
-
+__ST7789V_HDR_FILES =\
+	lv_font.h \
+	st7789v.h
 ST7789V_SRC_FILES = $(addprefix $(ST7789V_DIR)/, $(__ST7789V_SRC_FILES))
+ST7789V_HDR_FILES = $(addprefix $(ST7789V_DIR)/, $(__ST7789V_HDR_FILES))
+SRC_FILES += $(ST7789V_SRC_FILES)
+HDR_FILES += $(ST7789V_HDR_FILES)
 
+OBJ_FILES = $(SRC_FILES:.c=.o)
 LINKER_FILES = $(SW_HSD_SRC_DIR)/lscript.ld
 
 CFLAGS = -Wall -O2 -fmessage-length=0
@@ -104,13 +106,17 @@ LIB_DIRS = $(APP_NAME)/platform/export/platform/sw/platform/standalone_domain/bs
 LIB_FLAGS = $(addprefix -L, $(LIB_DIRS))
 LIBS = -Wl,--start-group,-lxil,-lgcc,-lc,--end-group -Wl,--start-group,-lxil,-lmetal,-lgcc,-lc,--end-group -Wl,--start-group,-lxil,-llwip4,-lgcc,-lc,--end-group -Wl,--start-group,-lxilffs,-lxil,-lgcc,-lc,--end-group -Wl,--start-group,-lxilpm,-lxil,-lgcc,-lc,--end-group -Wl,--start-group,-lxil,-lgcc,-lc,-lmetal,--end-group
 
-INCLUDE_DIRS = src $(APP_NAME)/platform/export/platform/sw/platform/standalone_domain/bspinclude/include
+INCLUDE_DIRS = \
+	src \
+	$(APP_NAME)/platform/export/platform/sw/platform/standalone_domain/bspinclude/include \
+	$(ST7789V_DIR)
 INCLUDE_FLAGS = $(addprefix -I, $(INCLUDE_DIRS))
 
 .PHONY: all clean bsp
 
 vpath *.c $(SW_HSD_SRC_DIR) $(ST7789V_DIR)
 vpath *.h $(SW_HSD_SRC_DIR) $(ST7789V_DIR)
+vpath *.o $(SW_HSD_SRC_DIR) $(ST7789V_DIR)
 vpath *.tcs $(SW_HSD_SRC_DIR)
 vpath *.bif $(SW_HSD_SCRIPTS_DIR)
 vpath *.bif.in $(SW_HSD_SCRIPTS_DIR)
@@ -131,7 +137,7 @@ all: $(APP_NAME) $(APP_NAME).elf $(APP_NAME).elf.size $(BIN)
 $(APP_NAME):
 	$(XCST) $(SW_SCRIPTS_DIR)/gen_vitis_platform.tcl $(APP_NAME) $(GW_HSD_DIR)/system.xsa
 
-$(APP_NAME).elf: $(HDR_GEN_FILES) $(OBJ_FILES) $(LINKER_FILES)
+$(APP_NAME).elf: $(HDR_FILES) $(OBJ_FILES) $(LINKER_FILES)
 	$(CC) $(CFLAGS) $(USER_FLAGS) $(INCLUDE_FLAGS) $(LIB_FLAGS) $(LD_FLAGS) -o $@ $(filter %.o, $^) $(LIBS)
 
 $(APP_NAME).elf.size: $(APP_NAME).elf
