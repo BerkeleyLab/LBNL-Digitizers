@@ -20,7 +20,7 @@ To build the gateware the following dependencies are needed:
 
 To build the software the following dependencies are needed:
 
-* aarch64-none toolchain, available [here](https://developer.arm.com/-/media/Files/downloads/gnu-a/10.3-2021.07/binrel/gcc-arm-10.3-2021.07-x86_64-aarch64-none-elf.tar.xz)
+* aarch64-none toolchain, bundled within Vitis
 
 #### Building Instructions
 
@@ -43,6 +43,6 @@ A suggestion in running the `make` command is to measure the time
 and redirect stdout/stderr to a file so you can inspect it later:
 
 ```bash
-ARM_TOOLCHAIN_LOCATION=~/Downloads/gcc-arm-10.3-2021.07-x86_64-aarch64-none-elf
+ARM_TOOLCHAIN_LOCATION=/media/Xilinx/Vivado/2020.1/Vitis/2020.1/gnu/aarch64/lin/aarch64-none
 (time make CROSS_COMPILE=${ARM_TOOLCHAIN_LOCATION}/bin/aarch64-none-elf-; date) 2>&1 | tee make_output
 ```
