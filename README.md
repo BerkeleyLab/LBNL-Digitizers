@@ -46,3 +46,28 @@ and redirect stdout/stderr to a file so you can inspect it later:
 ARM_TOOLCHAIN_LOCATION=/media/Xilinx/Vivado/2020.1/Vitis/2020.1/gnu/aarch64/lin/aarch64-none
 (time make CROSS_COMPILE=${ARM_TOOLCHAIN_LOCATION}/bin/aarch64-none-elf-; date) 2>&1 | tee make_output
 ```
+
+### Deploying
+
+To deploy the gateware and the software we can use a variety of
+methods. For development, JTAG is being used. Remember to check
+the DIP switches on development boards and ensure the switches
+are set to JTAG mode and NOT SD Card mode.
+
+#### Deploying gateware
+
+The following script can download the gateware via JTAG:
+
+```bash
+cd gateware/scripts
+xsct download_bit.tcl ../syn/hsd_ref/hsd_ref_top.bit
+```
+
+#### Deploying software
+
+The following script can download the software via JTAG:
+
+```bash
+cd software/scripts
+xsct download_elf.tcl ../../gateware/syn/hsd_ref/psu_init.tcl ../hsd/HighSpeedDigitizer.elf
+```
