@@ -10,15 +10,6 @@ set_property IOSTANDARD LVCMOS12 [get_ports SFP0_TX_ENABLE]
 set_property PACKAGE_PIN V32 [get_ports USER_MGT_SI570_CLK_N]
 set_property PACKAGE_PIN V31 [get_ports USER_MGT_SI570_CLK_P]
 
-# CPLL reference clock constraint (will be overridden by required constraint on IBUFDS_GTE4 input in context). Needed here as we are not using OOC
-# build for GTY4 transceiver. The other MGT clocks are already constrained
-# by system.bd build
-create_clock -period 6.4 [get_ports USER_MGT_SI570_CLK_P]
-
-# Set false path between USER_MGT_SI570_CLK_O2 and MGT ref clock,
-# only used at the frequencyu meter module
-set_false_path -from [get_clocks USER_MGT_SI570_CLK_O2] -to [get_clocks clk_pl_0]
-
 # User DIP switch
 set_property PACKAGE_PIN AF16 [get_ports {DIP_SWITCH[0]}]
 set_property PACKAGE_PIN AF17 [get_ports {DIP_SWITCH[1]}]
@@ -153,8 +144,6 @@ set_property IOSTANDARD LVDS [get_ports FPGA_REFCLK_OUT_C_P]
 set_property IOSTANDARD LVDS [get_ports FPGA_REFCLK_OUT_C_N]
 set_property DIFF_TERM_ADV TERM_100 [get_ports FPGA_REFCLK_OUT_C_P]
 set_property DIFF_TERM_ADV TERM_100 [get_ports FPGA_REFCLK_OUT_C_N]
-create_clock -period 87.931 [get_ports FPGA_REFCLK_OUT_C_P]
-create_clock -period 175.862 [get_ports SYSREF_FPGA_C_P]
 
 # RFDC SYSREF
 set_property PACKAGE_PIN U4 [get_ports SYSREF_RFSOC_C_N]
@@ -193,13 +182,3 @@ set_property PACKAGE_PIN AB1 [get_ports RFMC_ADC_06_N]
 set_property PACKAGE_PIN AB2 [get_ports RFMC_ADC_06_P]
 set_property PACKAGE_PIN Y1 [get_ports RFMC_ADC_07_N]
 set_property PACKAGE_PIN Y2 [get_ports RFMC_ADC_07_P]
-
-# Don't check timing across clock domains.
-set_false_path -from [get_clocks RFADC0_CLK] -to [get_clocks clk_pl_0]
-set_false_path -from [get_clocks FPGA_REFCLK_OUT_C_P] -to [get_clocks clk_pl_0]
-set_false_path -from [get_clocks SYSREF_FPGA_C_P] -to [get_clocks FPGA_REFCLK_OUT_C_P]
-set_false_path -from [get_clocks clk_pl_0] -to [get_clocks -of_objects [get_pins system_i/rfadc_mmcm/inst/CLK_CORE_DRP_I/clk_inst/mmcme4_adv_inst/CLKOUT0]]
-set_false_path -from [get_clocks -of_objects [get_pins system_i/rfadc_mmcm/inst/CLK_CORE_DRP_I/clk_inst/mmcme4_adv_inst/CLKOUT0]] -to [get_clocks clk_pl_0]
-set_false_path -from [get_clocks -of_objects [get_pins calibration/prbsMMCM/inst/mmcme4_adv_inst/CLKOUT0]] -to [get_clocks clk_pl_0]
-set_false_path -from [get_clocks clk_pl_0] -to [get_clocks -of_objects [get_pins calibration/prbsMMCM/inst/mmcme4_adv_inst/CLKOUT0]]
-set_false_path -from [get_clocks FPGA_REFCLK_OUT_C_P] -to [get_clocks -of_objects [get_pins system_i/rfadc_mmcm/inst/CLK_CORE_DRP_I/clk_inst/mmcme4_adv_inst/CLKOUT0]]

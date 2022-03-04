@@ -32,7 +32,8 @@ include $(BUILD_DIR)/top_rules.mk
 UNISIM_CRAP += '-e GTYE4_CHANNEL|MMCME4_ADV'
 
 # Top level files for depedency tracking
-SYSTEM_TOP_XDC = $(APP_NAME)_top.xdc
+SYSTEM_TOP_PINS_XDC = $(APP_NAME)_top_pins.xdc
+SYSTEM_TOP_TIM_XDC = $(APP_NAME)_top_tim.xdc
 
 # ip_cores generation scripts/names
 
@@ -48,7 +49,7 @@ prbsMMCM_TOP = $(prbsMMCM_DIR)/prbsMMCM.v
 
 IP_CORES_TOP_LVL_SRCS += $(evrGTY_TOP) $(prbsMMCM_TOP)
 IP_CORES_DIRS += $(evrGTY_DIR) $(prbsMMCM_DIR)
-IP_CORES_XDCS += $(IP_CORES_TOP_LVL_SRCS:%.v=%.xdc)
+IP_CORES_XDCS += $(evrGTY_TOP:%.v=%.xdc) $(prbsMMCM_TOP:%.v=%.xdc)
 
 IP_CORES_SRCS_DIRS = $(IP_CORES_DIRS)
 IP_CORES_SRCS_DIRS += $(addsuffix /synth, $(IP_CORES_DIRS))
@@ -119,11 +120,12 @@ vpath %.sh $(GW_SCRIPTS_DIR)
 # List top level depedencies here. Eveything named .bit will be used as
 # a top-level target in top_rules.mk. .v and .sv files will be used as
 # prerequisites as well as a system_top.xdc file
-$(APP_NAME)_top.bit: system_top.xdc $(TOP_LVL_DIR)/$(APP_NAME)_top.v $(BD_bds) $(IP_CORES_XDCS)
+$(APP_NAME)_top.bit: system_top.xdc $(TOP_LVL_DIR)/$(APP_NAME)_top.v $(BD_bds)
 $(TOP_LVL_DIR)/$(APP_NAME)_top.v: $(TOP_LVL_DIR)/firmwareBuildDate.v $(TOP_LVL_DIR)/gpioIDX.v $(IP_CORES_CUSTOM) $(IP_CORES_TOP_LVL_SRCS) $(BD_TOP_LVL_SRCS)
 
-# Generate bundled .xdc from other .xdc
-system_top.xdc: $(SYSTEM_TOP_XDC)
+# Generate bundled .xdc from other .xdc. Don't change the order of the
+# prerequisites as we need constraints in the order specified
+system_top.xdc: $(SYSTEM_TOP_PINS_XDC) $(IP_CORES_XDCS) $(SYSTEM_TOP_TIM_XDC)
 	cat $^ > $@
 
 # Generate firmware date and parameters
