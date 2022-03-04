@@ -10,6 +10,11 @@ set_property IOSTANDARD LVCMOS12 [get_ports SFP0_TX_ENABLE]
 set_property PACKAGE_PIN V32 [get_ports USER_MGT_SI570_CLK_N]
 set_property PACKAGE_PIN V31 [get_ports USER_MGT_SI570_CLK_P]
 
+# CPLL reference clock constraint (will be overridden by required constraint on IBUFDS_GTE4 input in context). Needed here as we are not using OOC
+# build for GTY4 transceiver. The other MGT clocks are already constrained
+# by system.bd build
+create_clock -period 6.4 [get_ports USER_MGT_SI570_CLK_P]
+
 # User DIP switch
 set_property PACKAGE_PIN AF16 [get_ports {DIP_SWITCH[0]}]
 set_property PACKAGE_PIN AF17 [get_ports {DIP_SWITCH[1]}]
