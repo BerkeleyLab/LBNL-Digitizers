@@ -17,5 +17,13 @@ set_false_path -from [get_clocks -of_objects [get_pins calibration/prbsMMCM/inst
 set_false_path -from [get_clocks clk_pl_0] -to [get_clocks -of_objects [get_pins calibration/prbsMMCM/inst/mmcme4_adv_inst/CLKOUT0]]
 set_false_path -from [get_clocks FPGA_REFCLK_OUT_C_P] -to [get_clocks -of_objects [get_pins system_i/rfadc_mmcm/inst/CLK_CORE_DRP_I/clk_inst/mmcme4_adv_inst/CLKOUT0]]
 # Set false path between USER_MGT_SI570_CLK_O2 and MGT ref clock,
-# only used at the frequencyu meter module
+# only used at the frequency meter module
 set_false_path -from [get_clocks USER_MGT_SI570_CLK_O2] -to [get_clocks clk_pl_0]
+# Set false path between ADC clock and RX MGT clock. Safely crossing domains already
+# and with ASYNC_REG properties in RTL.
+set_false_path -from [get_clocks clk_out1_system_rfadc_mmcm_0] -to [get_clocks cpllpd_int_reg_0]
+set_false_path -from [get_clocks cpllpd_int_reg_0] -to [get_clocks clk_out1_system_rfadc_mmcm_0]
+# Set false path between SYS clock and RX MGT clock. Safely crossing domains already
+# and with ASYNC_REG properties in RTL.
+set_false_path -from [get_clocks clk_pl_0] -to [get_clocks cpllpd_int_reg_0]
+set_false_path -from [get_clocks cpllpd_int_reg_0] -to [get_clocks clk_pl_0]
