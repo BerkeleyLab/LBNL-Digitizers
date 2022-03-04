@@ -15,6 +15,10 @@ set_property PACKAGE_PIN V31 [get_ports USER_MGT_SI570_CLK_P]
 # by system.bd build
 create_clock -period 6.4 [get_ports USER_MGT_SI570_CLK_P]
 
+# Set false path between USER_MGT_SI570_CLK_O2 and MGT ref clock,
+# only used at the frequencyu meter module
+set_false_path -from [get_clocks USER_MGT_SI570_CLK_O2] -to [get_clocks clk_pl_0]
+
 # User DIP switch
 set_property PACKAGE_PIN AF16 [get_ports {DIP_SWITCH[0]}]
 set_property PACKAGE_PIN AF17 [get_ports {DIP_SWITCH[1]}]
