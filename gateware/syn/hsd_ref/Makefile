@@ -24,7 +24,7 @@ TOP_LVL_DIR = ../../top/$(APP_NAME)
 vpath %.v $(TOP_LVL_DIR)
 vpath %.xdc $(TOP_LVL_DIR)
 
-VIVADO_SYNTH_EXTRA_TCL = prop.tcl
+VIVADO_SYNTH_EXTRA_TCL = prop.tcl ipcores_repos.tcl
 
 include $(BUILD_DIR)/top_rules.mk
 
@@ -120,7 +120,7 @@ vpath %.sh $(GW_SCRIPTS_DIR)
 # List top level depedencies here. Eveything named .bit will be used as
 # a top-level target in top_rules.mk. .v and .sv files will be used as
 # prerequisites as well as a system_top.xdc file
-$(APP_NAME)_top.bit: system_top.xdc $(TOP_LVL_DIR)/$(APP_NAME)_top.v $(BD_bds)
+$(APP_NAME)_top.bit: system_top.xdc $(VIVADO_SYNTH_EXTRA_TCL) $(TOP_LVL_DIR)/$(APP_NAME)_top.v $(BD_bds)
 $(TOP_LVL_DIR)/$(APP_NAME)_top.v: $(TOP_LVL_DIR)/firmwareBuildDate.v $(TOP_LVL_DIR)/gpioIDX.v $(IP_CORES_CUSTOM) $(IP_CORES_TOP_LVL_SRCS) $(BD_TOP_LVL_SRCS)
 
 # Generate bundled .xdc from other .xdc. Don't change the order of the
@@ -134,6 +134,10 @@ system_top.xdc: $(SYSTEM_TOP_PINS_XDC) $(IP_CORES_XDCS) $(SYSTEM_TOP_TIM_XDC)
 
 %gpioIDX.v: createVerilogIDX.sh
 	sh $< $(SW_HSD_SRC_DIR) > $@
+
+ipcores_repos.tcl: ipcores_repos.tcl.in
+	sed -e 's|$$DIRS|$(IP_CORES_CUSTOM_TARGET_DIRS)|g' \
+		$< > $@
 
 # ip_cores commands. Keep track only of the top-level. If this changed or doesn't
 # exist regenerate eveything. Otherwise, consider this up to date
@@ -175,6 +179,7 @@ CLEAN += $(VFLAGS_COMMAND_FILE)
 CLEAN += *.log *.jou *.str
 CLEAN += *.xsa
 CLEAN += psu_init*
+CLEAN += ipcores_repos.tcl
 CLEAN_DIRS +=  _xilinx .Xil .ip_user_files .hbs $(IP_CORES_CUSTOM_TARGET_DIRS)
 
 # Dependency rules for top level. It will include the dependencies for
