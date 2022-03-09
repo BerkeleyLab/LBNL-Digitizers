@@ -43,6 +43,8 @@ work/
 !/gateware/platform/xilinx/zu28/prbsMMCM/prbsMMCM.xci
 /gateware/platform/xilinx/zu28/system
 !/gateware/platform/xilinx/zu28/system/system.bd
+/gateware/platform/xilinx/zu28/ila_td256_s4096_cap
+!/gateware/platform/xilinx/zu28/ila_td256_s4096_cap/ila_td256_s4096_cap.xci
 
 /gateware/modules/evr_axi/PacketMem/
 !/gateware/modules/evr_axi/PacketMem/PacketMem.xci
