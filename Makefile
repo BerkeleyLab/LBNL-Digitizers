@@ -2,7 +2,7 @@ include dir_list.mk
 
 CROSS_COMPILE ?=
 
-HSD_APP_NAME = hsd_ref
+HSD_APP_NAME = hsd_zcu111
 HSD_SW_APP_NAME = HighSpeedDigitizer
 HSD_BIT      = $(GW_HSD_DIR)/hsd_ref_top.bit
 
