@@ -3,6 +3,8 @@ PROJECT_PART = xczu28dr-ffvg1517-2-e
 PROJECT_BOARD = xilinx.com:zcu111:part0:1.1
 COMMUNICATION = gty
 XILINX_TOOL := VIVADO
+FPGA_VENDOR := xilinx
+FPGA_PLATFORM := zu28
 
 CMD_SEP = ;
 
@@ -197,6 +199,7 @@ CLEAN += psu_init*
 CLEAN += ipcores_repos.tcl
 CLEAN += prio_xci_files.tcl
 CLEAN_DIRS +=  _xilinx .Xil .ip_user_files .hbs $(IP_CORES_CUSTOM_TARGET_DIRS)
+CLEAN_DIRS += _gen
 
 # Dependency rules for top level. It will include the dependencies for
 # the bitstream %.bit and use the stem to list the depedencies for the
