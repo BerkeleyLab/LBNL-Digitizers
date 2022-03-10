@@ -11,7 +11,7 @@ CMD_SEP = ;
 include ../../../dir_list.mk
 
 # Top level design name
-APP_NAME ?= hsd_ref
+APP_NAME ?= hsd_zcu111
 
 # Top level bitstream name
 all: $(APP_NAME)_top.bit
