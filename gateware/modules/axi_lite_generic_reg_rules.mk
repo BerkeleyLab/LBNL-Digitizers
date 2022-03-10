@@ -12,3 +12,5 @@ IP_CORES_CUSTOM_TARGET_DIRS += $(axi_lite_generic_reg_TARGET)
 axi_lite_generic_reg: $(axi_lite_generic_reg_SRCS)
 	$(VIVADO_CREATE_IP) $@ $($@_TARGET) $($@_VERSION) $^
 	touch $@
+
+CLEAN_DIRS += $(axi_lite_generic_reg_TARGET)
