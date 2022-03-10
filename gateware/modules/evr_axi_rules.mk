@@ -13,7 +13,7 @@ __evr_axi_SRCS = \
 			   timeStampFIFO/synth/timeStampFIFO.vhd
 evr_axi_SRCS = $(addprefix $(evr_axi_DIR)/, $(__evr_axi_SRCS))
 evr_axi_VERSION = 3.1
-evr_axi_TARGET = $(PLATFORM_ZU28_DIR)/evr_axi
+evr_axi_TARGET = _gen/evr_axi
 
 IP_CORES_CUSTOM += evr_axi
 IP_CORES_CUSTOM_TARGET_DIRS += $(evr_axi_TARGET)
