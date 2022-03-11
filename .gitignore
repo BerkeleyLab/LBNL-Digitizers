@@ -11,6 +11,7 @@
 *_history
 _autogen/
 _dep/
+_gen/
 _xilinx/
 *.o
 *.d
@@ -52,10 +53,6 @@ work/
 !/gateware/modules/evr_axi/MappingRam/MappingRam.xci
 /gateware/modules/evr_axi/timeStampFIFO/
 !/gateware/modules/evr_axi/timeStampFIFO/timeStampFIFO.xci
-
-# generated IP-cores directories
-/gateware/platform/xilinx/zu28/axi_lite_generic_reg/
-/gateware/platform/xilinx/zu28/evr_axi/
 
 ######################
 # Vivado files
