@@ -211,18 +211,34 @@ st7789v #(.CLK_RATE(SYSCLK_RATE),
 
 /////////////////////////////////////////////////////////////////////////////
 // Generate tile synchronization user_sysref_adc
-wire FPGA_REFCLK_OUT_C, user_sysref_adc;
+wire FPGA_REFCLK_OUT_C;
+wire FPGA_REFCLK_OUT_C_unbuf;
+wire user_sysref_adc;
+IBUFDS FPGA_REFCLK_IBUFDS(
+    .I(FPGA_REFCLK_OUT_C_P),
+    .IB(FPGA_REFCLK_OUT_C_N),
+    .O(FPGA_REFCLK_OUT_C_unbuf)
+);
+BUFG FPGA_REFCLK_BUFG(
+    .I(FPGA_REFCLK_OUT_C_unbuf),
+    .O(FPGA_REFCLK_OUT_C)
+);
+
+wire SYSREF_FPGA_C_unbuf;
+IBUFDS SYSREF_FPGA_IBUFDS(
+    .I(SYSREF_FPGA_C_P),
+    .IB(SYSREF_FPGA_C_N),
+    .O(SYSREF_FPGA_C_unbuf)
+);
+
 sysrefSync #(.DEBUG("false"))
   sysrefSync (
     .sysClk(sysClk),
     .sysCsrStrobe(GPIO_STROBES[GPIO_IDX_SYSREF_CSR]),
     .GPIO_OUT(GPIO_OUT),
     .sysStatusReg(GPIO_IN[GPIO_IDX_SYSREF_CSR]),
-    .FPGA_REFCLK_OUT_C_P(FPGA_REFCLK_OUT_C_P),
-    .FPGA_REFCLK_OUT_C_N(FPGA_REFCLK_OUT_C_N),
     .FPGA_REFCLK_OUT_C(FPGA_REFCLK_OUT_C),
-    .SYSREF_FPGA_C_P(SYSREF_FPGA_C_P),
-    .SYSREF_FPGA_C_N(SYSREF_FPGA_C_N),
+    .SYSREF_FPGA_C_UNBUF(SYSREF_FPGA_C_unbuf),
     .adcClk(adcClk),
     .user_sysref_adc(user_sysref_adc));
 
