@@ -5,9 +5,9 @@ module hsd_zcu208_top #(
     parameter ADC_CHANNEL_DEBUG    = "false"
     ) (
     input  USER_MGT_SI570_CLK_P, USER_MGT_SI570_CLK_N,
-    input  SFP0_RX_P, SFP0_RX_N,
-    output SFP0_TX_P, SFP0_TX_N,
-    output SFP0_TX_ENABLE,
+    input  SFP2_RX_P, SFP2_RX_N,
+    output SFP2_TX_P, SFP2_TX_N,
+    output SFP2_TX_ENABLE,
 
     input  FPGA_REFCLK_OUT_C_P, FPGA_REFCLK_OUT_C_N,
     input  SYSREF_FPGA_C_P, SYSREF_FPGA_C_N,
@@ -46,7 +46,7 @@ module hsd_zcu208_top #(
 
 //////////////////////////////////////////////////////////////////////////////
 // Static outputs
-assign SFP0_TX_ENABLE = 1'b1;
+assign SFP2_TX_ENABLE = 1'b1;
 
 //////////////////////////////////////////////////////////////////////////////
 // General-purpose I/O block
@@ -127,10 +127,10 @@ evrGTYwrapper #(.DEBUG("false"))
     .drp(GPIO_IN[GPIO_IDX_EVR_GTY_DRP]),
     .refClk(USER_MGT_SI570_CLK),
     .evrTxClk(evrTxClk),
-    .RX_N(SFP0_RX_N),
-    .RX_P(SFP0_RX_P),
-    .TX_N(SFP0_TX_N),
-    .TX_P(SFP0_TX_P),
+    .RX_N(SFP2_RX_N),
+    .RX_P(SFP2_RX_P),
+    .TX_N(SFP2_TX_N),
+    .TX_P(SFP2_TX_P),
     .evrClk(evrClk),
     .evrRxSynchronized(evrRxSynchronized),
     .evrChars(evrChars),
@@ -171,21 +171,19 @@ wire isPPSvalid = evrSyncStatus[2];
 wire FPGA_REFCLK_OUT_C;
 wire FPGA_REFCLK_OUT_C_unbuf;
 wire user_sysref_adc;
-// Divide-by-1 operation so we can route IBUFDS_GTE4 -> BUFG_GT
-IBUFDS_GTE4 #(.REFCLK_HROW_CK_SEL(2'b00))
-FPGA_REFCLK_IBUFDS(
+
+IBUFDS FPGA_REFCLK_IBUFDS(
     .I(FPGA_REFCLK_OUT_C_P),
     .IB(FPGA_REFCLK_OUT_C_N),
-    .O(),
-    .ODIV2(FPGA_REFCLK_OUT_C_unbuf)
+    .O(FPGA_REFCLK_OUT_C_unbuf)
 );
-BUFG_GT FPGA_REFCLK_BUFG(
+BUFG FPGA_REFCLK_BUFG(
     .I(FPGA_REFCLK_OUT_C_unbuf),
     .O(FPGA_REFCLK_OUT_C)
 );
 
 wire SYSREF_FPGA_C_unbuf;
-IBUFDS_GTE4 SYSREF_FPGA_IBUFDS(
+IBUFDS SYSREF_FPGA_IBUFDS(
     .I(SYSREF_FPGA_C_P),
     .IB(SYSREF_FPGA_C_N),
     .O(SYSREF_FPGA_C_unbuf)

@@ -1,10 +1,10 @@
-# SFPs
-set_property PACKAGE_PIN AA38       [get_ports SFP0_RX_P]
-set_property PACKAGE_PIN AA39       [get_ports SFP0_RX_N]
-set_property PACKAGE_PIN Y35        [get_ports SFP0_TX_P]
-set_property PACKAGE_PIN Y36        [get_ports SFP0_TX_N]
-set_property PACKAGE_PIN AT20       [get_ports SFP0_TX_ENABLE]
-set_property IOSTANDARD LVCMOS12    [get_ports SFP0_TX_ENABLE]
+# SFPs - MGT 129 - zSFP 2
+set_property PACKAGE_PIN N38        [get_ports SFP2_RX_P]
+set_property PACKAGE_PIN N39        [get_ports SFP2_RX_N]
+set_property PACKAGE_PIN P35        [get_ports SFP2_TX_P]
+set_property PACKAGE_PIN P36        [get_ports SFP2_TX_N]
+set_property PACKAGE_PIN AP18       [get_ports SFP2_TX_ENABLE]
+set_property IOSTANDARD LVCMOS12    [get_ports SFP2_TX_ENABLE]
 
 # USER_MGT_SI570
 set_property PACKAGE_PIN M32        [get_ports USER_MGT_SI570_CLK_N]
@@ -152,8 +152,8 @@ set_property IOSTANDARD LVCMOS18 [get_ports AMS_FPGA_REF_CLK]
 set_property PACKAGE_PIN B10  [get_ports SYSREF_FPGA_C_P]
 # PL_SYSREF_N - Bank  87 VCCO - VCC1V8   - IO_L8N_HDGC_87
 set_property PACKAGE_PIN B9   [get_ports SYSREF_FPGA_C_N]
-set_property IOSTANDARD LVDS_18 [get_ports SYSREF_FPGA_C_P]
-set_property IOSTANDARD LVDS_18 [get_ports SYSREF_FPGA_C_N]
+#set_property IOSTANDARD LVDS_18 [get_ports SYSREF_FPGA_C_P]
+#set_property IOSTANDARD LVDS_18 [get_ports SYSREF_FPGA_C_N]
 #set_property DIFF_TERM_ADV TERM_100 [get_ports SYSREF_FPGA_C_P]
 #set_property DIFF_TERM_ADV TERM_100 [get_ports SYSREF_FPGA_C_N]
 
@@ -161,10 +161,18 @@ set_property IOSTANDARD LVDS_18 [get_ports SYSREF_FPGA_C_N]
 set_property PACKAGE_PIN B8 [get_ports FPGA_REFCLK_OUT_C_P]
 # PL_CLK_N - Bank  87 VCCO - VCC1V8   - IO_L7N_HDGC_87
 set_property PACKAGE_PIN B7 [get_ports FPGA_REFCLK_OUT_C_N]
-set_property IOSTANDARD LVDS_18 [get_ports FPGA_REFCLK_OUT_C_P]
-set_property IOSTANDARD LVDS_18 [get_ports FPGA_REFCLK_OUT_C_N]
+#set_property IOSTANDARD LVDS_18 [get_ports FPGA_REFCLK_OUT_C_P]
+#set_property IOSTANDARD LVDS_18 [get_ports FPGA_REFCLK_OUT_C_N]
 #set_property DIFF_TERM_ADV TERM_100 [get_ports FPGA_REFCLK_OUT_C_P]
 #set_property DIFF_TERM_ADV TERM_100 [get_ports FPGA_REFCLK_OUT_C_N]
+
+# As we are using a HDGC pin to drive BUFG -> MMCM, we need
+# to use a sub-optimal path in the ZU48. ug572-ultrascale-clocking
+# page 10: "Therefore, clocks that are connected to an HDGC pin
+# can only connect to MMCMs/PLLs through the BUFGCEs. To avoid
+# a design rule check (DRC) error, set the property
+# CLOCK_DEDICATED_ROUTE = FALSE."
+set_property CLOCK_DEDICATED_ROUTE ANY_CMT_COLUMN [get_nets                    FPGA_REFCLK_OUT_C]
 
 # RFDC SYSREF
 # AMS_SYSREF_P - CLK104_AMS_SYSREF_C_P     Bank 228 - SYSREF_P_228
