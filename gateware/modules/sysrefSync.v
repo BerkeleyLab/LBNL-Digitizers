@@ -19,22 +19,11 @@ module sysrefSync #(
     input       [31:0] GPIO_OUT,
     output wire [31:0] sysStatusReg,
 
-    input              FPGA_REFCLK_OUT_C_P, FPGA_REFCLK_OUT_C_N,
-    output             FPGA_REFCLK_OUT_C,
-    input              SYSREF_FPGA_C_P, SYSREF_FPGA_C_N,
+    input              FPGA_REFCLK_OUT_C,
+    input              SYSREF_FPGA_C_UNBUF,
 
     input              adcClk,
     output reg         user_sysref_adc);
-
-wire FPGA_REFCLK_OUT_C_s;
-IBUFDS FPGA_REFCLK_IBUFDS(.I(FPGA_REFCLK_OUT_C_P),
-                          .IB(FPGA_REFCLK_OUT_C_N),
-                          .O(FPGA_REFCLK_OUT_C_s));
-BUFG FPGA_REFCLK_BUFG(.I(FPGA_REFCLK_OUT_C_s), .O(FPGA_REFCLK_OUT_C));
-
-wire sysrefRaw;
-(*ASYNC_REG="TRUE"*) reg sysrefSampled;
-IBUFDS sysrefBuf(.I(SYSREF_FPGA_C_P), .IB(SYSREF_FPGA_C_N), .O(sysrefRaw));
 
 // Domain-crossing values
 (*mark_debug=DEBUG*) reg adcClkNewValueToggle = 0;
@@ -91,10 +80,11 @@ end
 // Count clocks between SYSREF assertions.
 
 (*mark_debug=DEBUG*) reg [COUNTER_WIDTH-1:0] refClkCounter = 0;
+(*ASYNC_REG="TRUE"*) reg sysrefSampled;
 reg sysrefSampled_d = 1;
 
 always @(posedge FPGA_REFCLK_OUT_C) begin
-    sysrefSampled   <= sysrefRaw;
+    sysrefSampled   <= SYSREF_FPGA_C_UNBUF;
     sysrefSampled_d <= sysrefSampled;
     if (sysrefSampled && !sysrefSampled_d) begin
         refClkCount <= refClkCounter;
