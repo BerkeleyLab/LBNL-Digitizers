@@ -140,11 +140,12 @@ set_property IOSTANDARD LVCMOS12 [get_ports {GPIO_LEDS[7]}]
 #set_property IOSTANDARD LVCMOS12 [get_ports PMOD0_5]
 #set_property IOSTANDARD LVCMOS12 [get_ports PMOD0_6]
 #set_property IOSTANDARD LVCMOS12 [get_ports PMOD0_7]
-
-# EVR recovered clock output
-# Bank 130 - MGTREFCLK1P_130
-set_property PACKAGE_PIN T31 [get_ports AMS_FPGA_REF_CLK]
-set_property IOSTANDARD LVCMOS18 [get_ports AMS_FPGA_REF_CLK]
+# EVR recovered clock output. To CLK104 board
+# Bank 67
+set_property PACKAGE_PIN L21  [get_ports SFP_REC_CLK_N]
+set_property PACKAGE_PIN M20  [get_ports SFP_REC_CLK_P]
+set_property IOSTANDARD  LVDS [get_ports SFP_REC_CLK_N]
+set_property IOSTANDARD  LVDS [get_ports SFP_REC_CLK_P]
 
 # Jitter cleaner monitoring
 # Assume ALS-U AR/SR RF (125.0980659 MHz)

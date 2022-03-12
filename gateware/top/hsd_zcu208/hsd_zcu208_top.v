@@ -25,7 +25,8 @@ module hsd_zcu208_top #(
     input  RFMC_ADC_06_P, RFMC_ADC_06_N,
     input  RFMC_ADC_07_P, RFMC_ADC_07_N,
 
-    output wire AMS_FPGA_REF_CLK,
+    output wire SFP_REC_CLK_P,
+    output wire SFP_REC_CLK_N,
 
     input             GPIO_SW_W,
     input             GPIO_SW_E,
@@ -147,7 +148,11 @@ assign GPIO_LEDS[1] = evrPulsePerSecond;
 
 // Reference clock for RF ADC jitter cleaner
 // EVR clock ~124.91 MHz
-assign AMS_FPGA_REF_CLK = evrClk;
+OBUFDS OBUFDS_SFP_REC_CLK (
+    .O(SFP_REC_CLK_P),
+    .OB(SFP_REC_CLK_N),
+    .I(evrClk)
+);
 
 // Check EVR markers
 wire [31:0] evrSyncStatus;
