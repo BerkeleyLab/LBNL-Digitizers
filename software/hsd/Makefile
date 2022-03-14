@@ -7,13 +7,19 @@ SIZE = $(CROSS_COMPILE)size
 XCST ?= xsct
 
 APP_NAME ?= HighSpeedDigitizer
-BIT      ?= $(GW_HSD_DIR)/hsd_ref_top.bit
+TARGET   ?= zcu111
+GW_HSD_TGT_DIR = $(GW_HSD_DIR)/hsd_$(TARGET)
+BIT      ?= $(GW_HSD_TGT_DIR)/hsd_$(TARGET)_top.bit
 
 BIF   = $(SW_HSD_SCRIPTS_DIR)/BOOTGEN.bif
-FSBL  = $(THIS_DIR)/$(APP_NAME)/platform/zynqmp_fsbl/executable.elf
+FSBL  = $(THIS_DIR)/$(APP_NAME)/platform/zynqmp_fsbl/fsbl_a53.elf
 APP   = $(THIS_DIR)/$(APP_NAME).elf
 PMUFW = $(THIS_DIR)/$(APP_NAME)/platform/export/platform/sw/platform/boot/pmufw.elf
 BIN   = $(THIS_DIR)/BOOT.bin
+
+TARGET_DIR = target/$(TARGET)
+
+all: $(APP_NAME) $(APP_NAME).elf $(APP_NAME).elf.size $(BIN)
 
 include ../../dir_list.mk
 
@@ -60,8 +66,6 @@ __HDR_FILES = \
 	hsdProtocol.h \
 	iic.h \
 	interlock.h \
-	lmk04208.h \
-	lmx2594.h \
 	lv_font.h \
 	mgt.h \
 	mmcm.h \
@@ -78,11 +82,10 @@ __HDR_FILES = \
 HDR_FILES = $(addprefix $(SW_HSD_SRC_DIR)/, $(__HDR_FILES))
 
 __HDR_GEN_FILES = \
-	softwareBuildDate.h \
-	lmk04208.h \
-	lmx2594.h
+	softwareBuildDate.h
 HDR_GEN_FILES = $(addprefix $(SW_HSD_SRC_DIR)/, $(__HDR_GEN_FILES))
-HDR_FILES += $(HDR_GEN_FILES)
+
+include $(TARGET_DIR)/$(TARGET).mk
 
 ST7789V_DIR = libs/st7789v
 __ST7789V_SRC_FILES = \
@@ -108,36 +111,29 @@ LIBS = -Wl,--start-group,-lxil,-lgcc,-lc,--end-group -Wl,--start-group,-lxil,-lm
 
 INCLUDE_DIRS = \
 	src \
+	$(TARGET_DIR) \
 	$(APP_NAME)/platform/export/platform/sw/platform/standalone_domain/bspinclude/include \
 	$(ST7789V_DIR)
 INCLUDE_FLAGS = $(addprefix -I, $(INCLUDE_DIRS))
 
 .PHONY: all clean bsp
 
-vpath *.c $(SW_HSD_SRC_DIR) $(ST7789V_DIR)
-vpath *.h $(SW_HSD_SRC_DIR) $(ST7789V_DIR)
+vpath *.c $(SW_HSD_SRC_DIR) $(ST7789V_DIR) $(TARGET_DIR)
+vpath *.h $(SW_HSD_SRC_DIR) $(ST7789V_DIR) $(TARGET_DIR)
 vpath *.o $(SW_HSD_SRC_DIR) $(ST7789V_DIR)
 vpath *.tcs $(SW_HSD_SRC_DIR)
 vpath *.bif $(SW_HSD_SCRIPTS_DIR)
 vpath *.bif.in $(SW_HSD_SCRIPTS_DIR)
 
-all: $(APP_NAME) $(APP_NAME).elf $(APP_NAME).elf.size $(BIN)
-
 %softwareBuildDate.h: $(SRC_FILES) $(HDR_FILES)
 	sh $(SW_HSD_SCRIPTS_DIR)/setSoftwareBuildDate.sh > $@
-
-%lmk04208.h: %lmk04208.tcs
-	sh $(SW_HSD_SCRIPTS_DIR)/createRFCLKheader.sh $< > $@
-
-%lmx2594.h: %lmx2594.tcs
-	sh $(SW_HSD_SCRIPTS_DIR)/createRFCLKheader.sh $< > $@
 
 # FIXME: We are considering BSP done if the directory exists. This
 # could lead to mismatches!
 $(APP_NAME):
-	$(XCST) $(SW_SCRIPTS_DIR)/gen_vitis_platform.tcl $(APP_NAME) $(GW_HSD_DIR)/system.xsa
+	$(XCST) $(SW_SCRIPTS_DIR)/gen_vitis_platform.tcl $(APP_NAME) $(GW_HSD_TGT_DIR)/system.xsa
 
-$(APP_NAME).elf: $(HDR_FILES) $(OBJ_FILES) $(LINKER_FILES)
+$(APP_NAME).elf: $(HDR_FILES) $(HDR_GEN_FILES) $(OBJ_FILES) $(LINKER_FILES)
 	$(CC) $(CFLAGS) $(USER_FLAGS) $(INCLUDE_FLAGS) $(LIB_FLAGS) $(LD_FLAGS) -o $@ $(filter %.o, $^) $(LIBS)
 
 $(APP_NAME).elf.size: $(APP_NAME).elf
@@ -160,6 +156,6 @@ $(BIN): $(BIF) $(FSBL) $(PMUFW) $(BIT) $(APP)
 		-e 's|$$APP|$(APP)|g' \
 		$< > $@
 
-clean:
+clean::
 	$(RM) -rf $(APP_NAME).elf $(APP_NAME).elf.size $(HDR_GEN_FILES) \
 		$(OBJ_FILES) $(OBJ_FILES:.o=.d) $(APP_NAME) $(BIF) $(BIN)

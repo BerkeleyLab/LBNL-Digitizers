@@ -15,7 +15,7 @@ EVR_DIR            = $(MODULES_DIR)/evr
 PLATFORM_ZU28_DIR  = $(PLATFORM_DIR)/xilinx/zu28
 PLATFORM_ZU48_DIR  = $(PLATFORM_DIR)/xilinx/zu48
 
-GW_HSD_DIR         = $(GATEWARE_DIR)/syn/hsd_ref
+GW_HSD_DIR         = $(GATEWARE_DIR)/syn
 
 # Sofware
 
