@@ -109,25 +109,30 @@ set_property PACKAGE_PIN M20  [get_ports SFP_REC_CLK_P]
 set_property IOSTANDARD  LVDS [get_ports SFP_REC_CLK_N]
 set_property IOSTANDARD  LVDS [get_ports SFP_REC_CLK_P]
 
+# Note on LVDS_25 used on a 1.8V bank:
+#
+# There is not a specific requirement on the
+# VCCO bank voltage on LVDS_25 inputs provided
+# the VCCO level is high enough to ensure the
+# pin voltage aligns to the Vin spec in the
+# Recommended Operating Conditions table of the
+# specific UltraScale+ device data sheet
+
 # Jitter cleaner monitoring
 # Assume ALS-U AR/SR RF (125.0980659 MHz)
 # PL_SYSREF_P - Bank  87 VCCO - VCC1V8   - IO_L8P_HDGC_87
-set_property PACKAGE_PIN B10  [get_ports SYSREF_FPGA_C_P]
+set_property PACKAGE_PIN B10     [get_ports SYSREF_FPGA_C_P]
 # PL_SYSREF_N - Bank  87 VCCO - VCC1V8   - IO_L8N_HDGC_87
-set_property PACKAGE_PIN B9   [get_ports SYSREF_FPGA_C_N]
-#set_property IOSTANDARD LVDS_18 [get_ports SYSREF_FPGA_C_P]
-#set_property IOSTANDARD LVDS_18 [get_ports SYSREF_FPGA_C_N]
-#set_property DIFF_TERM_ADV TERM_100 [get_ports SYSREF_FPGA_C_P]
-#set_property DIFF_TERM_ADV TERM_100 [get_ports SYSREF_FPGA_C_N]
+set_property PACKAGE_PIN B9      [get_ports SYSREF_FPGA_C_N]
+set_property IOSTANDARD LVDS_25  [get_ports SYSREF_FPGA_C_P]
+set_property IOSTANDARD LVDS_25  [get_ports SYSREF_FPGA_C_N]
 
 # PL_CLK_P - Bank  87 VCCO - VCC1V8   - IO_L7P_HDGC_87
-set_property PACKAGE_PIN B8 [get_ports FPGA_REFCLK_OUT_C_P]
+set_property PACKAGE_PIN B8     [get_ports FPGA_REFCLK_OUT_C_P]
 # PL_CLK_N - Bank  87 VCCO - VCC1V8   - IO_L7N_HDGC_87
-set_property PACKAGE_PIN B7 [get_ports FPGA_REFCLK_OUT_C_N]
-#set_property IOSTANDARD LVDS_18 [get_ports FPGA_REFCLK_OUT_C_P]
-#set_property IOSTANDARD LVDS_18 [get_ports FPGA_REFCLK_OUT_C_N]
-#set_property DIFF_TERM_ADV TERM_100 [get_ports FPGA_REFCLK_OUT_C_P]
-#set_property DIFF_TERM_ADV TERM_100 [get_ports FPGA_REFCLK_OUT_C_N]
+set_property PACKAGE_PIN B7     [get_ports FPGA_REFCLK_OUT_C_N]
+set_property IOSTANDARD LVDS_25 [get_ports FPGA_REFCLK_OUT_C_P]
+set_property IOSTANDARD LVDS_25 [get_ports FPGA_REFCLK_OUT_C_N]
 
 # As we are using a HDGC pin to drive BUFG -> MMCM, we need
 # to use a sub-optimal path in the ZU48. ug572-ultrascale-clocking
