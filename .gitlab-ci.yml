@@ -1,0 +1,48 @@
+stages:
+  - prepare
+  - synthesis
+
+variables:
+  XILINX_VIVADO: /non-free/Xilinx/Vivado_and_Vitis/2020.2/Vivado/2020.2
+  XILINX_VITIS: /non-free/Xilinx/Vivado_and_Vitis/2020.2/Vitis/2020.2
+  CI_REGISTRY: mohs.dhcp.lbl.gov
+  CONTAINER_IMAGE: $CI_REGISTRY/testing_base_bullseye
+  DOCKER_HOST: tcp://docker:2375/
+  DOCKER_DRIVER: overlay2
+  GIT_SUBMODULE_STRATEGY: normal
+
+image: $CONTAINER_IMAGE:$CI_COMMIT_REF_NAME
+
+services:
+  - name: mohs.dhcp.lbl.gov/docker:20.10.12-dind
+    command: ["--insecure-registry", "mohs.dhcp.lbl.gov"]
+    alias: docker
+
+include:
+  - local: .gitlab/ci/build-image.gitlab-ci.yml
+
+zcu111:
+  before_script:
+    - cd gateware/syn/hsd_zcu111 && ls /non-free
+  stage: synthesis
+  script:
+    - make clean && PATH=$XILINX_VIVADO/bin:$PATH time make hsd_zcu111_top.bit
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_REF_NAME"
+    expire_in: 7 days
+    paths:
+      - gateware/syn/hsd_zcu111/hsd_zcu111_top.bit
+      - gateware/syn/hsd_zcu111/_xilinx/hsd_zcu111_top/*.runs/impl_1/*.rpt
+
+zcu208:
+  before_script:
+    - cd gateware/syn/hsd_zcu208 && ls /non-free
+  stage: synthesis
+  script:
+    - make clean && PATH=$XILINX_VIVADO/bin:$PATH time make hsd_zcu208_top.bit
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_REF_NAME"
+    expire_in: 7 days
+    paths:
+      - gateware/syn/hsd_zcu208/hsd_zcu208_top.bit
+      - gateware/syn/hsd_zcu208/_xilinx/hsd_zcu208_top/*.runs/impl_1/*.rpt
