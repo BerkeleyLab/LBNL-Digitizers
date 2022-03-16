@@ -12,10 +12,16 @@ GW_HSD_TGT_DIR = $(GW_HSD_DIR)/hsd_$(TARGET)
 BIT      ?= $(GW_HSD_TGT_DIR)/hsd_$(TARGET)_top.bit
 
 BIF   = $(SW_HSD_SCRIPTS_DIR)/BOOTGEN.bif
-FSBL  = $(THIS_DIR)/$(APP_NAME)/platform/zynqmp_fsbl/fsbl_a53.elf
 APP   = $(THIS_DIR)/$(APP_NAME).elf
 PMUFW = $(THIS_DIR)/$(APP_NAME)/platform/export/platform/sw/platform/boot/pmufw.elf
 BIN   = $(THIS_DIR)/BOOT.bin
+
+# Not usre why this changes name if targeting different platform
+ifeq ($(TARGET),zcu111)
+	FSBL  = $(THIS_DIR)/$(APP_NAME)/platform/zynqmp_fsbl/executable.elf
+else
+	FSBL  = $(THIS_DIR)/$(APP_NAME)/platform/zynqmp_fsbl/fsbl_a53.elf
+endif
 
 TARGET_DIR = target/$(TARGET)
 
