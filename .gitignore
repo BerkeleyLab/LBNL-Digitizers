@@ -1,6 +1,7 @@
 *~
 *.swp
 *.orig
+*tags
 
 ######################
 # Compilation files
