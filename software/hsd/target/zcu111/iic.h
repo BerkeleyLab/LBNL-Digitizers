@@ -53,6 +53,10 @@
 #define SPI_MUX_04208         2
 #define SPI_MUX_2594_C_DAC    3
 
+#define LMX2594_MUX_SEL_SIZE  3
+
+extern const unsigned int lmx2594MuxSel[];
+
 void iicInit(void);
 int iicRead(unsigned int deviceIndex, int subAddress, uint8_t *buf, int n);
 int iicWrite(unsigned int deviceIndex, const uint8_t *buf, int n);

@@ -8,12 +8,6 @@
 #include "rfclk.h"
 #include "util.h"
 
-static const unsigned int lmx2594MuxSel[] = {
-    SPI_MUX_2594_A_ADC,  // Tile 224 and 225 (ADC 0, 1, 2, 3)
-    SPI_MUX_2594_B_ADC,  // Tile 226 and 227 (ADC 4, 5, 6, 7)
-    SPI_MUX_2594_C_DAC,  // Tile 228 and 229 (All DACs)
-};
-
 /*
  * Configure LMK04208 jitter cleaner.
  */
@@ -97,10 +91,10 @@ void
 lmx2594Config(const uint32_t *values, int n)
 {
     int i;
-    for (i = 0 ; i < sizeof lmx2594MuxSel / sizeof lmx2594MuxSel[0] ; i++) {
+    for (i = 0 ; i < LMX2594_MUX_SEL_SIZE ; i++) {
         init2594(lmx2594MuxSel[i], values, n);
     }
-    for (i = 0 ; i < sizeof lmx2594MuxSel / sizeof lmx2594MuxSel[0] ; i++) {
+    for (i = 0 ; i < LMX2594_MUX_SEL_SIZE ; i++) {
         start2594(lmx2594MuxSel[i]);
     }
 }
@@ -135,7 +129,7 @@ rfClkShow(void)
     static uint16_t chDiv[32] = {
      2, 4, 6, 8, 12, 16, 24, 32, 48, 64, 72, 96, 128, 192, 256, 384, 512, 768};
 
-    for (i = 0 ; i < sizeof lmx2594MuxSel / sizeof lmx2594MuxSel[0] ; i++) {
+    for (i = 0 ; i < LMX2594_MUX_SEL_SIZE ; i++) {
         m = lmx2594MuxSel[i];
         r = lmx2594read(m, 110);
         printf("LMX2594 %c:\n", i + 'A');
@@ -187,7 +181,7 @@ lmx2594Status(void)
     int i;
     int v = 0;
 
-    for (i = 0 ; i < sizeof lmx2594MuxSel / sizeof lmx2594MuxSel[0] ; i++) {
+    for (i = 0 ; i < LMX2594_MUX_SEL_SIZE ; i++) {
         v |= ((lmx2594read(lmx2594MuxSel[i], 110) >> 9) & 0x3) << (i * 4);
     }
     return v;

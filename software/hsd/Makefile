@@ -16,12 +16,8 @@ APP   = $(THIS_DIR)/$(APP_NAME).elf
 PMUFW = $(THIS_DIR)/$(APP_NAME)/platform/export/platform/sw/platform/boot/pmufw.elf
 BIN   = $(THIS_DIR)/BOOT.bin
 
-# Not usre why this changes name if targeting different platform
-ifeq ($(TARGET),zcu111)
-	FSBL  = $(THIS_DIR)/$(APP_NAME)/platform/zynqmp_fsbl/executable.elf
-else
-	FSBL  = $(THIS_DIR)/$(APP_NAME)/platform/zynqmp_fsbl/fsbl_a53.elf
-endif
+# Vivado 2020.1 uses executable.elf name and Vivado 2020.2 uses fsbl_a53.elf
+FSBL  = $(THIS_DIR)/$(APP_NAME)/platform/zynqmp_fsbl/fsbl_a53.elf
 
 TARGET_DIR = target/$(TARGET)
 
@@ -40,7 +36,6 @@ __SRC_FILES = \
 	eyescan.c \
 	ffs.c \
 	frequencyMonitor.c \
-	iic.c \
 	interlock.c \
 	main.c \
 	mgt.c \
@@ -70,7 +65,6 @@ __HDR_FILES = \
 	frequencyMonitor.h \
 	gpio.h \
 	hsdProtocol.h \
-	iic.h \
 	interlock.h \
 	lv_font.h \
 	mgt.h \
