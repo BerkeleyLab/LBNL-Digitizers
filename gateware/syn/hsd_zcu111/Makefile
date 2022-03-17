@@ -26,7 +26,7 @@ TOP_LVL_DIR = ../../top/$(APP_NAME)
 vpath %.v $(TOP_LVL_DIR)
 vpath %.xdc $(TOP_LVL_DIR)
 
-VIVADO_SYNTH_EXTRA_TCL = prop.tcl ipcores_repos.tcl prio_xci_files.tcl
+VIVADO_SYNTH_EXTRA_TCL = prop.tcl ipcores_repos.tcl
 
 include $(BUILD_DIR)/top_rules.mk
 
@@ -43,16 +43,14 @@ SYSTEM_TOP_TIM_XDC = $(APP_NAME)_top_tim.xdc
 include $(MODULES_DIR)/evr_axi_rules.mk
 include $(MODULES_DIR)/axi_lite_generic_reg_rules.mk
 
-IP_CORES += evrGTY prbsMMCM ila_td256_s4096_cap
+IP_CORES += evrGTY prbsMMCM
 evrGTY_DIR = $(PLATFORM_ZU28_DIR)/evrGTY
 evrGTY_TOP = $(evrGTY_DIR)/synth/evrGTY.v
 prbsMMCM_DIR = $(PLATFORM_ZU28_DIR)/prbsMMCM
 prbsMMCM_TOP = $(prbsMMCM_DIR)/prbsMMCM.v
-ila_td256_s4096_cap_DIR = $(PLATFORM_ZU28_DIR)/ila_td256_s4096_cap
-ila_td256_s4096_cap_TOP = $(ila_td256_s4096_cap_DIR)/synth/ila_td256_s4096_cap.v
 
-IP_CORES_TOP_LVL_SRCS += $(evrGTY_TOP) $(prbsMMCM_TOP) $(ila_td256_s4096_cap_TOP)
-IP_CORES_DIRS += $(evrGTY_DIR) $(prbsMMCM_DIR) $(ila_td256_s4096_cap_DIR)
+IP_CORES_TOP_LVL_SRCS += $(evrGTY_TOP) $(prbsMMCM_TOP)
+IP_CORES_DIRS += $(evrGTY_DIR) $(prbsMMCM_DIR)
 IP_CORES_XDCS += $(evrGTY_TOP:%.v=%.xdc) $(prbsMMCM_TOP:%.v=%.xdc)
 
 IP_CORES_SRCS_DIRS = $(IP_CORES_DIRS)
@@ -105,15 +103,10 @@ VFLAGS_DEP += $(addprefix -I, $(BD_SRCS_DIRS))
 # the switches that will be consumed by iverilog later
 evrGTY_VFLAGS_COMMAND_FILE = evrGTY_iverilog_cfile.txt
 prbsMMCM_VFLAGS_COMMAND_FILE = prbsMMCM_iverilog_cfile.txt
-ila_td256_s4096_cap_VFLAGS_COMMAND_FILE = ila_td256_s4096_cap_iverilog_cfile.txt
 
 VFLAGS_COMMAND_FILE += \
 					  $(evrGTY_VFLAGS_COMMAND_FILE) \
 					  $(prbsMMCM_VFLAGS_COMMAND_FILE)
-# using ILA with verilog gives an error:
-# input buffer overflow, can't enlarge buffer because scanner uses REJECT,
-# but we don't need it for iverilog as we only use it when not simulating
-# $(ila_td256_s4096_cap_VFLAGS_COMMAND_FILE)
 
 VFLAGS_DEP += $(addprefix -c, $(VFLAGS_COMMAND_FILE))
 
@@ -129,7 +122,7 @@ vpath %.sh $(GW_SCRIPTS_DIR)
 # List top level depedencies here. Eveything named .bit will be used as
 # a top-level target in top_rules.mk. .v and .sv files will be used as
 # prerequisites as well as a system_top.xdc file
-$(APP_NAME)_top.bit: system_top.xdc $(VIVADO_SYNTH_EXTRA_TCL) $(TOP_LVL_DIR)/$(APP_NAME)_top.v $(BD_bds) ila_td256_s4096_cap.xci
+$(APP_NAME)_top.bit: system_top.xdc $(VIVADO_SYNTH_EXTRA_TCL) $(TOP_LVL_DIR)/$(APP_NAME)_top.v $(BD_bds)
 $(TOP_LVL_DIR)/$(APP_NAME)_top.v: $(TOP_LVL_DIR)/firmwareBuildDate.v $(TOP_LVL_DIR)/gpioIDX.v $(IP_CORES_CUSTOM) $(IP_CORES_TOP_LVL_SRCS) $(BD_TOP_LVL_SRCS)
 
 # Generate bundled .xdc from other .xdc. Don't change the order of the
@@ -147,10 +140,6 @@ system_top.xdc: $(SYSTEM_TOP_PINS_XDC) $(IP_CORES_XDCS) $(SYSTEM_TOP_TIM_XDC)
 ipcores_repos.tcl:
 	sed -e 's|$$DIRS|$(IP_CORES_CUSTOM_TARGET_DIRS)|g' \
 		ipcores_repos.tcl.in > $@
-
-prio_xci_files.tcl: ila_td256_s4096_cap.xci
-	sed -e 's|$$XCI_FILES|$<|g' \
-		prio_xci_files.tcl.in > $@
 
 # ip_cores commands. Keep track only of the top-level. If this changed or doesn't
 # exist regenerate eveything. Otherwise, consider this up to date
@@ -192,12 +181,10 @@ CLEAN += $(VFLAGS_COMMAND_FILE)
 # Not adding it to VFLAGS_COMMAND_FILE because iverilog gives an error:
 # input buffer overflow, can't enlarge buffer because scanner uses REJECT,
 # but we don't need it for iverilog as we only use it when not simulating
-CLEAN += $(ila_td256_s4096_cap_VFLAGS_COMMAND_FILE)
 CLEAN += *.log *.jou *.str
 CLEAN += *.xsa
 CLEAN += psu_init*
 CLEAN += ipcores_repos.tcl
-CLEAN += prio_xci_files.tcl
 CLEAN_DIRS +=  _xilinx .Xil .ip_user_files .hbs $(IP_CORES_CUSTOM_TARGET_DIRS)
 CLEAN_DIRS += _gen
 
