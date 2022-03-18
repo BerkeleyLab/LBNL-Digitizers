@@ -109,6 +109,14 @@ LIB_DIRS = $(APP_NAME)/platform/export/platform/sw/platform/standalone_domain/bs
 LIB_FLAGS = $(addprefix -L, $(LIB_DIRS))
 LIBS = -Wl,--start-group,-lxil,-lgcc,-lc,--end-group -Wl,--start-group,-lxil,-lmetal,-lgcc,-lc,--end-group -Wl,--start-group,-lxil,-llwip4,-lgcc,-lc,--end-group -Wl,--start-group,-lxilffs,-lxil,-lgcc,-lc,--end-group -Wl,--start-group,-lxilpm,-lxil,-lgcc,-lc,--end-group -Wl,--start-group,-lxil,-lgcc,-lc,-lmetal,--end-group
 
+ifeq ($(TARGET),zcu111)
+	USER_FLAGS += -D__TARGET_ZCU111__
+else ifeq ($(TARGET),zcu208)
+	USER_FLAGS += -D__TARGET_ZCU208__
+else
+	USER_FLAGS += -D__TARGET_NOT_RECOGNIZED__
+endif
+
 INCLUDE_DIRS = \
 	src \
 	$(TARGET_DIR) \

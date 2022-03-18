@@ -9,18 +9,29 @@
 #include "util.h"
 
 /*
- * Configure LMK04208 jitter cleaner.
+ * Configure LMK04208/LMK04828B jitter cleaner.
  */
 void
-rfClkInit04208(void)
+rfClkInitLMK04xx(void)
 {
     int i;
+#if defined (__TARGET_ZCU111__)
     static const uint32_t lmk04208[] = {
 #include "lmk04208.h"
     };
     for (i = 0 ; i < sizeof lmk04208 / sizeof lmk04208[0] ; i++) {
         lmk04208write(lmk04208[i]);
     }
+#elif defined (__TARGET_ZCU208__)
+    static const uint32_t lmk04828B[] = {
+#include "lmk04828B.h"
+    };
+    for (i = 0 ; i < sizeof lmk04828B / sizeof lmk04828B[0] ; i++) {
+        lmk04828Bwrite(lmk04828B[i]);
+    }
+#else
+#   error "Unrecognized __TARGET_XXX__ macro"
+#endif
 }
 
 /*
@@ -118,7 +129,7 @@ rfClkInit(void)
     static const uint32_t values[] = {
 #include "lmx2594.h"
     };
-    rfClkInit04208();
+    rfClkInitLMK04xx();
     lmx2594Config(values, sizeof lmx2594Defaults / sizeof lmx2594Defaults[0]);
 }
 
