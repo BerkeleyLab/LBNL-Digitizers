@@ -1,11 +1,11 @@
 include dir_list.mk
 
-CROSS_COMPILE ?=
+CROSS_COMPILE    ?=
+TARGET           ?= zcu111
 
-TARGET = zcu111
-HSD_APP_NAME = hsd_$(TARGET)
-HSD_SW_APP_NAME = HighSpeedDigitizer
-HSD_BIT      = $(GW_HSD_TGT_DIR)/hsd_$(TARGET)_top.bit
+HSD_APP_NAME     = hsd_$(TARGET)
+HSD_SW_APP_NAME  = HighSpeedDigitizer
+HSD_BIT          = $(GW_HSD_TGT_DIR)/hsd_$(TARGET)_top.bit
 
 GW_HSD_TGT_DIR = $(GW_HSD_DIR)/hsd_$(TARGET)
 
