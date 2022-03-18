@@ -19,6 +19,8 @@ RUN apt-get update && \
 	curl \
 	flake8 \
     x11-utils \
+    xvfb \
+    dbus-x11 \
 	python3-pip \
 	python3-numpy \
 	python3-scipy \
