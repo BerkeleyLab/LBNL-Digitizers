@@ -18,6 +18,7 @@ RUN apt-get update && \
 	bsdmainutils \
 	curl \
 	flake8 \
+    x11-utils \
 	python3-pip \
 	python3-numpy \
 	python3-scipy \
