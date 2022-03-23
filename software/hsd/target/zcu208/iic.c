@@ -473,7 +473,7 @@ lmk04828Bread(int reg)
      * Transmit values are ignored, so just send the same thing.
      */
     if (!spiTransfer(SPI_MUX_04828B, buf, 3)) return 0;
-    return (buf[0] << 16) | (buf[1] << 8) | buf[2];
+    return buf[2];
 }
 
 int
