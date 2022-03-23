@@ -4,7 +4,7 @@ THIS_DIR := $(__THIS_DIR:/=)
 CROSS_COMPILE ?= aarch64-none-elf-
 CC = $(CROSS_COMPILE)gcc
 SIZE = $(CROSS_COMPILE)size
-XCST ?= xsct
+XSCT ?= xsct -norlwrap
 
 APP_NAME ?= HighSpeedDigitizer
 TARGET   ?= zcu111
@@ -145,7 +145,7 @@ vpath *.bif.in $(SW_HSD_SCRIPTS_DIR)
 # FIXME: We are considering BSP done if the directory exists. This
 # could lead to mismatches!
 $(APP_NAME):
-	$(XCST) $(SW_SCRIPTS_DIR)/gen_vitis_platform.tcl $(APP_NAME) $(GW_HSD_TGT_DIR)/system.xsa
+	$(XSCT) $(SW_SCRIPTS_DIR)/gen_vitis_platform.tcl $(APP_NAME) $(GW_HSD_TGT_DIR)/system.xsa
 
 $(APP_NAME).elf: $(HDR_FILES) $(HDR_GEN_FILES) $(OBJ_FILES) $(LINKER_FILES)
 	$(CC) $(CFLAGS) $(USER_FLAGS) $(INCLUDE_FLAGS) $(LIB_FLAGS) $(LD_FLAGS) -o $@ $(filter %.o, $^) $(LIBS)
