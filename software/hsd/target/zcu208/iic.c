@@ -9,6 +9,7 @@
 #include <xiicps.h>
 #include "iic.h"
 #include "util.h"
+#include "gpio.h"
 
 const unsigned int lmx2594MuxSel[LMX2594_MUX_SEL_SIZE] = {
     SPI_MUX_2594_A_ADC,  // Tile 224, 225, 226, 227 (ADC 0, 1, 2, 3, 4, 5, 6, 7)
