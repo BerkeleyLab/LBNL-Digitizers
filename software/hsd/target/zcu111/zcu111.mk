@@ -7,7 +7,9 @@ __HDR_GEN_ZCU111_FILES = \
 HDR_GEN_ZCU111_FILES = $(addprefix $(ZCU111_DIR)/, $(__HDR_GEN_ZCU111_FILES))
 
 __HDR_ZCU111_FILES = \
-	iic.h
+	iic.h \
+	gpio.h \
+	config.h
 HDR_ZCU111_FILES = $(addprefix $(ZCU111_DIR)/, $(__HDR_ZCU111_FILES))
 
 __SRC_ZCU111_FILES = \

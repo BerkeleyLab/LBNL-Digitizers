@@ -7,7 +7,9 @@ __HDR_GEN_ZCU208_FILES = \
 HDR_GEN_ZCU208_FILES = $(addprefix $(ZCU208_DIR)/, $(__HDR_GEN_ZCU208_FILES))
 
 __HDR_ZCU208_FILES = \
-	iic.h
+	iic.h \
+	gpio.h \
+	config.h
 HDR_ZCU208_FILES = $(addprefix $(ZCU208_DIR)/, $(__HDR_ZCU208_FILES))
 
 __SRC_ZCU208_FILES = \

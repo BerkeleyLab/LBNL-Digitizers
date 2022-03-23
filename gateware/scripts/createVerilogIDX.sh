@@ -10,7 +10,7 @@
 
 set -eu
 
-SRC_DIR=$1
+HDR_FILES=$@
 
 process() {
     sed -n -e "/ *# *define *\($1[^ ]*\) *\(.*\)/s//localparam \1 = \2/p" $2 |
@@ -20,7 +20,7 @@ process() {
 
 echo '// DO NOT EDIT -- CHANGES WILL BE OVERWRITTEN WHEN'
 echo '// THIS FILE IS REGENERATED FROM THE C HEADER FILE'
-for f in ${SRC_DIR}/gpio.h ${SRC_DIR}/config.h
+for f in $HDR_FILES
 do
     process "GPIO_IDX" "$f"
     process "CFG_" "$f"

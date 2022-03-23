@@ -54,7 +54,6 @@ SRC_FILES = $(addprefix $(SW_HSD_SRC_DIR)/, $(__SRC_FILES))
 __HDR_FILES = \
 	acquisition.h \
 	afe.h \
-	config.h \
 	console.h \
 	display.h \
 	epics.h \
@@ -63,7 +62,6 @@ __HDR_FILES = \
 	eyescan.h \
 	ffs.h \
 	frequencyMonitor.h \
-	gpio.h \
 	hsdProtocol.h \
 	interlock.h \
 	lv_font.h \
