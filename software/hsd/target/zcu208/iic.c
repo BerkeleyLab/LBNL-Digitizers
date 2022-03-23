@@ -125,7 +125,8 @@ iicInit(void)
     }
 
     /*
-     * Configure port expander 1_2, 1_1 as outputs (SPI MISO MUX SEL)
+     * Configure port expander 1_2, 1_1 as outputs
+     * (compatibility only. Not connected on ZCU208)
      * Configure port expander 0_1 as output and drive low -- this works
      * around a design error on the ZCU111 that resulted in the fan always
      * running at maximum speed.  The workaround has the undesirable side
@@ -418,7 +419,7 @@ spiSend(unsigned int muxSelect, const uint8_t *buf, unsigned int n)
 int
 spiTransfer(unsigned int muxSelect, uint8_t *buf, unsigned int n)
 {
-    static uint8_t selected = 4;
+    uint8_t selected = GPIO_READ(GPIO_IDX_CLK104_SPI_MUX_CSR) & 0xFF;
 
     /*
      * Don't exceed I2C/SPI adapter buffer limit
@@ -431,15 +432,11 @@ spiTransfer(unsigned int muxSelect, uint8_t *buf, unsigned int n)
      * so we assume that the iicWrite below is the only code that
      * writes a value to port expander register 3.
      */
+    /*
+     * Set the SPI mux selection
+     */
     if (selected != muxSelect) {
-        uint8_t iicBuf[2];
-        iicBuf[0] = 0x3;
-        iicBuf[1] = muxSelect << 1;
-        if (!iicWrite(IIC_INDEX_TCA6416A_PORT, iicBuf, 2)) {
-            selected = 4;
-            return 0;
-        }
-        selected = muxSelect;
+        GPIO_WRITE(GPIO_IDX_CLK104_SPI_MUX_CSR, muxSelect);
     }
 
     /*

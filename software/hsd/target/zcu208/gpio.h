@@ -29,6 +29,7 @@
 #define GPIO_IDX_EVENT_LOG_CSR           15 // Event logger control/seconds
 #define GPIO_IDX_EVENT_LOG_TICKS         16 // Event logger ticks
 #define GPIO_IDX_ADC_RANGE_CSR           17 // Monitor ADC ranges
+#define GPIO_IDX_CLK104_SPI_MUX_CSR      18 // Select CLK104 SPI MUX
 #define CFG_AXI_SAMPLES_PER_CLOCK         8
 
 #include <xil_io.h>
