@@ -37,7 +37,10 @@ module hsd_zcu208_top #(
     output wire       AFE_SPI_CLK,
     output wire       TRAINING_SIGNAL,
     output wire       BCM_SROC_GND,
-    output wire       AFE_DACIO_00
+    output wire       AFE_DACIO_00,
+
+    output wire       CLK_SPI_MUX_SEL0,
+    output wire       CLK_SPI_MUX_SEL1
 );
 
 `include "firmwareBuildDate.v"
@@ -432,7 +435,8 @@ assign GPIO_LEDS[7] = interlockResetButton;
 assign GPIO_LEDS[6] = interlockRelayOpen;
 assign GPIO_LEDS[5] = interlockRelayClosed;
 assign GPIO_LEDS[4] = interlockRelayControl;
-assign GPIO_LEDS[3:2] = 0;
+assign GPIO_LEDS[3] = GPIO_IN[GPIO_IDX_SECONDS_SINCE_BOOT][1];
+assign GPIO_LEDS[2] = GPIO_IN[GPIO_IDX_SECONDS_SINCE_BOOT][0];
 always @(posedge sysClk) begin
     if (GPIO_STROBES[GPIO_IDX_INTERLOCK_CSR]) begin
         interlockRelayControl <= GPIO_OUT[0];
@@ -538,5 +542,15 @@ evrLogger evrLogger (
     .evrChar(evrChars[7:0]),
     .evrCharIsK(evrCharIsK[0]));
 
+wire [31:0] spiMuxSel;
+gpioReg spiMuxSelReg (
+    .sysClk(sysClk),
+    .sysCsrStrobe(GPIO_STROBES[GPIO_IDX_CLK104_SPI_MUX_CSR]),
+    .sysGpioOut(GPIO_OUT),
+    .sysCsr(GPIO_IN[GPIO_IDX_CLK104_SPI_MUX_CSR]),
+    .gpioOut(spiMuxSel));
+
+assign CLK_SPI_MUX_SEL0 = spiMuxSel[0];
+assign CLK_SPI_MUX_SEL1 = spiMuxSel[1];
 
 endmodule

@@ -102,6 +102,12 @@ set_property IOSTANDARD LVCMOS12 [get_ports {GPIO_LEDS[5]}]
 set_property IOSTANDARD LVCMOS12 [get_ports {GPIO_LEDS[6]}]
 set_property IOSTANDARD LVCMOS12 [get_ports {GPIO_LEDS[7]}]
 
+# SPI Mux Selection
+set_property PACKAGE_PIN C11       [get_ports "CLK_SPI_MUX_SEL0"]
+set_property PACKAGE_PIN B12       [get_ports "CLK_SPI_MUX_SEL1"]
+set_property IOSTANDARD  LVCMOS12  [get_ports "CLK_SPI_MUX_SEL0"]
+set_property IOSTANDARD  POD12_DCI [get_ports "CLK_SPI_MUX_SEL1"]
+
 # EVR recovered clock output. To CLK104 board
 # Bank 67
 set_property PACKAGE_PIN L21  [get_ports SFP_REC_CLK_N]
