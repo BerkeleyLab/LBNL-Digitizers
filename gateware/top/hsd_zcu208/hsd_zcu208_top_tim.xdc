@@ -4,7 +4,7 @@
 create_clock -period 6.4 [get_ports USER_MGT_SI570_CLK_P]
 
 # RFDC clocks
-create_clock -period 10.0 [get_ports FPGA_REFCLK_OUT_C_P]
+create_clock -period 2.5 [get_ports FPGA_REFCLK_OUT_C_P]
 create_clock -period 250.0 [get_ports SYSREF_FPGA_C_P]
 
 # Don't check timing across clock domains.
