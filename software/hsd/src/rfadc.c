@@ -158,7 +158,7 @@ rfADCinit(void)
     int i, tile;
     XRFdc_Config *configp;
     static struct metal_init_params init_param = METAL_INIT_DEFAULTS;
-    
+
     if (metal_init(&init_param)) {
         fatal("metal_init failed");
     }
@@ -171,7 +171,9 @@ rfADCinit(void)
     if (i != XST_SUCCESS) fatal("XRFdc_CfgInitialize=%d", i);
     for (tile = 0 ; tile < NTILES ; tile++) {
         i = XRFdc_DynamicPLLConfig(&rfDC, XRFDC_ADC_TILE, tile,
-                                          XRFDC_EXTERNAL_CLK, 3997.12, 3997.12);
+                                          XRFDC_EXTERNAL_CLK,
+                                          CFG_ADC_REF_CLK_FREQ,
+                                          CFG_ADC_SAMPLING_CLK_FREQ);
         if (i != XST_SUCCESS) fatal("XRFdc_DynamicPLLConfig=%d", i);
     }
     initDone = 1;

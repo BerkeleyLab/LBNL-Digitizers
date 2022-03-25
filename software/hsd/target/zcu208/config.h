@@ -33,6 +33,16 @@
 #define CFG_ADC_CHANNEL_COUNT    8
 
 /*
+ * ADC sampling clock frequency
+ */
+#define CFG_ADC_SAMPLING_CLK_FREQ   4000.00
+
+/*
+ * ADC reference clock
+ */
+#define CFG_ADC_REF_CLK_FREQ   4000.00
+
+/*
  * Application-specific registers
  */
 #define GPIO_IDX_ADC_0_CSR               32 // Acquisition control(W)/status(R)
