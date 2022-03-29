@@ -126,8 +126,6 @@ iicInit(void)
     }
 
     /*
-     * Configure port expander 1_2, 1_1 as outputs
-     * (compatibility only. Not connected on ZCU208)
      * Configure port expander 0_1 as output and drive low -- this works
      * around a design error on the ZCU111 that resulted in the fan always
      * running at maximum speed.  The workaround has the undesirable side
@@ -140,7 +138,7 @@ iicInit(void)
     buf[3] = 0x00; /* Port 0: No polarity inversion */
     buf[4] = 0x00; /* Port 1: No polarity inversion */
     buf[5] = ~0x02; /* Port 0: All inputs, except bit 1 */
-    buf[6] = ~0x06; /* Port 1: All inputs except bits 2 and 1 */
+    buf[6] = ~0x00; /* Port 1: All inputs */
     if (!iicWrite(IIC_INDEX_TCA6416A_PORT, buf, 7)) fatal("Configure TCA6416");
 }
 
@@ -398,6 +396,19 @@ eepromWrite(int address, const void *buf, int n)
 }
 
 /*
+ * Select the correct SPI multiplexer SDO output
+ */
+static int
+spiSDOMuxSelect(unsigned int muxSelect)
+{
+    uint32_t selected = GPIO_READ(GPIO_IDX_CLK104_SPI_MUX_CSR);
+    if (selected != muxSelect) {
+        GPIO_WRITE(GPIO_IDX_CLK104_SPI_MUX_CSR, muxSelect);
+    }
+    return 1;
+}
+
+/*
  * Send n bytes to specified SPI target
  * Note that the I2C to SPI adapter chip enable lines are connected to
  * the SPI devices in reverse order to the MUX channel selection (!!!)
@@ -420,25 +431,15 @@ spiSend(unsigned int muxSelect, const uint8_t *buf, unsigned int n)
 int
 spiTransfer(unsigned int muxSelect, uint8_t *buf, unsigned int n)
 {
-    uint8_t selected = GPIO_READ(GPIO_IDX_CLK104_SPI_MUX_CSR) & 0xFF;
-
     /*
      * Don't exceed I2C/SPI adapter buffer limit
      */
     if (n > 200) return 0;
 
     /*
-     * Set port expander lines 1_2, 1_1 (MISO MUX address)
-     * These are the only output lines on this port of the expander
-     * so we assume that the iicWrite below is the only code that
-     * writes a value to port expander register 3.
+     * Select the correct SDO MUX port for readout
      */
-    /*
-     * Set the SPI mux selection
-     */
-    if (selected != muxSelect) {
-        GPIO_WRITE(GPIO_IDX_CLK104_SPI_MUX_CSR, muxSelect);
-    }
+    spiSDOMuxSelect(muxSelect);
 
     /*
      * Transmit to and receive from SPI device
