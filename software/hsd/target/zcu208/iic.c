@@ -140,6 +140,18 @@ iicInit(void)
     buf[5] = ~0x02; /* Port 0: All inputs, except bit 1 */
     buf[6] = ~0x00; /* Port 1: All inputs */
     if (!iicWrite(IIC_INDEX_TCA6416A_PORT, buf, 7)) fatal("Configure TCA6416");
+
+    /*
+     * Configure SC18IS602 to:
+     *
+     * - ORDER = 0: MSB first
+     * - CPOL = 0: SPICLK LOW when IDLE
+     * - CPHA = 0: Data clocked on leading EDGE
+     * - SPI clock rate = 10: 115kHz
+     */
+    buf[0] = 0xF0; /* Function ID F0h */
+    buf[1] = 0x02; /* See above */
+    if (!iicWrite(IIC_INDEX_I2C2SPI, buf, 2)) fatal("Configure SC18IS602");
 }
 
 static int
