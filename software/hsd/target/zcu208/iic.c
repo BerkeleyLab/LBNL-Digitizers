@@ -183,6 +183,7 @@ iicSend(struct controller *cp, int address, const uint8_t *buf, int n)
         if (status != XST_SUCCESS) printf(" FAILED");
         printf("\n");
     }
+    microsecondSpin(10000);
     return status == XST_SUCCESS;
 }
 
@@ -203,6 +204,7 @@ iicRecv(struct controller *cp, int address, uint8_t *buf, int n)
         }
         printf("\n");
     }
+    microsecondSpin(10000);
     return status == XST_SUCCESS;
 }
 
