@@ -185,3 +185,11 @@ set_property PACKAGE_PIN AB1 [get_ports RFMC_ADC_06_N]
 set_property PACKAGE_PIN AB2 [get_ports RFMC_ADC_06_P]
 set_property PACKAGE_PIN Y1 [get_ports RFMC_ADC_07_N]
 set_property PACKAGE_PIN Y2 [get_ports RFMC_ADC_07_P]
+
+# All DACs are clocked from the 230
+
+# RF DAC tile 230
+# DAC_CLK_230_N - Bank 230 - DAC_CLK_N_230
+set_property PACKAGE_PIN N4 [get_ports RF4_CLKO_B_C_N]
+# DAC_CLK_230_P - Bank 230 - DAC_CLK_P_230
+set_property PACKAGE_PIN N5 [get_ports RF4_CLKO_B_C_P]

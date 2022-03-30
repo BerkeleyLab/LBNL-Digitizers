@@ -22,6 +22,8 @@ module hsd_zcu208_top #(
     input  RFMC_ADC_06_P, RFMC_ADC_06_N,
     input  RFMC_ADC_07_P, RFMC_ADC_07_N,
 
+    input  RF4_CLKO_B_C_P, RF4_CLKO_B_C_N,
+
     output wire SFP_REC_CLK_P,
     output wire SFP_REC_CLK_N,
 
@@ -67,8 +69,8 @@ assign GPIO_IN[GPIO_IDX_FIRMWARE_BUILD_DATE] = FIRMWARE_BUILD_DATE;
 
 //////////////////////////////////////////////////////////////////////////////
 // Clocks
-wire sysClk, evrClk, adcClk, prbsClk;
-wire adcClkLocked;
+wire sysClk, evrClk, adcClk, dacClk, prbsClk;
+wire adcClkLocked, dacClkLocked;
 wire sysReset_n;
 
 // Get USER MGT reference clock
@@ -384,6 +386,7 @@ always @(posedge sysClk) begin
 end
 assign GPIO_IN[GPIO_IDX_FREQ_MONITOR_CSR] = { 2'b0, measuredFrequency };
 wire rfdc_adc0_clk;
+wire rfdc_dac0_clk;
 freq_multi_count #(
         .NF(8),  // number of frequency counters in a block
         .NG(1),  // number of frequency counter blocks
@@ -482,9 +485,21 @@ system
     //.adc45_clk_p(),
     //.adc67_clk_n(),
     //.adc67_clk_p(),
+    .user_sysref_adc(user_sysref_adc),
+
+    // DAC tile 0 must be enabled dfor sysref
+    // to be distributed to ADC/DAC for RFSoC GEN3
     .sysref_in_diff_n(SYSREF_RFSOC_C_N),
     .sysref_in_diff_p(SYSREF_RFSOC_C_P),
-    .user_sysref_adc(user_sysref_adc),
+
+    .dacClk(dacClk),
+    .dacClkLocked(dacClkLocked),
+    .clk_dac0_0(rfdc_dac0_clk),
+
+    // DAC tile 230 distributes clock to all others
+    .dac45_clk_n(RF4_CLKO_B_C_N),
+    .dac45_clk_p(RF4_CLKO_B_C_P),
+    .user_sysref_dac(1'b0),
 
     .vin0_v_n(RFMC_ADC_00_N),
     .vin0_v_p(RFMC_ADC_00_P),
