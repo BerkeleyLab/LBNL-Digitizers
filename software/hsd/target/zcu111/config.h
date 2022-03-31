@@ -16,6 +16,8 @@
  */
 #define ADC_CLK_MMCM_MULTIPLIER 104500
 #define ADC_CLK_MMCM_DIVIDER      2375
+/* Unused, placeholder */
+#define ADC_CLK_MMCM_CLK1_DIVIDER 1000
 
 /*
  * Number of ADC AXI clocks per SYSREF clock
