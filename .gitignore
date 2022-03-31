@@ -39,20 +39,20 @@ work/
 ######################
 
 # Keep only source file, not generated products
-/gateware/platform/xilinx/*/evrGTY/
-!/gateware/platform/xilinx/*/evrGTY/evrGTY.xci
-/gateware/platform/xilinx/*/prbsMMCM/
-!/gateware/platform/xilinx/*/prbsMMCM/prbsMMCM.xci
-/gateware/platform/xilinx/*/system/
-!/gateware/platform/xilinx/*/system/system.bd
-/gateware/platform/xilinx/*/ila_td256_s4096_cap/
-!/gateware/platform/xilinx/*/ila_td256_s4096_cap/ila_td256_s4096_cap.xci
-/gateware/platform/xilinx/*/PacketMem/
-!/gateware/platform/xilinx/*/PacketMem/PacketMem.xci
-/gateware/platform/xilinx/*/MappingRam/
-!/gateware/platform/xilinx/*/MappingRam/MappingRam.xci
-/gateware/platform/xilinx/*/timeStampFIFO/
-!/gateware/platform/xilinx/*/timeStampFIFO/timeStampFIFO.xci
+/gateware/platform/xilinx/*/*/evrGTY/
+!/gateware/platform/xilinx/*/*/evrGTY/evrGTY.xci
+/gateware/platform/xilinx/*/*/prbsMMCM/
+!/gateware/platform/xilinx/*/*/prbsMMCM/prbsMMCM.xci
+/gateware/platform/xilinx/*/*/system/
+!/gateware/platform/xilinx/*/*/system/system.bd
+/gateware/platform/xilinx/*/*/ila_td256_s4096_cap/
+!/gateware/platform/xilinx/*/*/ila_td256_s4096_cap/ila_td256_s4096_cap.xci
+/gateware/platform/xilinx/*/*/PacketMem/
+!/gateware/platform/xilinx/*/*/PacketMem/PacketMem.xci
+/gateware/platform/xilinx/*/*/MappingRam/
+!/gateware/platform/xilinx/*/*/MappingRam/MappingRam.xci
+/gateware/platform/xilinx/*/*/timeStampFIFO/
+!/gateware/platform/xilinx/*/*/timeStampFIFO/timeStampFIFO.xci
 
 ######################
 # Vivado files
