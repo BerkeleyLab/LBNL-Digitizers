@@ -1,4 +1,4 @@
-FROM debian:bullseye-slim as testing_base_bullseye
+FROM debian:bullseye-slim as xilinx_env
 
 # Vivado needs libtinfo5, at least for Artix?
 # libz-dev required for Verilator FST support
