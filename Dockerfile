@@ -19,6 +19,8 @@ RUN apt-get update && \
     curl \
     flake8 \
     x11-utils \
+    lib32z1 \
+    libgtk2.0-0 \
     xvfb \
     dbus-x11 \
     python3-pip \
