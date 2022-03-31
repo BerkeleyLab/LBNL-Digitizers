@@ -14,8 +14,12 @@
  * ADC AXI MMCM (adcClk source) configuration
  * Values are scaled by a factor of 1000.
  */
-#define ADC_CLK_MMCM_MULTIPLIER   11875
-#define ADC_CLK_MMCM_DIVIDER      2375
+#define ADC_CLK_MMCM_MULTIPLIER   3125
+#define ADC_CLK_MMCM_DIVIDER      2500
+#define ADC_CLK_MMCM_CLK1_DIVIDER 5000
+
+/* For compatibility */
+#define ADC_CLK_MMCM_CLK0_DIVIDER ADC_CLK_MMCM_DIVIDER
 
 /*
  * Number of ADC AXI clocks per SYSREF clock
