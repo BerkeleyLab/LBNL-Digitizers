@@ -106,7 +106,7 @@ mmcmStartReconfig(void)
     then = MICROSECONDS_SINCE_BOOT();
     while (!RD(XPAR_RFADC_MMCM_BASEADDR, 0x04) & 0x1) {
         if ((MICROSECONDS_SINCE_BOOT() - then) > 1000000) {
-            warn("Critial -- ADC clock MMCM unlocked");
+            warn("Critical -- ADC clock MMCM unlocked");
             break;
         }
     }
@@ -114,7 +114,7 @@ mmcmStartReconfig(void)
     WR(XPAR_RFADC_MMCM_BASEADDR, 0x25C, 3);
     while (!RD(XPAR_RFADC_MMCM_BASEADDR, 0x04) & 0x1) {
         if ((MICROSECONDS_SINCE_BOOT() - then) > 10000000) {
-            warn("Critial -- ADC clock MMCM won't lock");
+            warn("Critical -- ADC clock MMCM won't lock");
         }
         return;
     }
