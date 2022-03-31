@@ -90,13 +90,19 @@ mmcmSetAdcClkMultiplier(int multiplier)
 }
 
 void
-mmcmSetAdcClkDivider(int divider)
+mmcmSetAdcClk0Divider(int divider)
 {
     int divInt = divider / 1000;
     int divFrac = divider % 1000;
-    uint32_t then;
 
     WR(XPAR_RFADC_MMCM_BASEADDR, 0x208, (divFrac << 8) | divInt);
+}
+
+void
+mmcmStartReconfig(void)
+{
+    uint32_t then;
+
     then = MICROSECONDS_SINCE_BOOT();
     while (!RD(XPAR_RFADC_MMCM_BASEADDR, 0x04) & 0x1) {
         if ((MICROSECONDS_SINCE_BOOT() - then) > 1000000) {
@@ -120,6 +126,7 @@ mmcmInit(void)
 {
     showAdcClk("Old ");
     mmcmSetAdcClkMultiplier(ADC_CLK_MMCM_MULTIPLIER);
-    mmcmSetAdcClkDivider(ADC_CLK_MMCM_DIVIDER);
+    mmcmSetAdcClk0Divider(ADC_CLK_MMCM_DIVIDER);
+    mmcmStartReconfig();
     showAdcClk("");
 }
