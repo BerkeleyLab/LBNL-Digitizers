@@ -14,7 +14,7 @@ evr_axi_TARGET = _gen/evr_axi
 
 # Mapping RAM ipcore generation for evr_axi
 
-TARGET_PLATFORM_DIR = $(PLATFORM_DIR)/$(FPGA_VENDOR)/$(FPGA_PLATFORM)
+TARGET_PLATFORM_DIR = $(PLATFORM_DIR)/$(FPGA_VENDOR)/$(FPGA_PLATFORM)/$(FPGA_APPLICATION)
 evr_axi_IP_CORES = MappingRam PacketMem timeStampFIFO
 
 MappingRam_DIR = $(TARGET_PLATFORM_DIR)/MappingRam
