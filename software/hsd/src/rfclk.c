@@ -8,25 +8,30 @@
 #include "rfclk.h"
 #include "util.h"
 
-static const unsigned int lmx2594MuxSel[] = {
-    SPI_MUX_2594_A_ADC,  // Tile 224 and 225 (ADC 0, 1, 2, 3)
-    SPI_MUX_2594_B_ADC,  // Tile 226 and 227 (ADC 4, 5, 6, 7)
-    SPI_MUX_2594_C_DAC,  // Tile 228 and 229 (All DACs)
-};
-
 /*
- * Configure LMK04208 jitter cleaner.
+ * Configure LMK04208/LMK04828B jitter cleaner.
  */
 void
-rfClkInit04208(void)
+rfClkInitLMK04xx(void)
 {
     int i;
+#if defined (__TARGET_ZCU111__)
     static const uint32_t lmk04208[] = {
 #include "lmk04208.h"
     };
     for (i = 0 ; i < sizeof lmk04208 / sizeof lmk04208[0] ; i++) {
         lmk04208write(lmk04208[i]);
     }
+#elif defined (__TARGET_ZCU208__)
+    static const uint32_t lmk04828B[] = {
+#include "lmk04828B.h"
+    };
+    for (i = 0 ; i < sizeof lmk04828B / sizeof lmk04828B[0] ; i++) {
+        lmk04828Bwrite(lmk04828B[i]);
+    }
+#else
+#   error "Unrecognized __TARGET_XXX__ macro"
+#endif
 }
 
 /*
@@ -97,10 +102,10 @@ void
 lmx2594Config(const uint32_t *values, int n)
 {
     int i;
-    for (i = 0 ; i < sizeof lmx2594MuxSel / sizeof lmx2594MuxSel[0] ; i++) {
+    for (i = 0 ; i < LMX2594_MUX_SEL_SIZE ; i++) {
         init2594(lmx2594MuxSel[i], values, n);
     }
-    for (i = 0 ; i < sizeof lmx2594MuxSel / sizeof lmx2594MuxSel[0] ; i++) {
+    for (i = 0 ; i < LMX2594_MUX_SEL_SIZE ; i++) {
         start2594(lmx2594MuxSel[i]);
     }
 }
@@ -124,7 +129,7 @@ rfClkInit(void)
     static const uint32_t values[] = {
 #include "lmx2594.h"
     };
-    rfClkInit04208();
+    rfClkInitLMK04xx();
     lmx2594Config(values, sizeof lmx2594Defaults / sizeof lmx2594Defaults[0]);
 }
 
@@ -135,7 +140,7 @@ rfClkShow(void)
     static uint16_t chDiv[32] = {
      2, 4, 6, 8, 12, 16, 24, 32, 48, 64, 72, 96, 128, 192, 256, 384, 512, 768};
 
-    for (i = 0 ; i < sizeof lmx2594MuxSel / sizeof lmx2594MuxSel[0] ; i++) {
+    for (i = 0 ; i < LMX2594_MUX_SEL_SIZE ; i++) {
         m = lmx2594MuxSel[i];
         r = lmx2594read(m, 110);
         printf("LMX2594 %c:\n", i + 'A');
@@ -187,7 +192,7 @@ lmx2594Status(void)
     int i;
     int v = 0;
 
-    for (i = 0 ; i < sizeof lmx2594MuxSel / sizeof lmx2594MuxSel[0] ; i++) {
+    for (i = 0 ; i < LMX2594_MUX_SEL_SIZE ; i++) {
         v |= ((lmx2594read(lmx2594MuxSel[i], 110) >> 9) & 0x3) << (i * 4);
     }
     return v;

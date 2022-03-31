@@ -16,7 +16,7 @@ targets 3
 
 # Configure the FPGA. When the active target is not a FPGA device,
 # the first FPGA device is configured
-fpga $bit_file
+fpga -f $bit_file -no-revision-check
 
 # cleanup
 exit

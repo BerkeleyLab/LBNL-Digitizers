@@ -1,6 +1,7 @@
 *~
 *.swp
 *.orig
+*tags
 
 ######################
 # Compilation files
@@ -11,6 +12,7 @@
 *_history
 _autogen/
 _dep/
+_gen/
 _xilinx/
 *.o
 *.d
@@ -37,25 +39,20 @@ work/
 ######################
 
 # Keep only source file, not generated products
-/gateware/platform/xilinx/zu28/evrGTY
-!/gateware/platform/xilinx/zu28/evrGTY/evrGTY.xci
-/gateware/platform/xilinx/zu28/prbsMMCM
-!/gateware/platform/xilinx/zu28/prbsMMCM/prbsMMCM.xci
-/gateware/platform/xilinx/zu28/system
-!/gateware/platform/xilinx/zu28/system/system.bd
-/gateware/platform/xilinx/zu28/ila_td256_s4096_cap
-!/gateware/platform/xilinx/zu28/ila_td256_s4096_cap/ila_td256_s4096_cap.xci
-
-/gateware/modules/evr_axi/PacketMem/
-!/gateware/modules/evr_axi/PacketMem/PacketMem.xci
-/gateware/modules/evr_axi/MappingRam/
-!/gateware/modules/evr_axi/MappingRam/MappingRam.xci
-/gateware/modules/evr_axi/timeStampFIFO/
-!/gateware/modules/evr_axi/timeStampFIFO/timeStampFIFO.xci
-
-# generated IP-cores directories
-/gateware/platform/xilinx/zu28/axi_lite_generic_reg/
-/gateware/platform/xilinx/zu28/evr_axi/
+/gateware/platform/xilinx/*/evrGTY/
+!/gateware/platform/xilinx/*/evrGTY/evrGTY.xci
+/gateware/platform/xilinx/*/prbsMMCM/
+!/gateware/platform/xilinx/*/prbsMMCM/prbsMMCM.xci
+/gateware/platform/xilinx/*/system/
+!/gateware/platform/xilinx/*/system/system.bd
+/gateware/platform/xilinx/*/ila_td256_s4096_cap/
+!/gateware/platform/xilinx/*/ila_td256_s4096_cap/ila_td256_s4096_cap.xci
+/gateware/platform/xilinx/*/PacketMem/
+!/gateware/platform/xilinx/*/PacketMem/PacketMem.xci
+/gateware/platform/xilinx/*/MappingRam/
+!/gateware/platform/xilinx/*/MappingRam/MappingRam.xci
+/gateware/platform/xilinx/*/timeStampFIFO/
+!/gateware/platform/xilinx/*/timeStampFIFO/timeStampFIFO.xci
 
 ######################
 # Vivado files

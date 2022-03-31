@@ -10,6 +10,12 @@
 #include "iic.h"
 #include "util.h"
 
+const unsigned int lmx2594MuxSel[LMX2594_MUX_SEL_SIZE] = {
+    SPI_MUX_2594_A_ADC,  // Tile 224 and 225 (ADC 0, 1, 2, 3)
+    SPI_MUX_2594_B_ADC,  // Tile 226 and 227 (ADC 4, 5, 6, 7)
+    SPI_MUX_2594_C_DAC,  // Tile 228 and 229 (All DACs)
+};
+
 #define C0_M_IIC_ADDRESS  0x75   /* Address of controller 0 multiplexer */
 #define C1_M0_IIC_ADDRESS 0x74   /* Address of controller 1 multiplexer 0 */
 
@@ -337,7 +343,7 @@ eepromRead(int address, void *buf, int n)
 {
     struct deviceInfo *dp = &deviceTable[IIC_INDEX_EEPROM];
     struct controller *cp = &controllers[dp->controllerIndex];
-    
+
     if (debugFlags & DEBUGFLAG_IIC) {
         printf("eepromRead %d@%d\n", n, address);
     }
@@ -367,7 +373,7 @@ eepromWrite(int address, const void *buf, int n)
     uint8_t subAddress = address & 0xFF;
     const uint8_t *src = buf;
     int nLeft = n;
-    
+
     if (!setMux(cp, dp->muxPort)) return 0;
     while (nLeft) {
         uint8_t xBuf[17];   /* One greater than page size */

@@ -74,7 +74,9 @@ showAdcClk(const char *msg)
     printf("     Input divider: %d\n", v & 0xFF);
     printf("        Multiplier: %d.%03d\n", (v >> 8) & 0xFF, (v >> 16) & 0x3FF);
     v = RD(XPAR_RFADC_MMCM_BASEADDR, 0x208);
-    printf("           Divider: %d.%03d\n", v & 0xFF, (v >> 8) & 0x3FF);
+    printf("           Divider CLK0: %d.%03d\n", v & 0xFF, (v >> 8) & 0x3FF);
+    v = RD(XPAR_RFADC_MMCM_BASEADDR, 0x214);
+    printf("           Divider CLK1: %d\n", v & 0xFF);
 }
 
 void
@@ -90,17 +92,31 @@ mmcmSetAdcClkMultiplier(int multiplier)
 }
 
 void
-mmcmSetAdcClkDivider(int divider)
+mmcmSetAdcClk0Divider(int divider)
 {
     int divInt = divider / 1000;
     int divFrac = divider % 1000;
-    uint32_t then;
 
     WR(XPAR_RFADC_MMCM_BASEADDR, 0x208, (divFrac << 8) | divInt);
+}
+
+void
+mmcmSetAdcClk1Divider(int divider)
+{
+    int divInt = divider / 1000;
+
+    WR(XPAR_RFADC_MMCM_BASEADDR, 0x214, divInt);
+}
+
+void
+mmcmStartReconfig(void)
+{
+    uint32_t then;
+
     then = MICROSECONDS_SINCE_BOOT();
     while (!RD(XPAR_RFADC_MMCM_BASEADDR, 0x04) & 0x1) {
         if ((MICROSECONDS_SINCE_BOOT() - then) > 1000000) {
-            warn("Critial -- ADC clock MMCM unlocked");
+            warn("Critical -- ADC clock MMCM unlocked");
             break;
         }
     }
@@ -108,7 +124,7 @@ mmcmSetAdcClkDivider(int divider)
     WR(XPAR_RFADC_MMCM_BASEADDR, 0x25C, 3);
     while (!RD(XPAR_RFADC_MMCM_BASEADDR, 0x04) & 0x1) {
         if ((MICROSECONDS_SINCE_BOOT() - then) > 10000000) {
-            warn("Critial -- ADC clock MMCM won't lock");
+            warn("Critical -- ADC clock MMCM won't lock");
         }
         return;
     }
@@ -120,6 +136,8 @@ mmcmInit(void)
 {
     showAdcClk("Old ");
     mmcmSetAdcClkMultiplier(ADC_CLK_MMCM_MULTIPLIER);
-    mmcmSetAdcClkDivider(ADC_CLK_MMCM_DIVIDER);
+    mmcmSetAdcClk0Divider(ADC_CLK_MMCM_DIVIDER);
+    mmcmSetAdcClk1Divider(ADC_CLK_MMCM_CLK1_DIVIDER);
+    mmcmStartReconfig();
     showAdcClk("");
 }

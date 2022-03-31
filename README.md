@@ -60,7 +60,7 @@ The following script can download the gateware via JTAG:
 
 ```bash
 cd gateware/scripts
-xsct download_bit.tcl ../syn/hsd_ref/hsd_ref_top.bit
+xsct download_bit.tcl ../syn/hsd_zcu111/hsd_zcu111_top.bit
 ```
 
 #### Deploying software
@@ -69,5 +69,5 @@ The following script can download the software via JTAG:
 
 ```bash
 cd software/scripts
-xsct download_elf.tcl ../../gateware/syn/hsd_ref/psu_init.tcl ../hsd/HighSpeedDigitizer.elf
+xsct download_elf.tcl ../../gateware/syn/hsd_zcu111/psu_init.tcl ../hsd/HighSpeedDigitizer.elf
 ```

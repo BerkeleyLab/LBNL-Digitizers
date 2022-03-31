@@ -3,7 +3,7 @@
  * Same restrictions as noted in gpio.h.
  */
 #define VERILOG_FIRMWARE_STYLE_HSD
-#define CFG_ACQUISITION_BUFFER_CAPACITY     (1<<17)
+#define CFG_ACQUISITION_BUFFER_CAPACITY     (1<<14)
 #define CFG_LONG_SEGMENT_CAPACITY           (1<<9)
 #define CFG_SHORT_SEGMENT_CAPACITY          (1<<6)
 #define CFG_EARLY_SEGMENTS_COUNT            5
@@ -16,6 +16,8 @@
  */
 #define ADC_CLK_MMCM_MULTIPLIER 104500
 #define ADC_CLK_MMCM_DIVIDER      2375
+/* Unused, placeholder */
+#define ADC_CLK_MMCM_CLK1_DIVIDER 1000
 
 /*
  * Number of ADC AXI clocks per SYSREF clock
@@ -31,6 +33,16 @@
  * Number of ADC channels required by application
  */
 #define CFG_ADC_CHANNEL_COUNT    8
+
+/*
+ * ADC sampling clock frequency
+ */
+#define CFG_ADC_SAMPLING_CLK_FREQ   3997.12
+
+/*
+ * ADC reference clock
+ */
+#define CFG_ADC_REF_CLK_FREQ   3997.12
 
 /*
  * Application-specific registers

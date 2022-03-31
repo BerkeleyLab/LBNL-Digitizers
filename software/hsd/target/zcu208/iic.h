@@ -49,9 +49,12 @@
 #define IIC_INDEX_SFP_0_STATUS           40
 
 #define SPI_MUX_2594_A_ADC    0
-#define SPI_MUX_2594_B_ADC    1
-#define SPI_MUX_04208         2
-#define SPI_MUX_2594_C_DAC    3
+#define SPI_MUX_2594_B_DAC    1
+#define SPI_MUX_04828B        2
+
+#define LMX2594_MUX_SEL_SIZE  2
+
+extern const unsigned int lmx2594MuxSel[];
 
 void iicInit(void);
 int iicRead(unsigned int deviceIndex, int subAddress, uint8_t *buf, int n);
@@ -62,8 +65,8 @@ int eepromWrite(int address, const void *buf, int n);
 
 int pmbusRead(unsigned int deviceIndex, unsigned int page, int reg);
 
-uint32_t lmk04208read(int reg);
-int lmk04208write(uint32_t value);
+uint32_t lmk04828Bread(int reg);
+int lmk04828Bwrite(uint32_t value);
 int lmx2594read(int muxSelect, int reg);
 int lmx2594write(int muxSelect, uint32_t value);
 

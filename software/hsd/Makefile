@@ -4,16 +4,24 @@ THIS_DIR := $(__THIS_DIR:/=)
 CROSS_COMPILE ?= aarch64-none-elf-
 CC = $(CROSS_COMPILE)gcc
 SIZE = $(CROSS_COMPILE)size
-XCST ?= xsct
+XSCT ?= xsct -norlwrap
 
 APP_NAME ?= HighSpeedDigitizer
-BIT      ?= $(GW_HSD_DIR)/hsd_ref_top.bit
+TARGET   ?= zcu111
+GW_HSD_TGT_DIR = $(GW_HSD_DIR)/hsd_$(TARGET)
+BIT      ?= $(GW_HSD_TGT_DIR)/hsd_$(TARGET)_top.bit
 
 BIF   = $(SW_HSD_SCRIPTS_DIR)/BOOTGEN.bif
-FSBL  = $(THIS_DIR)/$(APP_NAME)/platform/zynqmp_fsbl/executable.elf
 APP   = $(THIS_DIR)/$(APP_NAME).elf
 PMUFW = $(THIS_DIR)/$(APP_NAME)/platform/export/platform/sw/platform/boot/pmufw.elf
 BIN   = $(THIS_DIR)/BOOT.bin
+
+# Vivado 2020.1 uses executable.elf name and Vivado 2020.2 uses fsbl_a53.elf
+FSBL  = $(THIS_DIR)/$(APP_NAME)/platform/zynqmp_fsbl/fsbl_a53.elf
+
+TARGET_DIR = target/$(TARGET)
+
+all: $(APP_NAME) $(APP_NAME).elf $(APP_NAME).elf.size $(BIN)
 
 include ../../dir_list.mk
 
@@ -28,7 +36,6 @@ __SRC_FILES = \
 	eyescan.c \
 	ffs.c \
 	frequencyMonitor.c \
-	iic.c \
 	interlock.c \
 	main.c \
 	mgt.c \
@@ -47,7 +54,6 @@ SRC_FILES = $(addprefix $(SW_HSD_SRC_DIR)/, $(__SRC_FILES))
 __HDR_FILES = \
 	acquisition.h \
 	afe.h \
-	config.h \
 	console.h \
 	display.h \
 	epics.h \
@@ -56,12 +62,8 @@ __HDR_FILES = \
 	eyescan.h \
 	ffs.h \
 	frequencyMonitor.h \
-	gpio.h \
 	hsdProtocol.h \
-	iic.h \
 	interlock.h \
-	lmk04208.h \
-	lmx2594.h \
 	lv_font.h \
 	mgt.h \
 	mmcm.h \
@@ -78,19 +80,26 @@ __HDR_FILES = \
 HDR_FILES = $(addprefix $(SW_HSD_SRC_DIR)/, $(__HDR_FILES))
 
 __HDR_GEN_FILES = \
-	softwareBuildDate.h \
-	lmk04208.h \
-	lmx2594.h
+	softwareBuildDate.h
 HDR_GEN_FILES = $(addprefix $(SW_HSD_SRC_DIR)/, $(__HDR_GEN_FILES))
-HDR_FILES += $(HDR_GEN_FILES)
+
+include $(TARGET_DIR)/$(TARGET).mk
 
 ST7789V_DIR = libs/st7789v
 __ST7789V_SRC_FILES = \
-	systemFont.c \
-	st7789v.c
+	systemFont.c
 __ST7789V_HDR_FILES =\
 	lv_font.h \
 	st7789v.h
+
+ifeq ($(TARGET),zcu111)
+	__ST7789V_SRC_FILES += \
+		st7789v.c
+else ifeq ($(TARGET),zcu208)
+	__ST7789V_SRC_FILES += \
+		st7789v_stub.c
+endif
+
 ST7789V_SRC_FILES = $(addprefix $(ST7789V_DIR)/, $(__ST7789V_SRC_FILES))
 ST7789V_HDR_FILES = $(addprefix $(ST7789V_DIR)/, $(__ST7789V_HDR_FILES))
 SRC_FILES += $(ST7789V_SRC_FILES)
@@ -106,38 +115,39 @@ LIB_DIRS = $(APP_NAME)/platform/export/platform/sw/platform/standalone_domain/bs
 LIB_FLAGS = $(addprefix -L, $(LIB_DIRS))
 LIBS = -Wl,--start-group,-lxil,-lgcc,-lc,--end-group -Wl,--start-group,-lxil,-lmetal,-lgcc,-lc,--end-group -Wl,--start-group,-lxil,-llwip4,-lgcc,-lc,--end-group -Wl,--start-group,-lxilffs,-lxil,-lgcc,-lc,--end-group -Wl,--start-group,-lxilpm,-lxil,-lgcc,-lc,--end-group -Wl,--start-group,-lxil,-lgcc,-lc,-lmetal,--end-group
 
+ifeq ($(TARGET),zcu111)
+	USER_FLAGS += -D__TARGET_ZCU111__
+else ifeq ($(TARGET),zcu208)
+	USER_FLAGS += -D__TARGET_ZCU208__
+else
+	USER_FLAGS += -D__TARGET_NOT_RECOGNIZED__
+endif
+
 INCLUDE_DIRS = \
 	src \
+	$(TARGET_DIR) \
 	$(APP_NAME)/platform/export/platform/sw/platform/standalone_domain/bspinclude/include \
 	$(ST7789V_DIR)
 INCLUDE_FLAGS = $(addprefix -I, $(INCLUDE_DIRS))
 
 .PHONY: all clean bsp
 
-vpath *.c $(SW_HSD_SRC_DIR) $(ST7789V_DIR)
-vpath *.h $(SW_HSD_SRC_DIR) $(ST7789V_DIR)
+vpath *.c $(SW_HSD_SRC_DIR) $(ST7789V_DIR) $(TARGET_DIR)
+vpath *.h $(SW_HSD_SRC_DIR) $(ST7789V_DIR) $(TARGET_DIR)
 vpath *.o $(SW_HSD_SRC_DIR) $(ST7789V_DIR)
 vpath *.tcs $(SW_HSD_SRC_DIR)
 vpath *.bif $(SW_HSD_SCRIPTS_DIR)
 vpath *.bif.in $(SW_HSD_SCRIPTS_DIR)
 
-all: $(APP_NAME) $(APP_NAME).elf $(APP_NAME).elf.size $(BIN)
-
 %softwareBuildDate.h: $(SRC_FILES) $(HDR_FILES)
 	sh $(SW_HSD_SCRIPTS_DIR)/setSoftwareBuildDate.sh > $@
-
-%lmk04208.h: %lmk04208.tcs
-	sh $(SW_HSD_SCRIPTS_DIR)/createRFCLKheader.sh $< > $@
-
-%lmx2594.h: %lmx2594.tcs
-	sh $(SW_HSD_SCRIPTS_DIR)/createRFCLKheader.sh $< > $@
 
 # FIXME: We are considering BSP done if the directory exists. This
 # could lead to mismatches!
 $(APP_NAME):
-	$(XCST) $(SW_SCRIPTS_DIR)/gen_vitis_platform.tcl $(APP_NAME) $(GW_HSD_DIR)/system.xsa
+	$(XSCT) $(SW_SCRIPTS_DIR)/gen_vitis_platform.tcl $(APP_NAME) $(GW_HSD_TGT_DIR)/system.xsa
 
-$(APP_NAME).elf: $(HDR_FILES) $(OBJ_FILES) $(LINKER_FILES)
+$(APP_NAME).elf: $(HDR_FILES) $(HDR_GEN_FILES) $(OBJ_FILES) $(LINKER_FILES)
 	$(CC) $(CFLAGS) $(USER_FLAGS) $(INCLUDE_FLAGS) $(LIB_FLAGS) $(LD_FLAGS) -o $@ $(filter %.o, $^) $(LIBS)
 
 $(APP_NAME).elf.size: $(APP_NAME).elf
@@ -160,6 +170,6 @@ $(BIN): $(BIF) $(FSBL) $(PMUFW) $(BIT) $(APP)
 		-e 's|$$APP|$(APP)|g' \
 		$< > $@
 
-clean:
+clean::
 	$(RM) -rf $(APP_NAME).elf $(APP_NAME).elf.size $(HDR_GEN_FILES) \
 		$(OBJ_FILES) $(OBJ_FILES:.o=.d) $(APP_NAME) $(BIF) $(BIN)

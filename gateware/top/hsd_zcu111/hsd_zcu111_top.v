@@ -1,4 +1,4 @@
-module hsd_ref_top #(
+module hsd_zcu111_top #(
     parameter ADC_WIDTH            = 12,
     parameter SYSCLK_RATE          = 100000000,  // From block design
     parameter BD_ADC_CHANNEL_COUNT = 8,
@@ -211,18 +211,34 @@ st7789v #(.CLK_RATE(SYSCLK_RATE),
 
 /////////////////////////////////////////////////////////////////////////////
 // Generate tile synchronization user_sysref_adc
-wire FPGA_REFCLK_OUT_C, user_sysref_adc;
+wire FPGA_REFCLK_OUT_C;
+wire FPGA_REFCLK_OUT_C_unbuf;
+wire user_sysref_adc;
+IBUFDS FPGA_REFCLK_IBUFDS(
+    .I(FPGA_REFCLK_OUT_C_P),
+    .IB(FPGA_REFCLK_OUT_C_N),
+    .O(FPGA_REFCLK_OUT_C_unbuf)
+);
+BUFG FPGA_REFCLK_BUFG(
+    .I(FPGA_REFCLK_OUT_C_unbuf),
+    .O(FPGA_REFCLK_OUT_C)
+);
+
+wire SYSREF_FPGA_C_unbuf;
+IBUFDS SYSREF_FPGA_IBUFDS(
+    .I(SYSREF_FPGA_C_P),
+    .IB(SYSREF_FPGA_C_N),
+    .O(SYSREF_FPGA_C_unbuf)
+);
+
 sysrefSync #(.DEBUG("false"))
   sysrefSync (
     .sysClk(sysClk),
     .sysCsrStrobe(GPIO_STROBES[GPIO_IDX_SYSREF_CSR]),
     .GPIO_OUT(GPIO_OUT),
     .sysStatusReg(GPIO_IN[GPIO_IDX_SYSREF_CSR]),
-    .FPGA_REFCLK_OUT_C_P(FPGA_REFCLK_OUT_C_P),
-    .FPGA_REFCLK_OUT_C_N(FPGA_REFCLK_OUT_C_N),
     .FPGA_REFCLK_OUT_C(FPGA_REFCLK_OUT_C),
-    .SYSREF_FPGA_C_P(SYSREF_FPGA_C_P),
-    .SYSREF_FPGA_C_N(SYSREF_FPGA_C_N),
+    .SYSREF_FPGA_C_UNBUF(SYSREF_FPGA_C_unbuf),
     .adcClk(adcClk),
     .user_sysref_adc(user_sysref_adc));
 
@@ -527,18 +543,18 @@ system
     .adc1stream_tdata(adcsTDATA[1*SAMPLES_WIDTH+:SAMPLES_WIDTH]),
     .adc2stream_tdata(adcsTDATA[2*SAMPLES_WIDTH+:SAMPLES_WIDTH]),
     .adc3stream_tdata(adcsTDATA[3*SAMPLES_WIDTH+:SAMPLES_WIDTH]),
-    .adc4stream_tdata(adcsTDATA[4*SAMPLES_WIDTH+:SAMPLES_WIDTH]),
-    .adc5stream_tdata(adcsTDATA[5*SAMPLES_WIDTH+:SAMPLES_WIDTH]),
-    .adc6stream_tdata(adcsTDATA[6*SAMPLES_WIDTH+:SAMPLES_WIDTH]),
-    .adc7stream_tdata(adcsTDATA[7*SAMPLES_WIDTH+:SAMPLES_WIDTH]),
+    .adc4stream_tdata(),
+    .adc5stream_tdata(),
+    .adc6stream_tdata(),
+    .adc7stream_tdata(),
     .adc0stream_tvalid(adcsTVALID[0]),
     .adc1stream_tvalid(adcsTVALID[1]),
     .adc2stream_tvalid(adcsTVALID[2]),
     .adc3stream_tvalid(adcsTVALID[3]),
-    .adc4stream_tvalid(adcsTVALID[4]),
-    .adc5stream_tvalid(adcsTVALID[5]),
-    .adc6stream_tvalid(adcsTVALID[6]),
-    .adc7stream_tvalid(adcsTVALID[7]),
+    .adc4stream_tvalid(),
+    .adc5stream_tvalid(),
+    .adc6stream_tvalid(),
+    .adc7stream_tvalid(),
     .adc0stream_tready(1'b1),
     .adc1stream_tready(1'b1),
     .adc2stream_tready(1'b1),
@@ -548,6 +564,8 @@ system
     .adc6stream_tready(1'b1),
     .adc7stream_tready(1'b1)
     );
+
+    assign adcsTVALID[4+:4] = {4{1'b1}};
 `endif // `ifndef SIMULATE
 
 
