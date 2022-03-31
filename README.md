@@ -1,12 +1,13 @@
-High Speed Digitizer
-====================
+Digitizers
+==========
 
-Gateware/Software for High Speed digitizer
+Gateware/Software for High Speed digitizers, including
+High Speed Digitizer and Beam Position Monitor
 
 ### Building
 
 This repository contains both gateware and software
-for the High Speed Digitizer project.
+for some High Speed digitizers.
 
 #### Gateware Dependencies
 
