@@ -108,17 +108,21 @@ main(void)
     microsecondSpin(100000);
     rfClkInit();
     microsecondSpin(100000);
+    rfClkShow();
+    microsecondSpin(100000);
     mmcmInit();
     microsecondSpin(100000);
     sysrefInit();
     microsecondSpin(100000);
+    sysrefShow();
+    microsecondSpin(100000);
     rfADCinit();
     microsecondSpin(100000);
-    afeInit();
+    //afeInit();
     rfADCrestart();
     rfADCshow();
     rfADCsync();
-    afeStart();
+    //afeStart();
 
     /* Start network */
     lwip_init();

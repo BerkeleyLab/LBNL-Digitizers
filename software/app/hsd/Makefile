@@ -6,9 +6,11 @@ CC = $(CROSS_COMPILE)gcc
 SIZE = $(CROSS_COMPILE)size
 XSCT ?= xsct -norlwrap
 
-APP_NAME ?= HighSpeedDigitizer
+include ../../../dir_list.mk
+
+APP_NAME ?= hsd
 TARGET   ?= zcu111
-GW_HSD_TGT_DIR = $(GW_HSD_DIR)/hsd_$(TARGET)
+GW_HSD_TGT_DIR = $(GW_SYN_DIR)/hsd_$(TARGET)
 BIT      ?= $(GW_HSD_TGT_DIR)/hsd_$(TARGET)_top.bit
 
 BIF   = $(SW_HSD_SCRIPTS_DIR)/BOOTGEN.bif
@@ -19,11 +21,9 @@ BIN   = $(THIS_DIR)/BOOT.bin
 # Vivado 2020.1 uses executable.elf name and Vivado 2020.2 uses fsbl_a53.elf
 FSBL  = $(THIS_DIR)/$(APP_NAME)/platform/zynqmp_fsbl/fsbl_a53.elf
 
-TARGET_DIR = target/$(TARGET)
+TARGET_DIR = $(SW_TGT_DIR)/$(TARGET)
 
 all: $(APP_NAME) $(APP_NAME).elf $(APP_NAME).elf.size $(BIN)
-
-include ../../dir_list.mk
 
 __SRC_FILES = \
 	acquisition.c \
@@ -49,7 +49,7 @@ __SRC_FILES = \
 	tftp.c \
 	user_mgt_refclk.c \
 	util.c
-SRC_FILES = $(addprefix $(SW_HSD_SRC_DIR)/, $(__SRC_FILES))
+SRC_FILES = $(addprefix $(SW_SRC_DIR)/, $(__SRC_FILES))
 
 __HDR_FILES = \
 	acquisition.h \
@@ -77,15 +77,15 @@ __HDR_FILES = \
 	tftp.h \
 	user_mgt_refclk.h \
 	util.h
-HDR_FILES = $(addprefix $(SW_HSD_SRC_DIR)/, $(__HDR_FILES))
+HDR_FILES = $(addprefix $(SW_SRC_DIR)/, $(__HDR_FILES))
 
 __HDR_GEN_FILES = \
 	softwareBuildDate.h
-HDR_GEN_FILES = $(addprefix $(SW_HSD_SRC_DIR)/, $(__HDR_GEN_FILES))
+HDR_GEN_FILES = $(addprefix $(SW_SRC_DIR)/, $(__HDR_GEN_FILES))
 
 include $(TARGET_DIR)/$(TARGET).mk
 
-ST7789V_DIR = libs/st7789v
+ST7789V_DIR = $(SW_LIBS_DIR)/st7789v
 __ST7789V_SRC_FILES = \
 	systemFont.c
 __ST7789V_HDR_FILES =\
@@ -106,7 +106,7 @@ SRC_FILES += $(ST7789V_SRC_FILES)
 HDR_FILES += $(ST7789V_HDR_FILES)
 
 OBJ_FILES = $(SRC_FILES:.c=.o)
-LINKER_FILES = $(SW_HSD_SRC_DIR)/lscript.ld
+LINKER_FILES = $(SW_SRC_DIR)/lscript.ld
 
 CFLAGS = -Wall -O2 -fmessage-length=0
 LD_FLAGS = -Wl,-T -Wl,$(LINKER_FILES)
@@ -124,7 +124,7 @@ else
 endif
 
 INCLUDE_DIRS = \
-	src \
+	$(SW_SRC_DIR) \
 	$(TARGET_DIR) \
 	$(APP_NAME)/platform/export/platform/sw/platform/standalone_domain/bspinclude/include \
 	$(ST7789V_DIR)
@@ -132,10 +132,9 @@ INCLUDE_FLAGS = $(addprefix -I, $(INCLUDE_DIRS))
 
 .PHONY: all clean bsp
 
-vpath *.c $(SW_HSD_SRC_DIR) $(ST7789V_DIR) $(TARGET_DIR)
-vpath *.h $(SW_HSD_SRC_DIR) $(ST7789V_DIR) $(TARGET_DIR)
-vpath *.o $(SW_HSD_SRC_DIR) $(ST7789V_DIR)
-vpath *.tcs $(SW_HSD_SRC_DIR)
+vpath *.c $(SW_SRC_DIR) $(ST7789V_DIR) $(TARGET_DIR)
+vpath *.h $(SW_SRC_DIR) $(ST7789V_DIR) $(TARGET_DIR)
+vpath *.o $(SW_SRC_DIR) $(ST7789V_DIR)
 vpath *.bif $(SW_HSD_SCRIPTS_DIR)
 vpath *.bif.in $(SW_HSD_SCRIPTS_DIR)
 
