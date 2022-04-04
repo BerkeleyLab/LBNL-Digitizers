@@ -30,6 +30,7 @@ RUN apt-get update && \
     gcc-riscv64-unknown-elf \
     picolibc-riscv64-unknown-elf \
     cmake \
+    libidn11 \
     libftdi1-dev \
     libusb-dev \
     verilator \
