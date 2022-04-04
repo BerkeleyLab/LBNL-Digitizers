@@ -60,10 +60,10 @@ gw_hsd_zcu208:
 # description...
 sw_hsd_zcu111:
   before_script:
-    - ls -la gateware/syn/hsd_zcu111/hsd_zcu111_top.bit && ls -la gateware/syn/hsd_zcu111 && cd software/app/hsd
+    - cd software/app/hsd
   stage: software
   script:
-    - make clean && ls -la ../../../gateware/syn/hsd_zcu111/hsd_zcu111_top.bit && ls -la ../../../gateware/syn/hsd_zcu111 && PATH=$XILINX_VITIS/bin:$PATH time make TARGET=zcu111
+    - make clean && PATH=$XILINX_VITIS/bin:$PATH time make TARGET=zcu111
   # Get artifacts from this job, needed to compile the sofware
   needs:
     - job: gw_hsd_zcu111
