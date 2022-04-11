@@ -9,9 +9,9 @@ XSCT ?= xsct -norlwrap
 include ../../../dir_list.mk
 
 APP_NAME ?= hsd
-TARGET   ?= zcu111
-GW_HSD_TGT_DIR = $(GW_SYN_DIR)/hsd_$(TARGET)
-BIT      ?= $(GW_HSD_TGT_DIR)/hsd_$(TARGET)_top.bit
+TARGET   ?= hsd_zcu111
+GW_HSD_TGT_DIR = $(GW_SYN_DIR)/$(TARGET)
+BIT      ?= $(GW_HSD_TGT_DIR)/$(TARGET)_top.bit
 
 BIF   = $(SW_HSD_SCRIPTS_DIR)/BOOTGEN.bif
 APP   = $(THIS_DIR)/$(APP_NAME).elf
@@ -92,10 +92,10 @@ __ST7789V_HDR_FILES =\
 	lv_font.h \
 	st7789v.h
 
-ifeq ($(TARGET),zcu111)
+ifeq ($(TARGET),hsd_zcu111)
 	__ST7789V_SRC_FILES += \
 		st7789v.c
-else ifeq ($(TARGET),zcu208)
+else ifeq ($(TARGET),hsd_zcu208)
 	__ST7789V_SRC_FILES += \
 		st7789v_stub.c
 endif
@@ -115,10 +115,10 @@ LIB_DIRS = $(APP_NAME)/platform/export/platform/sw/platform/standalone_domain/bs
 LIB_FLAGS = $(addprefix -L, $(LIB_DIRS))
 LIBS = -Wl,--start-group,-lxil,-lgcc,-lc,--end-group -Wl,--start-group,-lxil,-lmetal,-lgcc,-lc,--end-group -Wl,--start-group,-lxil,-llwip4,-lgcc,-lc,--end-group -Wl,--start-group,-lxilffs,-lxil,-lgcc,-lc,--end-group -Wl,--start-group,-lxilpm,-lxil,-lgcc,-lc,--end-group -Wl,--start-group,-lxil,-lgcc,-lc,-lmetal,--end-group
 
-ifeq ($(TARGET),zcu111)
-	USER_FLAGS += -D__TARGET_ZCU111__
-else ifeq ($(TARGET),zcu208)
-	USER_FLAGS += -D__TARGET_ZCU208__
+ifeq ($(TARGET),hsd_zcu111)
+	USER_FLAGS += -D__TARGET_HSD_ZCU111__
+else ifeq ($(TARGET),hsd_zcu208)
+	USER_FLAGS += -D__TARGET_HSD_ZCU208__
 else
 	USER_FLAGS += -D__TARGET_NOT_RECOGNIZED__
 endif
