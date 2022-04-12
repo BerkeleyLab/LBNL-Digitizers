@@ -70,5 +70,5 @@ The following script can download the software via JTAG:
 
 ```bash
 cd software/scripts
-xsct download_elf.tcl ../../gateware/syn/hsd_zcu111/psu_init.tcl ../hsd/HighSpeedDigitizer.elf
+xsct download_elf.tcl ../../gateware/syn/hsd_zcu111/psu_init.tcl ../app/hsd/hsd_zcu111.elf
 ```
