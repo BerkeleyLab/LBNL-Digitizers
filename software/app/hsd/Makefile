@@ -13,7 +13,7 @@ GW_HSD_TGT_DIR = $(GW_SYN_DIR)/$(TARGET)
 BIT      ?= $(GW_HSD_TGT_DIR)/$(TARGET)_top.bit
 
 BIF   = $(SW_HSD_SCRIPTS_DIR)/BOOTGEN.bif
-APP   = $(THIS_DIR)/$(TARGET).elf
+ELF   = $(THIS_DIR)/$(TARGET).elf
 PMUFW = $(THIS_DIR)/$(TARGET)/platform/export/platform/sw/platform/boot/pmufw.elf
 BIN   = $(THIS_DIR)/BOOT.bin
 
@@ -158,14 +158,14 @@ $(TARGET).elf.size: $(TARGET).elf
 %.o: %.c
 	$(CC) -MMD -MP -MF"$(@:%.o=%.d)" -MT"$@" $(CFLAGS) $(USER_FLAGS) $(INCLUDE_FLAGS) -c $*.c -o $@
 
-$(BIN): $(BIF) $(FSBL) $(PMUFW) $(BIT) $(APP)
+$(BIN): $(BIF) $(FSBL) $(PMUFW) $(BIT) $(ELF)
 	bootgen -image "$<" -w on -arch zynqmp -o "$@"
 
 %.bif: %.bif.in
 	sed -e 's|$$BOOTLOADER|$(FSBL)|g' \
 		-e 's|$$PMUFW_IMAGE|$(PMUFW)|g' \
 		-e 's|$$BIT|$(BIT)|g' \
-		-e 's|$$APP|$(APP)|g' \
+		-e 's|$$APP|$(ELF)|g' \
 		$< > $@
 
 clean::
