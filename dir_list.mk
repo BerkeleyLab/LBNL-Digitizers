@@ -35,7 +35,6 @@ SW_HSD_SCRIPTS_DIR = $(SW_HSD_DIR)/scripts
 
 # BPM Sofware
 
-# Same as HSD for now
 SW_BPM_DIR         = $(SW_APP_DIR)/bpm
 SW_BPM_SCRIPTS_DIR = $(SW_BPM_DIR)/scripts
 
