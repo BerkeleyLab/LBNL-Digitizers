@@ -8,22 +8,21 @@ XSCT ?= xsct -norlwrap
 
 include ../../../dir_list.mk
 
-APP_NAME ?= hsd
 TARGET   ?= hsd_zcu111
 GW_HSD_TGT_DIR = $(GW_SYN_DIR)/$(TARGET)
 BIT      ?= $(GW_HSD_TGT_DIR)/$(TARGET)_top.bit
 
 BIF   = $(SW_HSD_SCRIPTS_DIR)/BOOTGEN.bif
-APP   = $(THIS_DIR)/$(APP_NAME).elf
-PMUFW = $(THIS_DIR)/$(APP_NAME)/platform/export/platform/sw/platform/boot/pmufw.elf
+APP   = $(THIS_DIR)/$(TARGET).elf
+PMUFW = $(THIS_DIR)/$(TARGET)/platform/export/platform/sw/platform/boot/pmufw.elf
 BIN   = $(THIS_DIR)/BOOT.bin
 
 # Vivado 2020.1 uses executable.elf name and Vivado 2020.2 uses fsbl_a53.elf
-FSBL  = $(THIS_DIR)/$(APP_NAME)/platform/zynqmp_fsbl/fsbl_a53.elf
+FSBL  = $(THIS_DIR)/$(TARGET)/platform/zynqmp_fsbl/fsbl_a53.elf
 
 TARGET_DIR = $(SW_TGT_DIR)/$(TARGET)
 
-all: $(APP_NAME) $(APP_NAME).elf $(APP_NAME).elf.size $(BIN)
+all: $(TARGET) $(TARGET).elf $(TARGET).elf.size $(BIN)
 
 __SRC_FILES = \
 	acquisition.c \
@@ -111,7 +110,7 @@ LINKER_FILES = $(SW_SRC_DIR)/lscript.ld
 CFLAGS = -Wall -O2 -fmessage-length=0
 LD_FLAGS = -Wl,-T -Wl,$(LINKER_FILES)
 USER_FLAGS = -DST7789_GRAB_SCREEN -D__BAREMETAL__
-LIB_DIRS = $(APP_NAME)/platform/export/platform/sw/platform/standalone_domain/bsplib/lib
+LIB_DIRS = $(TARGET)/platform/export/platform/sw/platform/standalone_domain/bsplib/lib
 LIB_FLAGS = $(addprefix -L, $(LIB_DIRS))
 LIBS = -Wl,--start-group,-lxil,-lgcc,-lc,--end-group -Wl,--start-group,-lxil,-lmetal,-lgcc,-lc,--end-group -Wl,--start-group,-lxil,-llwip4,-lgcc,-lc,--end-group -Wl,--start-group,-lxilffs,-lxil,-lgcc,-lc,--end-group -Wl,--start-group,-lxilpm,-lxil,-lgcc,-lc,--end-group -Wl,--start-group,-lxil,-lgcc,-lc,-lmetal,--end-group
 
@@ -126,7 +125,7 @@ endif
 INCLUDE_DIRS = \
 	$(SW_SRC_DIR) \
 	$(TARGET_DIR) \
-	$(APP_NAME)/platform/export/platform/sw/platform/standalone_domain/bspinclude/include \
+	$(TARGET)/platform/export/platform/sw/platform/standalone_domain/bspinclude/include \
 	$(ST7789V_DIR)
 INCLUDE_FLAGS = $(addprefix -I, $(INCLUDE_DIRS))
 
@@ -143,13 +142,13 @@ vpath *.bif.in $(SW_HSD_SCRIPTS_DIR)
 
 # FIXME: We are considering BSP done if the directory exists. This
 # could lead to mismatches!
-$(APP_NAME):
-	$(XSCT) $(SW_SCRIPTS_DIR)/gen_vitis_platform.tcl $(APP_NAME) $(GW_HSD_TGT_DIR)/system.xsa
+$(TARGET):
+	$(XSCT) $(SW_SCRIPTS_DIR)/gen_vitis_platform.tcl $(TARGET) $(GW_HSD_TGT_DIR)/system.xsa
 
-$(APP_NAME).elf: $(HDR_FILES) $(HDR_GEN_FILES) $(OBJ_FILES) $(LINKER_FILES)
+$(TARGET).elf: $(HDR_FILES) $(HDR_GEN_FILES) $(OBJ_FILES) $(LINKER_FILES)
 	$(CC) $(CFLAGS) $(USER_FLAGS) $(INCLUDE_FLAGS) $(LIB_FLAGS) $(LD_FLAGS) -o $@ $(filter %.o, $^) $(LIBS)
 
-$(APP_NAME).elf.size: $(APP_NAME).elf
+$(TARGET).elf.size: $(TARGET).elf
 	$(SIZE) $< | tee $@
 
 # Pull in dependency info for *existing* .o files and don't complain if the
@@ -170,5 +169,5 @@ $(BIN): $(BIF) $(FSBL) $(PMUFW) $(BIT) $(APP)
 		$< > $@
 
 clean::
-	$(RM) -rf $(APP_NAME).elf $(APP_NAME).elf.size $(HDR_GEN_FILES) \
-		$(OBJ_FILES) $(OBJ_FILES:.o=.d) $(APP_NAME) $(BIF) $(BIN)
+	$(RM) -rf $(TARGET).elf $(TARGET).elf.size $(HDR_GEN_FILES) \
+		$(OBJ_FILES) $(OBJ_FILES:.o=.d) $(TARGET) $(BIF) $(BIN)
