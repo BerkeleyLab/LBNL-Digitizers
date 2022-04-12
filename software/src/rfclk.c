@@ -23,7 +23,7 @@ rfClkInitLMK04xx(void)
     for (i = 0 ; i < sizeof lmk04208 / sizeof lmk04208[0] ; i++) {
         lmk04208write(lmk04208[i]);
     }
-#elif defined (__TARGET_HSD_ZCU208__)
+#elif defined (__TARGET_HSD_ZCU208__) || defined (__TARGET_BPM_ZCU208__)
     static const uint32_t lmk04828B[] = {
 #include "lmk04828B.h"
     };
