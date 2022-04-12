@@ -16,6 +16,16 @@ const unsigned int lmx2594MuxSel[LMX2594_MUX_SEL_SIZE] = {
     SPI_MUX_2594_B_DAC,  // Tile 228, 229, 230, 231 (DAC 0, 1, 2, 3, 4, 5, 6, 7)
 };
 
+// Same values for ADC/DAC
+static const uint32_t lmx2594Defaults[] = {
+#include "lmx2594.h"
+};
+
+#define LMX2594_SIZE (sizeof lmx2594Defaults/sizeof lmx2594Defaults[0])
+
+const uint32_t *lmx2594Values[LMX2594_MUX_SEL_SIZE];
+uint32_t lmx2594Sizes[LMX2594_MUX_SEL_SIZE];
+
 #define C0_M_IIC_ADDRESS  0x75   /* Address of controller 0 multiplexer */
 #define C1_M0_IIC_ADDRESS 0x74   /* Address of controller 1 multiplexer 0 */
 
@@ -124,6 +134,12 @@ iicInit(void)
         cp->muxPort[0] = i == 0 ? MUXPORT_NONE : MUXPORT_UNKNOWN;
         cp->muxPort[1] = MUXPORT_UNKNOWN;
     }
+
+    // LMX and LMK init values
+    lmx2594Values[0] = lmx2594Defaults;
+    lmx2594Values[1] = lmx2594Defaults;
+    lmx2594Sizes[0] = LMX2594_SIZE;
+    lmx2594Sizes[1] = LMX2594_SIZE;
 
     /*
      * Configure port expander 0_1 as output and drive low -- this works

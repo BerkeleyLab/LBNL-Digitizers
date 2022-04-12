@@ -56,6 +56,8 @@
 #define LMX2594_MUX_SEL_SIZE  3
 
 extern const unsigned int lmx2594MuxSel[];
+extern const uint32_t *lmx2594Values[];
+extern uint32_t lmx2594Sizes[];
 
 void iicInit(void);
 int iicRead(unsigned int deviceIndex, int subAddress, uint8_t *buf, int n);

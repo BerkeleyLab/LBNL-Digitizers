@@ -189,12 +189,12 @@ epicsCommonCommand(int commandArgCount, struct hsdPacket *cmdp,
     case HSD_PROTOCOL_CMD_HI_PLL_CONFIG:
         switch (lo) {
         case HSD_PROTOCOL_CMD_PLL_CONFIG_LO_SET:
-            lmx2594Config(cmdp->args, commandArgCount);
+            lmx2594ConfigAllSame(cmdp->args, commandArgCount);
             replyArgCount = 0;
             break;
 
         case HSD_PROTOCOL_CMD_PLL_CONFIG_LO_GET:
-            replyArgCount = lmx2594Readback(replyp->args,
+            replyArgCount = lmx2594ReadbackFirst(replyp->args,
                                                      HSD_PROTOCOL_ARG_CAPACITY);
             break;
 

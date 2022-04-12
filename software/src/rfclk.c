@@ -3,6 +3,7 @@
  */
 #include <stdio.h>
 #include <stdint.h>
+#include <xil_assert.h>
 #include "iic.h"
 #include "rfadc.h"
 #include "rfclk.h"
@@ -42,6 +43,8 @@ static const char * const vTuneNames[4] =
 static void
 init2594(int muxSelect, const uint32_t *values, int n)
 {
+    Xil_AssertVoid(muxSelect < LMX2594_MUX_SEL_SIZE);
+
     int i;
 
     /*
@@ -71,6 +74,8 @@ init2594(int muxSelect, const uint32_t *values, int n)
 static void
 start2594(int muxSelect)
 {
+    Xil_AssertVoid(muxSelect < LMX2594_MUX_SEL_SIZE);
+
     int vTuneCode;
     uint32_t v0 = lmx2594read(muxSelect, 0);
 
@@ -94,43 +99,54 @@ start2594(int muxSelect)
     }
 }
 
-static const uint32_t lmx2594Defaults[] = {
-#include "lmx2594.h"
-};
+void
+lmx2594Config(int muxSelect, const uint32_t *values, int n)
+{
+    Xil_AssertVoid(muxSelect < LMX2594_MUX_SEL_SIZE);
+
+    init2594(muxSelect, values, n);
+    start2594(muxSelect);
+}
 
 void
-lmx2594Config(const uint32_t *values, int n)
+lmx2594ConfigAllSame(const uint32_t *values, int n)
 {
     int i;
-    for (i = 0 ; i < LMX2594_MUX_SEL_SIZE ; i++) {
-        init2594(lmx2594MuxSel[i], values, n);
-    }
-    for (i = 0 ; i < LMX2594_MUX_SEL_SIZE ; i++) {
-        start2594(lmx2594MuxSel[i]);
+    for (i = 0 ; i < LMX2594_MUX_SEL_SIZE; i++) {
+        lmx2594Config(lmx2594MuxSel[i], values, n);
     }
 }
 
 int
-lmx2594Readback(uint32_t *values, int capacity)
+lmx2594Readback(int muxSelect, uint32_t *values, int capacity)
 {
+    Xil_AssertNonvoid(muxSelect < LMX2594_MUX_SEL_SIZE);
+
     int i;
-    int n = sizeof lmx2594Defaults / sizeof lmx2594Defaults[0];
+    int n = lmx2594Sizes[muxSelect];
     for (i = 0 ; (i < n) && (i < capacity) ; i++) {
         int r = n - i - 1;
-        int v = lmx2594read(lmx2594MuxSel[0], r);
+        int v = lmx2594read(muxSelect, r);
         *values++ = (r << 16) | (v & 0xFFFF);
     }
     return n;
 }
 
+int
+lmx2594ReadbackFirst(uint32_t *values, int capacity)
+{
+    return lmx2594Readback(lmx2594MuxSel[0], values, capacity);
+}
+
 void
 rfClkInit(void)
 {
-    static const uint32_t values[] = {
-#include "lmx2594.h"
-    };
     rfClkInitLMK04xx();
-    lmx2594Config(values, sizeof lmx2594Defaults / sizeof lmx2594Defaults[0]);
+    int i;
+    for (i = 0 ; i < LMX2594_MUX_SEL_SIZE ; i++) {
+        lmx2594Config(lmx2594MuxSel[i], lmx2594Values[i],
+                lmx2594Sizes[i]);
+    }
 }
 
 void
