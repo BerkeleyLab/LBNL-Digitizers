@@ -147,7 +147,7 @@ main(void)
     epicsInit();
     tftpInit();
     acquisitionInit();
-for (int i = 0 ; i < CFG_ADC_CHANNEL_COUNT ; i++) { afeSetGain(i, 16); }
+    for (int i = 0 ; i < CFG_ADC_CHANNEL_COUNT ; i++) { afeSetGain(i, 16); }
 
     /*
      * Main processing loop
