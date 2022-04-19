@@ -9,7 +9,7 @@
 #ifndef _GPIO_H_
 #define _GPIO_H_
 
-#define GPIO_IDX_COUNT 64
+#define GPIO_IDX_COUNT 128
 
 #define GPIO_IDX_FIRMWARE_BUILD_DATE      0 // Firmware build POSIX seconds (R)
 #define GPIO_IDX_MICROSECONDS_SINCE_BOOT  1 // Microseconds since boot (R)
@@ -30,7 +30,7 @@
 #define GPIO_IDX_EVENT_LOG_TICKS         16 // Event logger ticks
 #define GPIO_IDX_ADC_RANGE_CSR           17 // Monitor ADC ranges
 #define GPIO_IDX_CLK104_SPI_MUX_CSR      18 // Select CLK104 SPI MUX
-#define CFG_AXI_SAMPLES_PER_CLOCK         2 // I/Q samples
+#define CFG_AXI_SAMPLES_PER_CLOCK         1 // 1 sample per clock
 
 #include <xil_io.h>
 #include <xparameters.h>

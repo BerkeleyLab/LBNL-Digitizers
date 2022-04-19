@@ -1,7 +1,7 @@
 module bpm_zcu208_top #(
     parameter ADC_WIDTH            = 14,
-    parameter SYSCLK_RATE          = 100000000,  // From block design
-    parameter BD_ADC_CHANNEL_COUNT = 8,
+    parameter SYSCLK_RATE          = 99999001,  // From block design
+    parameter BD_ADC_CHANNEL_COUNT = 16,
     parameter ADC_CHANNEL_DEBUG    = "false"
     ) (
     input  USER_MGT_SI570_CLK_P, USER_MGT_SI570_CLK_N,
@@ -268,10 +268,10 @@ calibration #(
 /////////////////////////////////////////////////////////////////////////////
 // Monitor range of signals at ADC inputs
 adcRangeCheck #(
-    .AXI_CHANNEL_COUNT(CFG_ADC_CHANNEL_COUNT), // 8
-    .AXI_SAMPLE_WIDTH(AXI_SAMPLE_WIDTH), // 16
-    .AXI_SAMPLES_PER_CLOCK(CFG_AXI_SAMPLES_PER_CLOCK), // 2
-    .ADC_WIDTH(ADC_WIDTH)) // 14
+    .AXI_CHANNEL_COUNT(CFG_ADC_CHANNEL_COUNT),
+    .AXI_SAMPLE_WIDTH(AXI_SAMPLE_WIDTH),
+    .AXI_SAMPLES_PER_CLOCK(CFG_AXI_SAMPLES_PER_CLOCK),
+    .ADC_WIDTH(ADC_WIDTH))
   adcRangeCheck (
     .sysClk(sysClk),
     .sysCsrStrobe(GPIO_STROBES[GPIO_IDX_ADC_RANGE_CSR]),
@@ -543,22 +543,21 @@ system
     .adc6Qstream_tdata(adcsTDATA[13*AXI_SAMPLE_WIDTH+:AXI_SAMPLE_WIDTH]),
     .adc7Qstream_tdata(adcsTDATA[15*AXI_SAMPLE_WIDTH+:AXI_SAMPLE_WIDTH]),
     .adc0stream_tvalid(adcsTVALID[0]),
-    .adc1stream_tvalid(adcsTVALID[1]),
-    .adc2stream_tvalid(adcsTVALID[2]),
-    .adc3stream_tvalid(adcsTVALID[3]),
-    .adc4stream_tvalid(adcsTVALID[4]),
-    .adc5stream_tvalid(adcsTVALID[5]),
-    .adc6stream_tvalid(adcsTVALID[6]),
-    .adc7stream_tvalid(adcsTVALID[7]),
-    // Ignored as I and Q samples must be cycle accurate
-    // .adc0Qstream_tvalid(adcsTVALID[1]),
-    // .adc1Qstream_tvalid(adcsTVALID[3]),
-    // .adc2Qstream_tvalid(adcsTVALID[5]),
-    // .adc3Qstream_tvalid(adcsTVALID[7]),
-    // .adc4Qstream_tvalid(adcsTVALID[9]),
-    // .adc5Qstream_tvalid(adcsTVALID[11]),
-    // .adc6Qstream_tvalid(adcsTVALID[13]),
-    // .adc7Qstream_tvalid(adcsTVALID[15]),
+    .adc1stream_tvalid(adcsTVALID[2]),
+    .adc2stream_tvalid(adcsTVALID[4]),
+    .adc3stream_tvalid(adcsTVALID[6]),
+    .adc4stream_tvalid(adcsTVALID[8]),
+    .adc5stream_tvalid(adcsTVALID[10]),
+    .adc6stream_tvalid(adcsTVALID[12]),
+    .adc7stream_tvalid(adcsTVALID[14]),
+    .adc0Qstream_tvalid(adcsTVALID[1]),
+    .adc1Qstream_tvalid(adcsTVALID[3]),
+    .adc2Qstream_tvalid(adcsTVALID[5]),
+    .adc3Qstream_tvalid(adcsTVALID[7]),
+    .adc4Qstream_tvalid(adcsTVALID[9]),
+    .adc5Qstream_tvalid(adcsTVALID[11]),
+    .adc6Qstream_tvalid(adcsTVALID[13]),
+    .adc7Qstream_tvalid(adcsTVALID[15]),
     .adc0stream_tready(1'b1),
     .adc1stream_tready(1'b1),
     .adc2stream_tready(1'b1),
