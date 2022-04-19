@@ -76,9 +76,9 @@ afeSetDAC(int value)
     cbuf[0] = 0x30;
     cbuf[1] = value >> 8;
     cbuf[2] = value;
-//    if (!iicWrite((DAC_ADDR << 8) | IIC_INDEX_RFMC, cbuf, 3)) {
-//        return -1;
-//    }
+    if (!iicWrite((DAC_ADDR << 8) | IIC_INDEX_RFMC, cbuf, 3)) {
+        return -1;
+    }
     ret = oldValue;
     oldValue = value;
     return ret;
@@ -168,17 +168,17 @@ afeInit(void)
         c[1] = 0x0;
         c[2] = 0x0;
         c[3] = 0x0;
-//        if (!iicWrite(((PORTEX_ADDR + i) << 8) | IIC_INDEX_RFMC, c, 4)) err = 1;
+        if (!iicWrite(((PORTEX_ADDR + i) << 8) | IIC_INDEX_RFMC, c, 4)) err = 1;
         c[0] = 0x8C;    /* Port direction */
         c[1] = 0x0;     /*    0 out */
         c[2] = 0x0;     /*    1 out */
         c[3] = 0xFF;    /*    2 in  */
- //       if (!iicWrite(((PORTEX_ADDR + i) << 8) | IIC_INDEX_RFMC, c, 4)) err = 1;
+        if (!iicWrite(((PORTEX_ADDR + i) << 8) | IIC_INDEX_RFMC, c, 4)) err = 1;
         if (err) warn("Can't set up port expander %d", i);
     }
 
     /* Get AFE serial number */
-    //iicRead((PORTEX_ADDR << 8) | IIC_INDEX_RFMC, 0x2, c, 1);
+    iicRead((PORTEX_ADDR << 8) | IIC_INDEX_RFMC, 0x2, c, 1);
     serialNumber = c[0];
 }
 
@@ -380,7 +380,7 @@ afeSetCoupling(unsigned int channel, int coupling)
     if (channel >= AFE_CHANNEL_COUNT) return -1;
     c[0] = reg;
     c[1] = (shadow[idx] & ~mask) | (((1 << coupling) << shift) & mask);
-//    if (!iicWrite((addr << 8) | IIC_INDEX_RFMC, c, 2)) return -1;
+    if (!iicWrite((addr << 8) | IIC_INDEX_RFMC, c, 2)) return -1;
     shadow[idx] = c[1];
     afeConfig[channel].coupling = coupling;
     return 0;
@@ -495,9 +495,9 @@ afeFetchEEPROM(void)
     if (fr != FR_OK) {
         return;
     }
-//    if (iicRead((0x50 << 8) | IIC_INDEX_RFMC, 0, buf, sizeof buf)) {
-//        f_write(&fil, buf, sizeof buf, &nWritten);
-//    }
+    if (iicRead((0x50 << 8) | IIC_INDEX_RFMC, 0, buf, sizeof buf)) {
+        f_write(&fil, buf, sizeof buf, &nWritten);
+    }
     f_close(&fil);
 }
 
@@ -530,14 +530,14 @@ afeStashEEPROM(void)
         }
         pass = 0;
         buf[0] = address;
-        //while (!iicWrite((0x50 << 8) | IIC_INDEX_RFMC, buf, nRead + 1)) {
-        //    if (++pass > 12) {
-        //        printf("IIC EEPROM write failed\n");
-        //        f_close(&fil);
-        //        return;
-        //    }
-        //    microsecondSpin(500);
-        //}
+        while (!iicWrite((0x50 << 8) | IIC_INDEX_RFMC, buf, nRead + 1)) {
+            if (++pass > 12) {
+                printf("IIC EEPROM write failed\n");
+                f_close(&fil);
+                return;
+            }
+            microsecondSpin(500);
+        }
         address += nRead;
     }
     f_close(&fil);
