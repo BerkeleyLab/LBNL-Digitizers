@@ -80,7 +80,7 @@ reg                  [31:0] sysAcqConfig1 = 0, sysAcqConfig2 = 0;
 // Values are left-adjusted in AXI word
 localparam ADC_SHIFT = AXI_SAMPLE_WIDTH - ADC_WIDTH;
 localparam ADC_ALL_SAMPLES_WIDTH = AXI_SAMPLES_PER_CLOCK * ADC_WIDTH;
-localparam ADC_MUX_SELECT_WIDTH = $clog2(AXI_SAMPLES_PER_CLOCK);
+localparam ADC_MUX_SELECT_WIDTH = $clog2(AXI_SAMPLES_PER_CLOCK+1);
 wire [ACQ_COUNTER_WIDTH:0] sysPretriggerCount =
                                            sysAcqConfig1[ACQ_COUNTER_WIDTH-1:0];
 wire [ACQ_COUNTER_WIDTH-1:0] sysContinuousPosttriggerCount =
