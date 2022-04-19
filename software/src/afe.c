@@ -91,7 +91,7 @@ afeMicrovoltsToCounts(unsigned int channel, int microVolts)
     double dacVolts, countsPerVolt, fCounts;
     int offset, iCounts;
 
-    if (channel >= CFG_ADC_CHANNEL_COUNT) return 32767;
+    if (channel >= CFG_ADC_PHYSICAL_COUNT) return 32767;
     ap = &afeConfig[channel];
     dacVolts = (2.5 * ap->calDAC) / 65536.0;
     countsPerVolt = (ap->calReading - ap->gndReading) / dacVolts;
@@ -188,7 +188,7 @@ afeStart(void)
     int i;
     /* Set default coupling */
     if (afeMissing) return;
-    for (i = 0 ; i < CFG_ADC_CHANNEL_COUNT ; i++) {
+    for (i = 0 ; i < CFG_ADC_PHYSICAL_COUNT ; i++) {
         if (afeSetCoupling(i, AFE_COUPLING_OPEN) < 0) {
             warn("Can't set AFE %d coupling", i);
         }
@@ -343,12 +343,12 @@ afeADCrestart(void)
     // DAC can drive 0V to all channels simultaneously since
     // termination resistors are connected to ground.
     afeSetDAC(0);
-    for (i = 0 ; i < CFG_ADC_CHANNEL_COUNT ; i++) {
+    for (i = 0 ; i < CFG_ADC_PHYSICAL_COUNT ; i++) {
         setPGA(i, AFE_PGA_CODE_FOR_MINIMUM_GAIN);
         afeSetCoupling(i, AFE_COUPLING_CALIBRATION);
     }
     // Unfreeze all ADCs
-    for (i = 0 ; i < CFG_ADC_CHANNEL_COUNT ; i++) {
+    for (i = 0 ; i < CFG_ADC_PHYSICAL_COUNT ; i++) {
         rfADCfreezeCalibration(i, 0);
     }
     // Perform ADC restart (foreground calibration)
@@ -356,11 +356,11 @@ afeADCrestart(void)
     // Perform ADC synchronization
     rfADCsync();
     // Uncouple DAC
-    for (i = 0 ; i < CFG_ADC_CHANNEL_COUNT ; i++) {
+    for (i = 0 ; i < CFG_ADC_PHYSICAL_COUNT ; i++) {
         afeSetCoupling(i, AFE_COUPLING_OPEN);
     }
     // Set gain and coupling and perform background training and calibration
-    for (i = 0 ; i < CFG_ADC_CHANNEL_COUNT ; i++) {
+    for (i = 0 ; i < CFG_ADC_PHYSICAL_COUNT ; i++) {
         calibrate(i);
     }
 }
@@ -390,7 +390,7 @@ int
 afeSetGain(unsigned int channel, int gainCode)
 {
     if (afeMissing) return 0;
-    if (channel >= CFG_ADC_CHANNEL_COUNT) return -1;
+    if (channel >= CFG_ADC_PHYSICAL_COUNT) return -1;
     afeConfig[channel].gainCode = gainCode;
     calibrate(channel);
     return 0;
@@ -463,7 +463,7 @@ afeFetchADCextents(uint32_t *buf)
 {
     int channel, i;
     GPIO_WRITE(GPIO_IDX_ADC_RANGE_CSR, ADC_RANGE_CSR_CMD_LATCH);
-    for (channel = 0 ; channel < CFG_ADC_CHANNEL_COUNT ; channel++) {
+    for (channel = 0 ; channel < CFG_ADC_PHYSICAL_COUNT ; channel++) {
         int min = INT_MAX, max = INT_MIN;
         for (i = 0 ; i < CFG_AXI_SAMPLES_PER_CLOCK ; i++) {
             int v;
@@ -476,7 +476,7 @@ afeFetchADCextents(uint32_t *buf)
         }
         *buf++ = (max << 16) | (min & 0xFFFF);
     }
-    return CFG_ADC_CHANNEL_COUNT;
+    return CFG_ADC_PHYSICAL_COUNT;
 }
 
 /*

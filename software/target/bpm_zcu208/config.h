@@ -32,9 +32,14 @@
 #define REFCLK_OUT_PER_SYSREF   100
 
 /*
- * Number of ADC channels required by application
+ * Number of ADC streams required by application
  */
-#define CFG_ADC_CHANNEL_COUNT    8 // I/Q
+#define CFG_ADC_CHANNEL_COUNT    16 // I/Q
+
+/*
+ * Number of physical ADC channels required by application
+ */
+#define CFG_ADC_PHYSICAL_COUNT    8
 
 /*
  * ADC sampling clock frequency

@@ -19,7 +19,7 @@ typedef int64_t __s64;
 #define XRFDC_ADC_OVR_RANGE_MASK    0x08000000U
 
 #define ADC_PER_TILE    2
-#define NTILES (((CFG_ADC_CHANNEL_COUNT)+(ADC_PER_TILE)-1)/(ADC_PER_TILE))
+#define NTILES (((CFG_ADC_PHYSICAL_COUNT)+(ADC_PER_TILE)-1)/(ADC_PER_TILE))
 
 #define REG_W_MASTER_RESET   0x0004
 #define REG_R_POWER_ON_STATE 0x0004
@@ -72,7 +72,7 @@ rfADCshow(void)
             int i;
             XRFdc_Mixer_Settings mixer;
             XRFdc_Cal_Freeze_Settings cfs;
-            if (adcIdx >= CFG_ADC_CHANNEL_COUNT) break;
+            if (adcIdx >= CFG_ADC_PHYSICAL_COUNT) break;
             XRFdc_GetLinkCoupling(&rfDC, tile, adc, &v);
             printf("        ADC %d: %cC link", adcIdx,  v ? 'A' : 'D');
             XRFdc_GetIntrStatus(&rfDC, XRFDC_ADC_TILE, tile, adc, &v);
@@ -298,7 +298,7 @@ rfADCstatus(void)
     for (tile = 0 ; tile < NTILES ; tile++) {
         for (adc = 0 ; adc < ADC_PER_TILE ; adc++) {
             int b = 0;
-            if (((tile * ADC_PER_TILE) + adc) >= CFG_ADC_CHANNEL_COUNT) break;
+            if (((tile * ADC_PER_TILE) + adc) >= CFG_ADC_PHYSICAL_COUNT) break;
             XRFdc_GetIntrStatus(&rfDC, XRFDC_ADC_TILE, tile, adc, &v);
             if (v) {
                 b |= (v & XRFDC_ADC_OVR_RANGE_MASK) ? 0x1 : 0;

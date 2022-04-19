@@ -35,6 +35,11 @@
 #define CFG_ADC_CHANNEL_COUNT    8
 
 /*
+ * Number of physical ADC channels required by application
+ */
+#define CFG_ADC_PHYSICAL_COUNT    8
+
+/*
  * ADC sampling clock frequency
  */
 #define CFG_ADC_SAMPLING_CLK_FREQ   3997.12
