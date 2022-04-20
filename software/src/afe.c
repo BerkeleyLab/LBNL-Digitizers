@@ -463,7 +463,7 @@ afeFetchADCextents(uint32_t *buf)
 {
     int channel, i;
     GPIO_WRITE(GPIO_IDX_ADC_RANGE_CSR, ADC_RANGE_CSR_CMD_LATCH);
-    for (channel = 0 ; channel < CFG_ADC_PHYSICAL_COUNT ; channel++) {
+    for (channel = 0 ; channel < CFG_ADC_CHANNEL_COUNT ; channel++) {
         int min = INT_MAX, max = INT_MIN;
         for (i = 0 ; i < CFG_AXI_SAMPLES_PER_CLOCK ; i++) {
             int v;
@@ -476,7 +476,7 @@ afeFetchADCextents(uint32_t *buf)
         }
         *buf++ = (max << 16) | (min & 0xFFFF);
     }
-    return CFG_ADC_PHYSICAL_COUNT;
+    return CFG_ADC_CHANNEL_COUNT;
 }
 
 /*
