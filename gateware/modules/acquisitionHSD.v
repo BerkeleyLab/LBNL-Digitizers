@@ -80,7 +80,9 @@ reg                  [31:0] sysAcqConfig1 = 0, sysAcqConfig2 = 0;
 // Values are left-adjusted in AXI word
 localparam ADC_SHIFT = AXI_SAMPLE_WIDTH - ADC_WIDTH;
 localparam ADC_ALL_SAMPLES_WIDTH = AXI_SAMPLES_PER_CLOCK * ADC_WIDTH;
-localparam ADC_MUX_SELECT_WIDTH = $clog2(AXI_SAMPLES_PER_CLOCK+1);
+localparam ADC_MUX_SELECT_WIDTH = $clog2(AXI_SAMPLES_PER_CLOCK);
+localparam ADC_MUX_SELECT_WIDTH_NONZERO = (ADC_MUX_SELECT_WIDTH == 0)? 1 : ADC_MUX_SELECT_WIDTH;
+localparam SINGLE_SAMPLE_PER_CLOCK = AXI_SAMPLES_PER_CLOCK == 1;
 wire [ACQ_COUNTER_WIDTH:0] sysPretriggerCount =
                                            sysAcqConfig1[ACQ_COUNTER_WIDTH-1:0];
 wire [ACQ_COUNTER_WIDTH-1:0] sysContinuousPosttriggerCount =
@@ -148,7 +150,7 @@ endgenerate
 // edge by requiring a full clock's worth of samples to be idle
 // before accepting trigger
 reg watchForTrigger = 0, watchForTrigger_d = 0;
-reg [ADC_MUX_SELECT_WIDTH-1:0] triggerLocation;
+reg [ADC_MUX_SELECT_WIDTH_NONZERO-1:0] triggerLocation;
 reg [ADC_RAM_ADDRESS_WIDTH-1:0] triggerDpramAddr;
 reg triggered = 0;
 always @(posedge adcClk) begin
@@ -296,8 +298,7 @@ end
 ///////////////////////////////////////////////////////////////////////////////
 // System Clock Domain
 
-reg  [ADC_RAM_ADDRESS_WIDTH+ADC_MUX_SELECT_WIDTH-1:0] sysReadOffset;
-reg [ADC_MUX_SELECT_WIDTH-1:0] sysMuxSelect;
+reg [ADC_MUX_SELECT_WIDTH_NONZERO-1:0] sysMuxSelect;
 reg [ADC_RAM_ADDRESS_WIDTH-1:0] sysDpramRdAddr;
 reg             [ADC_WIDTH-1:0] sysDataMux;
 
@@ -305,7 +306,8 @@ always @(posedge sysClk) begin
     sysAcqFinish_m <= acqFinish;
     sysAcqFinish   <= sysAcqFinish_m;
     if (sysCsrStrobe) begin
-        sysMuxSelect <= GPIO_OUT[0+:ADC_MUX_SELECT_WIDTH];
+        // Must have a valid slice, so must be NONZERO
+        sysMuxSelect <= GPIO_OUT[0+:ADC_MUX_SELECT_WIDTH_NONZERO];
         sysDpramRdAddr <= GPIO_OUT[ADC_MUX_SELECT_WIDTH+:ADC_RAM_ADDRESS_WIDTH]
                                                     - TRIGGER_DETECTION_LATENCY;
         sysAcqActive <= GPIO_OUT[31];
@@ -345,14 +347,24 @@ always @(posedge sysClk) begin
                          ((LONG_SEGMENT_CAPACITY / AXI_SAMPLES_PER_CLOCK) - 2) :
                          ((SHORT_SEGMENT_CAPACITY / AXI_SAMPLES_PER_CLOCK) - 2);
     dpramQ <= dpram[sysDpramRdAddr];
-    sysDataMux <= dpramQ[sysMuxSelect*ADC_WIDTH+:ADC_WIDTH];
+    sysDataMux <= (SINGLE_SAMPLE_PER_CLOCK)? dpramQ[0+:ADC_WIDTH] :
+        dpramQ[sysMuxSelect*ADC_WIDTH+:ADC_WIDTH];
 end
 assign sysStatus = { sysAcqActive, sysFull, sysSegMode,
                      {32-1-1-2-3-ADC_WIDTH-ADC_SHIFT{1'b0}},
                      acqState,
                      sysDataMux, {ADC_SHIFT{1'b0}} };
+
+generate
+if (SINGLE_SAMPLE_PER_CLOCK) begin
+assign sysTriggerLocation = { {32-ADC_WIDTH-ADC_SHIFT{1'b0}},
+                                            triggerDpramAddr };
+end
+else begin
 assign sysTriggerLocation = { {32-ADC_WIDTH-ADC_SHIFT{1'b0}},
                                             triggerDpramAddr, triggerLocation };
+end
+endgenerate
 
 ///////////////////////////////////////////////////////////////////////////////
 // EVR Clock Domain

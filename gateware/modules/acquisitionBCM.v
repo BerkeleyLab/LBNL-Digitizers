@@ -31,7 +31,9 @@ module acquisitionBCM #(
 localparam PASS_COUNT_WIDTH = $clog2(MAX_PASSES_PER_ACQUISITION) + 1;
 localparam DPRAM_WIDTH = ADC_WIDTH + $clog2(MAX_PASSES_PER_ACQUISITION);
 localparam DPRAM_ADDRESS_WIDTH = $clog2(SAMPLE_CAPACITY/AXI_SAMPLES_PER_CLOCK);
-localparam SAMPLE_INDEX_WIDTH = $clog2(AXI_SAMPLES_PER_CLOCK+1);
+localparam SAMPLE_INDEX_WIDTH = $clog2(AXI_SAMPLES_PER_CLOCK);
+localparam SAMPLE_INDEX_WIDTH_NONZERO = (SAMPLE_INDEX_WIDTH == 0)? 1 : SAMPLE_INDEX_WIDTH;
+localparam SINGLE_SAMPLE_PER_CLOCK = AXI_SAMPLES_PER_CLOCK == 1;
 localparam CHANNEL_INDEX_WIDTH = $clog2(CHANNEL_COUNT);
 localparam ADC_SHIFT = AXI_SAMPLE_WIDTH - ADC_WIDTH;
 
@@ -41,7 +43,7 @@ localparam ADC_SHIFT = AXI_SAMPLE_WIDTH - ADC_WIDTH;
 reg         [DPRAM_ADDRESS_WIDTH-1:0] sysAddress;
 reg         [DPRAM_ADDRESS_WIDTH-1:0] sysAcqCountReload;
 reg            [PASS_COUNT_WIDTH-1:0] sysPassCountReload;
-reg          [SAMPLE_INDEX_WIDTH-1:0] sysSampleIndex;
+reg          [SAMPLE_INDEX_WIDTH_NONZERO-1:0] sysSampleIndex;
 reg         [CHANNEL_INDEX_WIDTH-1:0] sysChannelIndex;
 reg sysAcqToggle = 0, acqAcqMatch = 0;
 wire sysAcqMatch;
@@ -68,7 +70,8 @@ always @(posedge sysClk) begin
         end
     end
     if (sysAddrStrobe) begin
-        sysSampleIndex <= GPIO_OUT[0+:SAMPLE_INDEX_WIDTH];
+        // Must have a valid slice, so must be NONZERO
+        sysSampleIndex <= GPIO_OUT[0+:SAMPLE_INDEX_WIDTH_NONZERO];
         sysAddress <= GPIO_OUT[SAMPLE_INDEX_WIDTH+:DPRAM_ADDRESS_WIDTH];
         sysChannelIndex <= GPIO_OUT[24+:CHANNEL_INDEX_WIDTH];
     end
@@ -190,8 +193,10 @@ endgenerate
 // address and reading the value for all clock crossing to stabilize.
 reg [DPRAM_WIDTH-1:0] dpramMUX;
 always @(posedge sysClk) begin
-    dpramMUX <= dpramQ[((sysChannelIndex * AXI_SAMPLES_PER_CLOCK) +
-                                    sysSampleIndex) * DPRAM_WIDTH+:DPRAM_WIDTH];
+    dpramMUX <= (SINGLE_SAMPLE_PER_CLOCK)? :
+        dpramQ[(sysChannelIndex * AXI_SAMPLES_PER_CLOCK) * DPRAM_WIDTH+:DPRAM_WIDTH];
+        dpramQ[((sysChannelIndex * AXI_SAMPLES_PER_CLOCK) +
+                 sysSampleIndex) * DPRAM_WIDTH+:DPRAM_WIDTH];
 end
 assign sysReadoutReg = $signed(dpramMUX) << ADC_SHIFT;
 
