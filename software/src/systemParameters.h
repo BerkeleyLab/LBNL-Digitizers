@@ -23,6 +23,10 @@ extern struct systemParameters {
     struct sysNetConfig netConfig;
     int                 userMGTrefClkOffsetPPM;
     int                 startupDebugFlags;
+    int                 rfDivisor;
+    int                 pllMultiplier;
+    int                 isSinglePass;
+    int                 evrPerFaMarker;
     uint32_t            checksum;
 } systemParameters;
 

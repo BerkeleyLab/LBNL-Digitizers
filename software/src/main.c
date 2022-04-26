@@ -25,6 +25,7 @@
 #include "systemParameters.h"
 #include "tftp.h"
 #include "util.h"
+#include "localOscillator.h"
 
 static void
 sfpString(const char *name, int offset)
@@ -147,6 +148,7 @@ main(void)
     epicsInit();
     tftpInit();
     acquisitionInit();
+    localOscillatorInit();
     for (int i = 0 ; i < CFG_ADC_PHYSICAL_COUNT ; i++) { afeSetGain(i, 16); }
 
     /*

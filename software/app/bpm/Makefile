@@ -46,6 +46,7 @@ __SRC_FILES = \
 	sysref.c \
 	systemParameters.c \
 	tftp.c \
+	localOscillator.c \
 	user_mgt_refclk.c \
 	util.c
 SRC_FILES = $(addprefix $(SW_SRC_DIR)/, $(__SRC_FILES))
@@ -74,6 +75,7 @@ __HDR_FILES = \
 	sysref.h \
 	systemParameters.h \
 	tftp.h \
+	loTables.h \
 	user_mgt_refclk.h \
 	util.h
 HDR_FILES = $(addprefix $(SW_SRC_DIR)/, $(__HDR_FILES))

@@ -54,6 +54,9 @@ work/
 /gateware/platform/xilinx/*/*/timeStampFIFO/
 !/gateware/platform/xilinx/*/*/timeStampFIFO/timeStampFIFO.xci
 
+# NCO tables
+*csv
+
 # generated from TICS files
 *lmk04208.h
 *lmx2594.h

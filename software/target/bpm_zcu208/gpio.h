@@ -30,7 +30,11 @@
 #define GPIO_IDX_EVENT_LOG_TICKS         16 // Event logger ticks
 #define GPIO_IDX_ADC_RANGE_CSR           17 // Monitor ADC ranges
 #define GPIO_IDX_CLK104_SPI_MUX_CSR      18 // Select CLK104 SPI MUX
+#define GPIO_IDX_LOTABLE_ADDRESS         19 // Local oscillator table write address
+#define GPIO_IDX_LOTABLE_CSR             20 // Local oscillator tables
 #define CFG_AXI_SAMPLES_PER_CLOCK         1 // 1 sample per clock
+#define CFG_LO_RF_ROW_CAPACITY           1024
+#define CFG_LO_PT_ROW_CAPACITY           8192
 
 #include <xil_io.h>
 #include <xparameters.h>
