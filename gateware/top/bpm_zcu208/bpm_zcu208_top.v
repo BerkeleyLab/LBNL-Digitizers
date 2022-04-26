@@ -1,9 +1,16 @@
 module bpm_zcu208_top #(
-    parameter ADC_WIDTH            = 14,
-    parameter SYSCLK_RATE          = 99999001,  // From block design
-    parameter BD_ADC_CHANNEL_COUNT = 16,
-    parameter ADC_CHANNEL_DEBUG    = "false"
-    ) (
+    parameter ADC_WIDTH                 = 14,
+    parameter AXI_SAMPLE_WIDTH          = ((ADC_WIDTH + 7) / 8) * 8,
+    parameter SYSCLK_RATE               = 99999001,  // From block design
+    parameter BD_ADC_CHANNEL_COUNT      = 16,
+    parameter ADC_CHANNEL_DEBUG         = "false",
+    parameter LO_WIDTH                  = 18,
+    parameter MAG_WIDTH                 = 26,
+    parameter PRODUCT_WIDTH             = AXI_SAMPLE_WIDTH + LO_WIDTH - 1,
+    parameter SITE_SAMPLES_PER_TURN     = 77,
+    parameter SITE_CIC_FA_DECIMATE      = 76,
+    parameter SITE_CIC_SA_DECIMATE      = 1000,
+    parameter SITE_CIC_STAGES           = 2) (
     input  USER_MGT_SI570_CLK_P, USER_MGT_SI570_CLK_N,
     input  SFP2_RX_P, SFP2_RX_N,
     output SFP2_TX_P, SFP2_TX_N,
@@ -244,7 +251,6 @@ end
 
 /////////////////////////////////////////////////////////////////////////////
 // Acquisition common
-localparam AXI_SAMPLE_WIDTH = ((ADC_WIDTH + 7) / 8) * 8;
 localparam SAMPLES_WIDTH    = CFG_AXI_SAMPLES_PER_CLOCK * AXI_SAMPLE_WIDTH;
 wire [(BD_ADC_CHANNEL_COUNT*SAMPLES_WIDTH)-1:0] adcsTDATA;
 wire                 [BD_ADC_CHANNEL_COUNT-1:0] adcsTVALID;
@@ -373,7 +379,7 @@ for (i = 0 ; i < NUMBER_OF_BONDED_GROUPS ; i = i + 1) begin
         .evrClk(evrClk),
         .evrTimestamp(evrTimestamp),
         .adcClk(adcClk),
-        .axiData(adcsTDATA[adc*SAMPLES_WIDTH+:SAMPLES_WIDTH]),
+        .axiData(dspTDATA[adc*SAMPLES_WIDTH+:SAMPLES_WIDTH]),
         .eventTriggerStrobes(adcEventTriggerStrobes),
         .bondedWriteEnableIn(bondedWriteEnable[0]),
         .bondedWriteAddressIn(bondedWriteAddress[0]),
@@ -595,6 +601,73 @@ system
 
 `endif // `ifndef SIMULATE
 
+assign dspTDATA[0*SAMPLES_WIDTH+:SAMPLES_WIDTH] = adcsTDATA[0*SAMPLES_WIDTH+:SAMPLES_WIDTH];
+assign dspTDATA[1*SAMPLES_WIDTH+:SAMPLES_WIDTH] = adcsTDATA[1*SAMPLES_WIDTH+:SAMPLES_WIDTH];
+assign dspTDATA[2*SAMPLES_WIDTH+:SAMPLES_WIDTH] = rfLOcos[0+:SAMPLES_WIDTH];
+assign dspTDATA[3*SAMPLES_WIDTH+:SAMPLES_WIDTH] = rfLOsin[0+:SAMPLES_WIDTH];
+assign dspTDATA[4*SAMPLES_WIDTH+:SAMPLES_WIDTH] = adcsTDATA[2*SAMPLES_WIDTH+:SAMPLES_WIDTH];
+assign dspTDATA[5*SAMPLES_WIDTH+:SAMPLES_WIDTH] = adcsTDATA[3*SAMPLES_WIDTH+:SAMPLES_WIDTH];
+assign dspTDATA[6*SAMPLES_WIDTH+:SAMPLES_WIDTH] = plLOcos[0+:SAMPLES_WIDTH];
+assign dspTDATA[7*SAMPLES_WIDTH+:SAMPLES_WIDTH] = plLOsin[0+:SAMPLES_WIDTH];
+
+//
+// Preliminary processing (compute magnitude of ADC signals)
+//
+wire sysSingleTrig;
+wire adcLoSynced;
+wire  [LO_WIDTH-1:0] rfLOcos, rfLOsin;
+wire  [LO_WIDTH-1:0] plLOcos, plLOsin;
+wire  [LO_WIDTH-1:0] phLOcos, phLOsin;
+wire  [(BD_ADC_CHANNEL_COUNT*SAMPLES_WIDTH)-1:0] dspTDATA;
+preliminaryProcessing #(.SYSCLK_RATE(SYSCLK_RATE),
+                        .ADC_WIDTH(AXI_SAMPLE_WIDTH),
+                        .MAG_WIDTH(MAG_WIDTH),
+                        .SAMPLES_PER_TURN(SITE_SAMPLES_PER_TURN),
+                        .LO_WIDTH(LO_WIDTH),
+                        .CIC_STAGES(SITE_CIC_STAGES),
+                        .CIC_FA_DECIMATE(SITE_CIC_FA_DECIMATE),
+                        .CIC_SA_DECIMATE(SITE_CIC_SA_DECIMATE),
+                        .GPIO_LO_RF_ROW_CAPACITY(CFG_LO_RF_ROW_CAPACITY),
+                        .GPIO_LO_PT_ROW_CAPACITY(CFG_LO_PT_ROW_CAPACITY))
+  prelimProc(
+    .clk(sysClk),
+    .adcClk(adcClk),
+    .adc0(adcsTDATA[0*SAMPLES_WIDTH+:SAMPLES_WIDTH]), // I0
+    .adc1(adcsTDATA[1*SAMPLES_WIDTH+:SAMPLES_WIDTH]), // Q0
+    .adc2(adcsTDATA[2*SAMPLES_WIDTH+:SAMPLES_WIDTH]), // I1
+    .adc3(adcsTDATA[3*SAMPLES_WIDTH+:SAMPLES_WIDTH]), // Q1
+    .adcExceedsThreshold(1'b0),
+    .adcUseThisSample(1'b1),
+    .evrClk(evrClk),
+    .evrFaMarker(1'b0),
+    .evrSaMarker(1'b0),
+    .evrTimestamp(evrTimestamp),
+    .evrPtTrigger(1'b0),
+    .evrSinglePassTrigger(1'b0),
+    .evrHbMarker(1'b0),
+    .sysSingleTrig(sysSingleTrig),
+    .sysTimestamp(evrTimestamp),
+    .PT_P(),
+    .PT_N(),
+    .gpioData(GPIO_OUT),
+    .localOscillatorAddressStrobe(GPIO_STROBES[GPIO_IDX_LOTABLE_ADDRESS]),
+    .localOscillatorCsrStrobe(GPIO_STROBES[GPIO_IDX_LOTABLE_CSR]),
+    .localOscillatorCsr(GPIO_IN[GPIO_IDX_LOTABLE_CSR]),
+    .sumShiftCsrStrobe(1'b0),
+    .autotrimCsrStrobe(1'b0),
+    .autotrimThresholdStrobe(1'b0),
+    .autotrimGainStrobes({1'b0,
+                          1'b0,
+                          1'b0,
+                          1'b0}),
+    .adcLoSynced(adcLoSynced),
+    .rfLOcosDbg(rfLOcos),
+    .rfLOsinDbg(rfLOsin),
+    .plLOcosDbg(plLOcos),
+    .plLOsinDbg(plLOsin),
+    .phLOcosDbg(phLOcos),
+    .phLOsinDbg(phLOsin)
+);
 
 evrLogger evrLogger (
     .sysClk(sysClk),
