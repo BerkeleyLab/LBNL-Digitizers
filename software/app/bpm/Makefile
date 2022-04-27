@@ -75,6 +75,7 @@ __HDR_FILES = \
 	sysref.h \
 	systemParameters.h \
 	tftp.h \
+	localOscillator.h \
 	loTables.h \
 	user_mgt_refclk.h \
 	util.h
