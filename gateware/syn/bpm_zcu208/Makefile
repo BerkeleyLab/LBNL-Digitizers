@@ -135,8 +135,8 @@ system_top.xdc: $(SYSTEM_TOP_PINS_XDC) $(IP_CORES_XDCS) $(SYSTEM_TOP_TIM_XDC)
 %firmwareBuildDate.v: set_firmware_build_date.tcl
 	$(VIVADO_CMD) -source $< -tclargs $@
 
-%gpioIDX.v: createVerilogIDX.sh
-	sh $< $(SW_TGT_DIR)/$(FPGA_APPLICATION)_$(HARDWARE)/config.h $(SW_TGT_DIR)/$(FPGA_APPLICATION)_$(HARDWARE)/gpio.h > $@
+%gpioIDX.v: $(SW_TGT_DIR)/$(FPGA_APPLICATION)_$(HARDWARE)/config.h $(SW_TGT_DIR)/$(FPGA_APPLICATION)_$(HARDWARE)/gpio.h
+	sh $(GW_SCRIPTS_DIR)/createVerilogIDX.sh $^ > $@
 
 ipcores_repos.tcl:
 	sed -e 's|$$DIRS|$(IP_CORES_CUSTOM_TARGET_DIRS)|g' \
