@@ -32,6 +32,28 @@
 #define GPIO_IDX_CLK104_SPI_MUX_CSR      18 // Select CLK104 SPI MUX
 #define GPIO_IDX_LOTABLE_ADDRESS         19 // Local oscillator table write address
 #define GPIO_IDX_LOTABLE_CSR             20 // Local oscillator tables
+#define GPIO_IDX_SUM_SHIFT_CSR           21 // Accumulator scaling values
+#define GPIO_IDX_AUTOTRIM_CSR            22 // Auto gain compensation control/status
+#define GPIO_IDX_AUTOTRIM_THRESHOLD      23 // Auto gain compensation tone threshold
+#define GPIO_IDX_ADC_GAIN_FACTOR_0       24 // Gain factor for ADC 0
+#define GPIO_IDX_ADC_GAIN_FACTOR_1       25 // Gain factor for ADC 1
+#define GPIO_IDX_ADC_GAIN_FACTOR_2       26 // Gain factor for ADC 2
+#define GPIO_IDX_ADC_GAIN_FACTOR_3       27 // Gain factor for ADC 3
+#define GPIO_IDX_PRELIM_RF_MAG_0         28 // ADC 0 RF (SA) magnitude
+#define GPIO_IDX_PRELIM_RF_MAG_1         29 // ADC 1 RF (SA) magnitude
+#define GPIO_IDX_PRELIM_RF_MAG_2         30 // ADC 2 RF (SA) magnitude
+#define GPIO_IDX_PRELIM_RF_MAG_3         31 // ADC 3 RF (SA) magnitude
+#define GPIO_IDX_PRELIM_PT_LO_MAG_0      32 // ADC 0 low freq pilot tone magnitude
+#define GPIO_IDX_PRELIM_PT_LO_MAG_1      33 // ADC 1 low freq pilot tone magnitude
+#define GPIO_IDX_PRELIM_PT_LO_MAG_2      34 // ADC 2 low freq pilot tone magnitude
+#define GPIO_IDX_PRELIM_PT_LO_MAG_3      35 // ADC 3 low freq pilot tone magnitude
+#define GPIO_IDX_PRELIM_PT_HI_MAG_0      36 // ADC 0 high freq pilot tone magnitude
+#define GPIO_IDX_PRELIM_PT_HI_MAG_1      37 // ADC 1 high freq pilot tone magnitude
+#define GPIO_IDX_PRELIM_PT_HI_MAG_2      38 // ADC 2 high freq pilot tone magnitude
+#define GPIO_IDX_PRELIM_PT_HI_MAG_3      39 // ADC 3 high freq pilot tone magnitude
+#define GPIO_IDX_SA_TIMESTAMP_SEC        40 // Slow acquisition time stamp
+#define GPIO_IDX_SA_TIMESTAMP_TICKS      41 // Slow acquisition time stamp
+
 #define CFG_AXI_SAMPLES_PER_CLOCK         1 // 1 sample per clock
 #define CFG_LO_RF_ROW_CAPACITY           1024
 #define CFG_LO_PT_ROW_CAPACITY           8192
