@@ -46,6 +46,7 @@ __SRC_FILES = \
 	sysref.c \
 	systemParameters.c \
 	tftp.c \
+	localOscillatorStub.c \
 	user_mgt_refclk.c \
 	util.c
 SRC_FILES = $(addprefix $(SW_SRC_DIR)/, $(__SRC_FILES))
@@ -73,6 +74,7 @@ __HDR_FILES = \
 	sysmon.h \
 	sysref.h \
 	systemParameters.h \
+	localOscillator.h \
 	tftp.h \
 	user_mgt_refclk.h \
 	util.h
