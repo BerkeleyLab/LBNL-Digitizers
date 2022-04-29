@@ -53,6 +53,7 @@ systemParametersReadback(void)
         systemParameters.startupDebugFlags = 0;
         systemParameters.rfDivisor = 328;
         systemParameters.pllMultiplier = 77;
+        systemParameters.isSinglePass = 0;
         systemParameters.evrPerFaMarker = 152 * 82;
     }
     debugFlags = systemParameters.startupDebugFlags;
