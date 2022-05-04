@@ -50,7 +50,7 @@ evrGTY_TOP = $(evrGTY_DIR)/synth/evrGTY.v
 prbsMMCM_DIR = $(PLATFORM_ZU48_BPM_DIR)/prbsMMCM
 prbsMMCM_TOP = $(prbsMMCM_DIR)/prbsMMCM.v
 adcCordic_DIR = $(PLATFORM_ZU48_BPM_DIR)/adcCordic
-adcCordic_TOP = $(adcCordic_DIR)/adcCordic.v
+adcCordic_TOP = $(adcCordic_DIR)/synth/adcCordic.vhd
 ila_td256_s4096_cap_DIR = $(PLATFORM_ZU48_BPM_DIR)/ila_td256_s4096_cap
 ila_td256_s4096_cap_TOP = $(ila_td256_s4096_cap_DIR)/synth/ila_td256_s4096_cap.v
 
@@ -113,8 +113,8 @@ ila_td256_s4096_cap_VFLAGS_COMMAND_FILE = ila_td256_s4096_cap_iverilog_cfile.txt
 
 VFLAGS_COMMAND_FILE += \
 					  $(evrGTY_VFLAGS_COMMAND_FILE) \
-					  $(prbsMMCM_VFLAGS_COMMAND_FILE) \
-					  $(adcCordic_VFLAGS_COMMAND_FILE)
+					  $(prbsMMCM_VFLAGS_COMMAND_FILE)
+#					  $(adcCordic_VFLAGS_COMMAND_FILE)
 # using ILA with verilog gives an error:
 # input buffer overflow, can't enlarge buffer because scanner uses REJECT,
 # but we don't need it for iverilog as we only use it when not simulating
