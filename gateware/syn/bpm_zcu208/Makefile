@@ -44,16 +44,18 @@ SYSTEM_TOP_TIM_XDC = $(TARGET)_top_tim.xdc
 include $(MODULES_DIR)/evr_axi_rules.mk
 include $(MODULES_DIR)/axi_lite_generic_reg_rules.mk
 
-IP_CORES += evrGTY prbsMMCM ila_td256_s4096_cap
+IP_CORES += evrGTY prbsMMCM adcCordic ila_td256_s4096_cap
 evrGTY_DIR = $(PLATFORM_ZU48_BPM_DIR)/evrGTY
 evrGTY_TOP = $(evrGTY_DIR)/synth/evrGTY.v
 prbsMMCM_DIR = $(PLATFORM_ZU48_BPM_DIR)/prbsMMCM
 prbsMMCM_TOP = $(prbsMMCM_DIR)/prbsMMCM.v
+adcCordic_DIR = $(PLATFORM_ZU48_BPM_DIR)/adcCordic
+adcCordic_TOP = $(adcCordic_DIR)/adcCordic.v
 ila_td256_s4096_cap_DIR = $(PLATFORM_ZU48_BPM_DIR)/ila_td256_s4096_cap
 ila_td256_s4096_cap_TOP = $(ila_td256_s4096_cap_DIR)/synth/ila_td256_s4096_cap.v
 
-IP_CORES_TOP_LVL_SRCS += $(evrGTY_TOP) $(prbsMMCM_TOP) $(ila_td256_s4096_cap_TOP)
-IP_CORES_DIRS += $(evrGTY_DIR) $(prbsMMCM_DIR) $(ila_td256_s4096_cap_DIR)
+IP_CORES_TOP_LVL_SRCS += $(evrGTY_TOP) $(prbsMMCM_TOP) $(adcCordic_TOP) $(ila_td256_s4096_cap_TOP)
+IP_CORES_DIRS += $(evrGTY_DIR) $(prbsMMCM_DIR) $(adcCordic_DIR) $(ila_td256_s4096_cap_DIR)
 IP_CORES_XDCS += $(evrGTY_TOP:%.v=%.xdc) $(prbsMMCM_TOP:%.v=%.xdc)
 
 IP_CORES_SRCS_DIRS = $(IP_CORES_DIRS)
@@ -106,11 +108,13 @@ VFLAGS_DEP += $(addprefix -I, $(BD_SRCS_DIRS))
 # the switches that will be consumed by iverilog later
 evrGTY_VFLAGS_COMMAND_FILE = evrGTY_iverilog_cfile.txt
 prbsMMCM_VFLAGS_COMMAND_FILE = prbsMMCM_iverilog_cfile.txt
+adcCordic_VFLAGS_COMMAND_FILE = adcCordic_iverilog_cfile.txt
 ila_td256_s4096_cap_VFLAGS_COMMAND_FILE = ila_td256_s4096_cap_iverilog_cfile.txt
 
 VFLAGS_COMMAND_FILE += \
 					  $(evrGTY_VFLAGS_COMMAND_FILE) \
-					  $(prbsMMCM_VFLAGS_COMMAND_FILE)
+					  $(prbsMMCM_VFLAGS_COMMAND_FILE) \
+					  $(adcCordic_VFLAGS_COMMAND_FILE)
 # using ILA with verilog gives an error:
 # input buffer overflow, can't enlarge buffer because scanner uses REJECT,
 # but we don't need it for iverilog as we only use it when not simulating
