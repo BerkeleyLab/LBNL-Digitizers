@@ -1,7 +1,8 @@
 __THIS_DIR := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 THIS_DIR := $(__THIS_DIR:/=)
 
-CROSS_COMPILE ?= aarch64-none-elf-
+VITIS_X_DIR = $(dir $(shell which vitis))../gnu/aarch64/lin/aarch64-none/bin
+CROSS_COMPILE ?= $(VITIS_X_DIR)/aarch64-none-elf-
 CC = $(CROSS_COMPILE)gcc
 SIZE = $(CROSS_COMPILE)size
 XSCT ?= xsct -norlwrap
