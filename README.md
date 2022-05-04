@@ -32,14 +32,6 @@ both gateware and software, plus the SD boot image .bin.
 make
 ```
 
-Remember that vivado and the ARM toolchain should be in your PATH. If that's
-not the case you can pass the ARM directory in the `CROSS_COMPILE` make
-variable:
-
-```bash
-make CROSS_COMPILE=<ARM_TOOLCHAIN_LOCATION>/bin/aarch64-none-elf-
-```
-
 A suggestion in running the `make` command is to measure the time
 and redirect stdout/stderr to a file so you can inspect it later:
 
