@@ -71,7 +71,7 @@ acquisitionArm(int channel, int enable)
 {
     uint32_t csr, config1, config2;
     struct acqConfig *ap;
-    
+
     if ((channel < 0) || (channel >= CFG_ADC_CHANNEL_COUNT)) return;
     ap = &acqConfig[channel];
     if (enable) {
@@ -129,10 +129,10 @@ acquisitionStatus(void)
 }
 
 static int
-fetch(int csr_idx, int dataLocation)
+fetch(int csr_idx, int data_idx, int dataLocation)
 {
     GPIO_WRITE(csr_idx, dataLocation);
-    return GPIO_READ(csr_idx) & 0xFFFF;
+    return GPIO_READ(data_idx);
 }
 
 /*
@@ -168,6 +168,7 @@ int
 acquisitionFetch(uint32_t *buf, int capacity, int channel, int offset, int last)
 {
     int csr_idx;
+    int data_idx;
     int triggerChannel;
     int triggerLocation, base;
     int segMode;
@@ -188,13 +189,13 @@ acquisitionFetch(uint32_t *buf, int capacity, int channel, int offset, int last)
         return 0;
     }
     csr_idx = REG(GPIO_IDX_ADC_0_CSR, channel);
+    data_idx = REG(GPIO_IDX_ADC_0_DATA, channel);
     segMode = acqConfig[triggerChannel].segMode;
     triggerLocation = GPIO_READ(REG(GPIO_IDX_ADC_0_TRIGGER_LOCATION, triggerChannel));
     base = (triggerLocation - acqConfig[triggerChannel].pretriggerCount +
              CFG_ACQUISITION_BUFFER_CAPACITY) % CFG_ACQUISITION_BUFFER_CAPACITY;
     while ((n < capacity) && (offset < last)) {
         int loc;
-        uint32_t v;
         if (offset == 0) {
             if (debugFlags & DEBUGFLAG_ACQUISITION) {
                 printf("Chan:%d(t%d) trigger@%d (%d:%d)\n", channel,
@@ -214,15 +215,8 @@ acquisitionFetch(uint32_t *buf, int capacity, int channel, int offset, int last)
         if (loc < 0) {
             break;
         }
-        v = fetch(csr_idx, loc);
+        *buf++ = fetch(csr_idx, data_idx, loc);
         n++;
-        offset++;
-        loc = dataLocation(segMode, base, offset);
-        if (loc < 0) {
-            *buf = v;
-            break;
-        }
-        *buf++ = v | (fetch(csr_idx, loc) << 16);
         offset++;
     }
     return n;
@@ -257,7 +251,7 @@ acquisitionSetTriggerLevel(int channel, int microvolts)
         printf("C%d uV:%d adc:%d\n", channel, microvolts, counts);
     }
     setTrigger(channel, TRIGGER_CONFIG_LEVEL_MASK, counts);
-                                    
+
 }
 void
 acquisitionScaleChanged(int channel)

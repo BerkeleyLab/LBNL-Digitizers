@@ -55,10 +55,11 @@
  * Application-specific registers
  */
 #define GPIO_IDX_ADC_0_CSR               64 // Acquisition control(W)/status(R)
-#define GPIO_IDX_ADC_0_TRIGGER_CONFIG    65 // Acquisition trigger info (W)
-#define GPIO_IDX_ADC_0_TRIGGER_LOCATION  65 // Acquisition trigger location (R)
-#define GPIO_IDX_ADC_0_SECONDS           66 // Acquisition trigger time (R)
-#define GPIO_IDX_ADC_0_CONFIG_1          66 // Acquisition configuration 1 (W)
-#define GPIO_IDX_ADC_0_TICKS             67 // Acquisition trigger time (R)
-#define GPIO_IDX_ADC_0_CONFIG_2          67 // Acquisition configuration 2 (W)
-#define GPIO_IDX_PER_ADC             4
+#define GPIO_IDX_ADC_0_DATA              65 // Acquisition data(R)
+#define GPIO_IDX_ADC_0_TRIGGER_CONFIG    66 // Acquisition trigger info (W)
+#define GPIO_IDX_ADC_0_TRIGGER_LOCATION  66 // Acquisition trigger location (R)
+#define GPIO_IDX_ADC_0_SECONDS           67 // Acquisition trigger time (R)
+#define GPIO_IDX_ADC_0_CONFIG_1          67 // Acquisition configuration 1 (W)
+#define GPIO_IDX_ADC_0_TICKS             68 // Acquisition trigger time (R)
+#define GPIO_IDX_ADC_0_CONFIG_2          68 // Acquisition configuration 2 (W)
+#define GPIO_IDX_PER_ADC             5

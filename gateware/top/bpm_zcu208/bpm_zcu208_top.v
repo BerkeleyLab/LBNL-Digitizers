@@ -7,6 +7,7 @@ module bpm_zcu208_top #(
     parameter LO_WIDTH                  = 18,
     parameter MAG_WIDTH                 = 26,
     parameter PRODUCT_WIDTH             = AXI_SAMPLE_WIDTH + LO_WIDTH - 1,
+    parameter ACQ_WIDTH                 = 32,
     parameter SITE_SAMPLES_PER_TURN     = 77,
     parameter SITE_CIC_FA_DECIMATE      = 76,
     parameter SITE_CIC_SA_DECIMATE      = 1000,
@@ -252,6 +253,7 @@ end
 /////////////////////////////////////////////////////////////////////////////
 // Acquisition common
 localparam SAMPLES_WIDTH    = CFG_AXI_SAMPLES_PER_CLOCK * AXI_SAMPLE_WIDTH;
+localparam ACQ_SAMPLES_WIDTH = ACQ_WIDTH;
 wire [(BD_ADC_CHANNEL_COUNT*SAMPLES_WIDTH)-1:0] adcsTDATA;
 wire                 [BD_ADC_CHANNEL_COUNT-1:0] adcsTVALID;
 
@@ -259,8 +261,8 @@ wire                 [BD_ADC_CHANNEL_COUNT-1:0] adcsTVALID;
 calibration #(
     .ADC_COUNT(CFG_ADC_CHANNEL_COUNT),
     .SAMPLES_PER_CLOCK(CFG_AXI_SAMPLES_PER_CLOCK),
-    .ADC_WIDTH(ADC_WIDTH),
-    .AXI_SAMPLE_WIDTH(AXI_SAMPLE_WIDTH))
+    .ADC_WIDTH(ACQ_SAMPLES_WIDTH),
+    .AXI_SAMPLE_WIDTH(ACQ_SAMPLES_WIDTH))
   calibration (
     .sysClk(sysClk),
     .csrStrobe(GPIO_STROBES[GPIO_IDX_CALIBRATION_CSR]),
@@ -269,22 +271,22 @@ calibration #(
     .prbsClk(prbsClk),
     .trainingSignal(TRAINING_SIGNAL),
     .adcClk(adcClk),
-    .adcsTDATA(adcsTDATA[0+:CFG_ADC_CHANNEL_COUNT*SAMPLES_WIDTH]));
+    .adcsTDATA(acqTDATA[0+:CFG_ADC_CHANNEL_COUNT*ACQ_SAMPLES_WIDTH]));
 
 /////////////////////////////////////////////////////////////////////////////
 // Monitor range of signals at ADC inputs
 adcRangeCheck #(
     .AXI_CHANNEL_COUNT(CFG_ADC_CHANNEL_COUNT),
-    .AXI_SAMPLE_WIDTH(AXI_SAMPLE_WIDTH),
+    .AXI_SAMPLE_WIDTH(ACQ_SAMPLES_WIDTH),
     .AXI_SAMPLES_PER_CLOCK(CFG_AXI_SAMPLES_PER_CLOCK),
-    .ADC_WIDTH(ADC_WIDTH))
+    .ADC_WIDTH(ACQ_SAMPLES_WIDTH))
   adcRangeCheck (
     .sysClk(sysClk),
     .sysCsrStrobe(GPIO_STROBES[GPIO_IDX_ADC_RANGE_CSR]),
     .GPIO_OUT(GPIO_OUT),
     .sysReadout(GPIO_IN[GPIO_IDX_ADC_RANGE_CSR]),
     .adcClk(adcClk),
-    .axiData(adcsTDATA[0+:CFG_ADC_CHANNEL_COUNT*SAMPLES_WIDTH]));
+    .axiData(acqTDATA[0+:CFG_ADC_CHANNEL_COUNT*ACQ_SAMPLES_WIDTH]));
 
 /////////////////////////////////////////////////////////////////////////////
 // Acquisition per style of firmware
@@ -296,7 +298,7 @@ adcRangeCheck #(
 acquisitionBRAM #(
     .ACQUISITION_BUFFER_CAPACITY(CFG_ACQUISITION_BUFFER_CAPACITY),
     .AXI_CHANNEL_COUNT(CFG_ADC_CHANNEL_COUNT),
-    .AXI_SAMPLE_WIDTH(AXI_SAMPLE_WIDTH),
+    .AXI_SAMPLE_WIDTH(ACQ_SAMPLES_WIDTH),
     .AXI_SAMPLES_PER_CLOCK(CFG_AXI_SAMPLES_PER_CLOCK))
   acquisitionBRAM (
     .sysClk(sysClk),
@@ -304,7 +306,7 @@ acquisitionBRAM #(
     .GPIO_OUT(GPIO_OUT),
     .sysStatus(GPIO_IN[GPIO_IDX_ADC_0_CSR]),
     .adcClk(adcClk),
-    .axiData(adcsTDATA));
+    .axiData(acqTDATA));
 `endif
 
 `ifdef FIRMWARE_STYLE_BCM
@@ -316,8 +318,8 @@ acquisitionBCM #(
     .SAMPLE_CAPACITY(CFG_ACQUISITION_BUFFER_CAPACITY),
     .MAX_PASSES_PER_ACQUISITION(CFG_MAX_PASSES_PER_ACQUISITION),
     .AXI_SAMPLES_PER_CLOCK(CFG_AXI_SAMPLES_PER_CLOCK),
-    .AXI_SAMPLE_WIDTH(AXI_SAMPLE_WIDTH),
-    .ADC_WIDTH(ADC_WIDTH))
+    .AXI_SAMPLE_WIDTH(ACQ_SAMPLES_WIDTH),
+    .ADC_WIDTH(ACQ_SAMPLES_WIDTH))
   acquisitionBCM (
     .sysClk(sysClk),
     .sysCsrStrobe(GPIO_STROBES[GPIO_IDX_ACQUISITION_CSR]),
@@ -332,7 +334,7 @@ acquisitionBCM #(
     .evrInjectionTrigger(evrTriggerBus[3]),
     .evrTimestamp(evrTimestamp),
     .adcClk(adcClk),
-    .axiData(adcsTDATA[0+:CFG_ADC_CHANNEL_COUNT*SAMPLES_WIDTH]));
+    .axiData(acqTDATA[0+:CFG_ADC_CHANNEL_COUNT*ACQ_SAMPLES_WIDTH]));
 
 assign BCM_SROC_GND = 0;
 `endif
@@ -361,8 +363,8 @@ for (i = 0 ; i < NUMBER_OF_BONDED_GROUPS ; i = i + 1) begin
         .EARLY_SEGMENTS_COUNT(CFG_EARLY_SEGMENTS_COUNT),
         .SEGMENT_PRETRIGGER_COUNT(CFG_SEGMENT_PRETRIGGER_COUNT),
         .AXI_SAMPLES_PER_CLOCK(CFG_AXI_SAMPLES_PER_CLOCK),
-        .AXI_SAMPLE_WIDTH(AXI_SAMPLE_WIDTH),
-        .ADC_WIDTH(ADC_WIDTH),
+        .AXI_SAMPLE_WIDTH(ACQ_SAMPLES_WIDTH),
+        .ADC_WIDTH(ACQ_SAMPLES_WIDTH),
         .TRIGGER_BUS_WIDTH(ACQ_TRIGGER_BUS_WIDTH),
         .DEBUG((adc == 0) ? ADC_CHANNEL_DEBUG : "false"))
       adcChannel (
@@ -373,13 +375,14 @@ for (i = 0 ; i < NUMBER_OF_BONDED_GROUPS ; i = i + 1) begin
         .sysAcqConfig2Strobe(GPIO_STROBES[GPIO_IDX_ADC_0_CONFIG_2+rOff]),
         .GPIO_OUT(GPIO_OUT),
         .sysStatus(GPIO_IN[GPIO_IDX_ADC_0_CSR+rOff]),
+        .sysData(GPIO_IN[GPIO_IDX_ADC_0_DATA+rOff]),
         .sysTriggerLocation(GPIO_IN[GPIO_IDX_ADC_0_TRIGGER_LOCATION+rOff]),
         .sysTriggerTimestamp({GPIO_IN[GPIO_IDX_ADC_0_SECONDS+rOff],
                               GPIO_IN[GPIO_IDX_ADC_0_TICKS+rOff]}),
         .evrClk(evrClk),
         .evrTimestamp(evrTimestamp),
         .adcClk(adcClk),
-        .axiData(dspTDATA[adc*SAMPLES_WIDTH+:SAMPLES_WIDTH]),
+        .axiData(acqTDATA[adc*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH]),
         .eventTriggerStrobes(adcEventTriggerStrobes),
         .bondedWriteEnableIn(bondedWriteEnable[0]),
         .bondedWriteAddressIn(bondedWriteAddress[0]),
@@ -601,14 +604,38 @@ system
 
 `endif // `ifndef SIMULATE
 
-assign dspTDATA[0*SAMPLES_WIDTH+:SAMPLES_WIDTH] = adcsTDATA[0*SAMPLES_WIDTH+:SAMPLES_WIDTH];
-assign dspTDATA[1*SAMPLES_WIDTH+:SAMPLES_WIDTH] = adcsTDATA[1*SAMPLES_WIDTH+:SAMPLES_WIDTH];
-assign dspTDATA[2*SAMPLES_WIDTH+:SAMPLES_WIDTH] = rfLOcos[0+:SAMPLES_WIDTH];
-assign dspTDATA[3*SAMPLES_WIDTH+:SAMPLES_WIDTH] = rfLOsin[0+:SAMPLES_WIDTH];
-assign dspTDATA[4*SAMPLES_WIDTH+:SAMPLES_WIDTH] = adcsTDATA[2*SAMPLES_WIDTH+:SAMPLES_WIDTH];
-assign dspTDATA[5*SAMPLES_WIDTH+:SAMPLES_WIDTH] = adcsTDATA[3*SAMPLES_WIDTH+:SAMPLES_WIDTH];
-assign dspTDATA[6*SAMPLES_WIDTH+:SAMPLES_WIDTH] = plLOcos[0+:SAMPLES_WIDTH];
-assign dspTDATA[7*SAMPLES_WIDTH+:SAMPLES_WIDTH] = plLOsin[0+:SAMPLES_WIDTH];
+assign acqTDATA[0*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
+    {ACQ_SAMPLES_WIDTH-SAMPLES_WIDTH{adcsTDATA[SAMPLES_WIDTH-1]}},
+    adcsTDATA[0*SAMPLES_WIDTH+:SAMPLES_WIDTH]
+};
+assign acqTDATA[1*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
+    {ACQ_SAMPLES_WIDTH-SAMPLES_WIDTH{adcsTDATA[2*SAMPLES_WIDTH-1]}},
+    adcsTDATA[SAMPLES_WIDTH+:SAMPLES_WIDTH]
+};
+assign acqTDATA[2*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
+    {ACQ_SAMPLES_WIDTH-PRODUCT_WIDTH{rfProducts[PRODUCT_WIDTH-1]}},
+    rfProducts[0+:PRODUCT_WIDTH]
+};
+assign acqTDATA[3*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
+    {ACQ_SAMPLES_WIDTH-PRODUCT_WIDTH{rfProducts[2*PRODUCT_WIDTH-1]}},
+    rfProducts[PRODUCT_WIDTH+:PRODUCT_WIDTH]
+};
+assign acqTDATA[4*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
+    {ACQ_SAMPLES_WIDTH-MAG_WIDTH{tbtSums[MAG_WIDTH-1]}},
+    tbtSums[0+:MAG_WIDTH]
+};
+assign acqTDATA[5*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
+    {ACQ_SAMPLES_WIDTH-MAG_WIDTH{tbtSums[2*MAG_WIDTH-1]}},
+    tbtSums[MAG_WIDTH+:MAG_WIDTH]
+};
+assign acqTDATA[6*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
+    {ACQ_SAMPLES_WIDTH-MAG_WIDTH{tbtMags[MAG_WIDTH-1]}},
+    tbtMags[0+:MAG_WIDTH]
+};
+assign acqTDATA[7*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
+    {ACQ_SAMPLES_WIDTH-MAG_WIDTH{tbtMags[2*MAG_WIDTH-1]}},
+    tbtMags[MAG_WIDTH+:MAG_WIDTH]
+};
 
 //
 // Preliminary processing (compute magnitude of ADC signals)
@@ -618,7 +645,7 @@ wire adcLoSynced;
 wire  [LO_WIDTH-1:0] rfLOcos, rfLOsin;
 wire  [LO_WIDTH-1:0] plLOcos, plLOsin;
 wire  [LO_WIDTH-1:0] phLOcos, phLOsin;
-wire  [(BD_ADC_CHANNEL_COUNT*SAMPLES_WIDTH)-1:0] dspTDATA;
+wire  [(BD_ADC_CHANNEL_COUNT*SAMPLES_WIDTH)-1:0] acqTDATA;
 preliminaryProcessing #(.SYSCLK_RATE(SYSCLK_RATE),
                         .ADC_WIDTH(AXI_SAMPLE_WIDTH),
                         .MAG_WIDTH(MAG_WIDTH),

@@ -23,6 +23,7 @@ module acquisitionHSD #(
     input              sysAcqConfig2Strobe,
     input       [31:0] GPIO_OUT,
     output wire [31:0] sysStatus,
+    output wire [31:0] sysData,
     output wire [31:0] sysTriggerLocation,
     output reg  [63:0] sysTriggerTimestamp,
 
@@ -351,9 +352,9 @@ always @(posedge sysClk) begin
         dpramQ[sysMuxSelect*ADC_WIDTH+:ADC_WIDTH];
 end
 assign sysStatus = { sysAcqActive, sysFull, sysSegMode,
-                     {32-1-1-2-3-ADC_WIDTH-ADC_SHIFT{1'b0}},
-                     acqState,
-                     sysDataMux, {ADC_SHIFT{1'b0}} };
+                     {32-1-1-2-3{1'b0}},
+                     acqState};
+assign sysData = { sysDataMux, {ADC_SHIFT{1'b0}} };
 
 generate
 if (SINGLE_SAMPLE_PER_CLOCK) begin
