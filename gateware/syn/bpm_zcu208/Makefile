@@ -114,7 +114,7 @@ ila_td256_s4096_cap_VFLAGS_COMMAND_FILE = ila_td256_s4096_cap_iverilog_cfile.txt
 VFLAGS_COMMAND_FILE += \
 					  $(evrGTY_VFLAGS_COMMAND_FILE) \
 					  $(prbsMMCM_VFLAGS_COMMAND_FILE)
-#					  $(adcCordic_VFLAGS_COMMAND_FILE)
+# $(adcCordic_VFLAGS_COMMAND_FILE)
 # using ILA with verilog gives an error:
 # input buffer overflow, can't enlarge buffer because scanner uses REJECT,
 # but we don't need it for iverilog as we only use it when not simulating
@@ -124,9 +124,10 @@ VFLAGS_DEP += $(addprefix -c, $(VFLAGS_COMMAND_FILE))
 
 VFLAGS_DEP += -DSIMULATE
 
-# Search prerequisites for generated .v/.vh/.xdc here
+# Search prerequisites for generated .v/.vh/.vhd/.xdc here
 vpath %.v $(IP_CORES_SRCS_DIRS) $(BD_SRCS_DIRS)
 vpath %.vh $(IP_CORES_SRCS_DIRS) $(BD_SRCS_DIRS)
+vpath %.vhd $(IP_CORES_SRCS_DIRS) $(BD_SRCS_DIRS)
 vpath %.xdc $(IP_CORES_SRCS_DIRS) $(BD_SRCS_DIRS)
 vpath %.tcl $(GW_SCRIPTS_DIR)
 vpath %.sh $(GW_SCRIPTS_DIR)
@@ -134,7 +135,7 @@ vpath %.sh $(GW_SCRIPTS_DIR)
 # List top level depedencies here. Eveything named .bit will be used as
 # a top-level target in top_rules.mk. .v and .sv files will be used as
 # prerequisites as well as a system_top.xdc file
-$(TARGET)_top.bit: system_top.xdc $(VIVADO_SYNTH_EXTRA_TCL) $(TOP_LVL_DIR)/$(TARGET)_top.v $(BD_bds) ila_td256_s4096_cap.xci
+$(TARGET)_top.bit: system_top.xdc $(VIVADO_SYNTH_EXTRA_TCL) $(TOP_LVL_DIR)/$(TARGET)_top.v $(BD_bds) adcCordic.xci ila_td256_s4096_cap.xci
 $(TOP_LVL_DIR)/$(TARGET)_top.v: $(TOP_LVL_DIR)/firmwareBuildDate.v $(TOP_LVL_DIR)/gpioIDX.v $(IP_CORES_CUSTOM) $(IP_CORES_TOP_LVL_SRCS) $(BD_TOP_LVL_SRCS)
 
 # Generate bundled .xdc from other .xdc. Don't change the order of the
