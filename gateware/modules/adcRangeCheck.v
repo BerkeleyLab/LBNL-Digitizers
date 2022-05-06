@@ -87,5 +87,14 @@ always @(posedge sysClk) begin
         if (GPIO_OUT[1]) sysShiftToggle <= !sysShiftToggle;
     end
 end
-assign sysReadout = { 16'b0, shiftReg[ADC_WIDTH-1:0], {16-ADC_WIDTH{1'b0}} };
+
+generate
+if (ADC_WIDTH <= 16) begin
+    assign sysReadout = { 16'b0, shiftReg[ADC_WIDTH-1:0], {16-ADC_WIDTH{1'b0}} };
+end
+else begin
+    assign sysReadout = { {32-ADC_WIDTH{shiftReg[ADC_WIDTH-1]}}, shiftReg[ADC_WIDTH-1:0]};
+end
+endgenerate
+
 endmodule
