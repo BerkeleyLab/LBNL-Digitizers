@@ -619,7 +619,10 @@ faDecimate #(.DATA_WIDTH(MAG_WIDTH),
 //
 // Auto trim
 //
-wire [GAIN_WIDTH-1:0] gain0, gain1, gain2, gain3;
+wire signed [GAIN_WIDTH-1:0] gain0 = {1'b0, {GAIN_WIDTH-1{1'b1}}};
+wire signed [GAIN_WIDTH-1:0] gain1 = {1'b0, {GAIN_WIDTH-1{1'b1}}};
+wire signed [GAIN_WIDTH-1:0] gain2 = {1'b0, {GAIN_WIDTH-1{1'b1}}};
+wire signed [GAIN_WIDTH-1:0] gain3 = {1'b0, {GAIN_WIDTH-1{1'b1}}};
 wire gainDoneToggle;
 //autotrim #(.GPIO_WIDTH(DATA_WIDTH),
 //           .NADC(NADC),
