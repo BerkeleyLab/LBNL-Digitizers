@@ -24,6 +24,7 @@ module acquisitionBCM #(
     input [63:0] evrTimestamp,
 
     input                                                              adcClk,
+    input [CHANNEL_COUNT-1:0]                                          axiValid,
     input [(CHANNEL_COUNT*AXI_SAMPLES_PER_CLOCK*AXI_SAMPLE_WIDTH)-1:0] axiData
     );
 
@@ -165,25 +166,35 @@ reg  [(CHANNEL_COUNT*AXI_SAMPLES_PER_CLOCK*DPRAM_WIDTH)-1:0] dpram
                                                  [0:(1<<DPRAM_ADDRESS_WIDTH)-1];
 reg  [(CHANNEL_COUNT*AXI_SAMPLES_PER_CLOCK*DPRAM_WIDTH)-1:0] dpramQ;
 wire [(CHANNEL_COUNT*AXI_SAMPLES_PER_CLOCK*DPRAM_WIDTH)-1:0] dpramWriteData;
+wire [(CHANNEL_COUNT*AXI_SAMPLES_PER_CLOCK)-1:0] dpramWriteDataValid;
 always @(posedge adcClk) begin
     dpramQ <= dpram[acqAddress];
-    if (acquiring_d3) dpram[acqAddress_d3] <= dpramWriteData;
+    if (acquiring_d3 && dpramWriteDataValid) dpram[acqAddress_d3] <= dpramWriteData;
 end
 
 genvar i;
 generate
 for (i = 0 ; i < (CHANNEL_COUNT * AXI_SAMPLES_PER_CLOCK) ; i = i + 1) begin
+ wire                          adcValid = axiValid[i/AXI_SAMPLES_PER_CLOCK];
  // ADC values are left adjusted in the AXI_SAMPLE_WIDTH fields.
  wire signed   [ADC_WIDTH-1:0] adcData =
                             axiData[(i*AXI_SAMPLE_WIDTH)+ADC_SHIFT+:ADC_WIDTH];
+ reg                           wideAdcDataValid;
+ reg                           newValueValid;
  reg  signed [DPRAM_WIDTH-1:0] wideAdcData, oldValue, newValue;
  wire signed [DPRAM_WIDTH-1:0] ramValue = dpramQ[i*DPRAM_WIDTH+:DPRAM_WIDTH];
+ assign dpramWriteDataValid[i] = newValueValid;
  assign dpramWriteData[i*DPRAM_WIDTH+:DPRAM_WIDTH] = newValue;
 
  always @(posedge adcClk) begin
+     wideAdcDataValid <= adcValid;
      wideAdcData <= adcData;
      oldValue <= firstPass_d1 ? {DPRAM_WIDTH{1'b0}} : ramValue;
-     newValue <= oldValue + wideAdcData;
+
+     newValueValid <= wideAdcDataValid;
+     if (wideAdcDataValid) begin
+         newValue <= oldValue + wideAdcData;
+     end
  end
 end
 endgenerate

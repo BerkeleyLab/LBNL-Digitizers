@@ -31,6 +31,7 @@ module acquisitionHSD #(
     input [63:0] evrTimestamp,
 
     input                                                adcClk,
+    input                                                axiValid,
     input [(AXI_SAMPLES_PER_CLOCK*AXI_SAMPLE_WIDTH)-1:0] axiData,
     input                        [TRIGGER_BUS_WIDTH-1:0] eventTriggerStrobes,
     input                                                bondedWriteEnableIn,
@@ -126,6 +127,7 @@ wire [SEG_GAP_COUNTER_WIDTH:0] laterSegGapCounterLoad =
 // ADC AXI Clock Domain
 
 // Extract salient bits from AXI stream and note those above trigger threshold.
+wire                             adcDataValid;
 wire [ADC_ALL_SAMPLES_WIDTH-1:0] adcData;
 reg  [AXI_SAMPLES_PER_CLOCK-1:0] sampleAboveTrigger = 0;
 reg  [AXI_SAMPLES_PER_CLOCK-1:0] sampleBelowTrigger = 0;
@@ -134,14 +136,17 @@ reg                              triggersBeenIdle = 0;
 genvar i;
 generate
 for (i = 0 ; i < AXI_SAMPLES_PER_CLOCK ; i = i + 1) begin
+    (*mark_debug=DEBUG*) reg adcValid = 0;
     (*mark_debug=DEBUG*) reg signed [ADC_WIDTH-1:0] adc = 0;
     always @(posedge adcClk) begin
+        adcValid <= axiValid;
         adc <= axiData[i*AXI_SAMPLE_WIDTH+ADC_SHIFT+:ADC_WIDTH];
         sampleAboveTrigger[i] <= (adc > sysTriggerLevel);
         sampleBelowTrigger[i] <= (adc < sysTriggerLevel);
         triggerFlags[i] <= sysFallingEdgeTrigger ? sampleBelowTrigger[i]
                                                  : sampleAboveTrigger[i];
     end
+    assign adcDataValid = adcValid;
     assign adcData[i*ADC_WIDTH+:ADC_WIDTH] = adc;
 end
 endgenerate
@@ -215,12 +220,12 @@ reg startMatch = 0;
 always @(posedge adcClk) begin
     // DPRAM writes are outside other logic since bonded channels
     // need to be written even though their acqActive is false.
-    if (dpramWriteEnable) begin
+    if (dpramWriteEnable && adcDataValid) begin
         dpramWriteAddress <= dpramWriteAddress + 1;
     end
     channelWriteEnable <= sysIsBonded ? bondedWriteEnableIn:dpramWriteEnable;
     channelWriteAddress <= sysIsBonded ? bondedWriteAddressIn:dpramWriteAddress;
-    if (channelWriteEnable) begin
+    if (channelWriteEnable && adcDataValid) begin
         dpram[channelWriteAddress] <= adcData;
     end
 
