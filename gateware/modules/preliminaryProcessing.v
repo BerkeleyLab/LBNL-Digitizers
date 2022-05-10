@@ -47,13 +47,16 @@ module preliminaryProcessing #(
     output wire  [4*MAG_WIDTH-1:0] tbtMagsDbg,
     output wire                  tbtMagsValidDbg,
     output wire                  tbtToggle,
+    output reg                   rfTbtMagValid,
     output wire  [MAG_WIDTH-1:0] rfTbtMag0, rfTbtMag1, rfTbtMag2, rfTbtMag3,
     output wire                  faToggle,
+    output reg                   rfFaMagValid,
     output wire  [MAG_WIDTH-1:0] rfFaMag0, rfFaMag1, rfFaMag2, rfFaMag3,
     output wire                  adcTbtLoadAccumulator,
     output wire                  adcTbtLatchAccumulator,
     output wire                  adcMtLoadAndLatch,
     output reg                   saToggle,
+    output reg                   saValid,
     output reg            [63:0] sysSaTimestamp,
     output reg   [MAG_WIDTH-1:0] rfMag0, rfMag1, rfMag2, rfMag3,
     output reg   [MAG_WIDTH-1:0] plMag0, plMag1, plMag2, plMag3,
@@ -671,25 +674,49 @@ always @(posedge clk) begin
     end
 end
 
-//trim #(.MAG_WIDTH(MAG_WIDTH),
-//       .GAIN_WIDTH(GAIN_WIDTH))
-//  faTrim (
-//    .clk(clk),
-//    .strobe(faTrimStrobe),
-//    .magnitudes({cicFaMag3, cicFaMag2, cicFaMag1, cicFaMag0}),
-//    .gains({gain3, gain2, gain1, gain0}),
-//    .trimmedToggle(faToggle),
-//    .trimmed({rfFaMag3, rfFaMag2, rfFaMag1, rfFaMag0}));
-//
-//trim #(.MAG_WIDTH(MAG_WIDTH),
-//       .GAIN_WIDTH(GAIN_WIDTH))
-//  tbtTrim (
-//    .clk(clk),
-//    .strobe(tbtTrimStrobe),
-//    .magnitudes(tbtMags),
-//    .gains({gain3, gain2, gain1, gain0}),
-//    .trimmedToggle(tbtToggle),
-//    .trimmed({rfTbtMag3, rfTbtMag2, rfTbtMag1, rfTbtMag0}));
+trim #(.MAG_WIDTH(MAG_WIDTH),
+       .GAIN_WIDTH(GAIN_WIDTH))
+  faTrim (
+    .clk(clk),
+    .strobe(faTrimStrobe),
+    .magnitudes({cicFaMag3, cicFaMag2, cicFaMag1, cicFaMag0}),
+    .gains({gain3, gain2, gain1, gain0}),
+    .trimmedToggle(faToggle),
+    .trimmed({rfFaMag3, rfFaMag2, rfFaMag1, rfFaMag0}));
+
+trim #(.MAG_WIDTH(MAG_WIDTH),
+       .GAIN_WIDTH(GAIN_WIDTH))
+  tbtTrim (
+    .clk(clk),
+    .strobe(tbtTrimStrobe),
+    .magnitudes(tbtMags),
+    .gains({gain3, gain2, gain1, gain0}),
+    .trimmedToggle(tbtToggle),
+    .trimmed({rfTbtMag3, rfTbtMag2, rfTbtMag1, rfTbtMag0}));
+
+// TbT/FA valid generation
+reg tbtToggle_m, tbtToggle_m2;
+reg faToggle_m, faToggle_m2;
+always @(posedge adcClk) begin
+    tbtToggle_m <= tbtToggle;
+    tbtToggle_m2 <= tbtToggle_m;
+    faToggle_m <= faToggle;
+    faToggle_m2 <= faToggle_m;
+
+    if (tbtToggle_m != tbtToggle_m2) begin
+        rfTbtMagValid <= 1'b1;
+    end
+    else begin
+        rfTbtMagValid <= 1'b0;
+    end
+
+    if (faToggle_m != faToggle_m2) begin
+        rfFaMagValid <= 1'b1;
+    end
+    else begin
+        rfFaMagValid <= 1'b0;
+    end
+end
 
 // CIC SA DECIMATION
 wire [MAG_WIDTH-1:0] rfSaMag0, rfSaMag1, rfSaMag2, rfSaMag3;
@@ -784,6 +811,20 @@ always @(posedge clk) begin
          * will have been latched before the CORDIC/trim computations.
          */
         sysSaTimestamp <= evrSaTimestamp;
+    end
+end
+
+// SA valid generation
+reg saToggle_m, saToggle_m2;
+always @(posedge adcClk) begin
+    saToggle_m <= saToggle;
+    saToggle_m2 <= saToggle_m;
+
+    if (saToggle_m != saToggle_m2) begin
+        saValid <= 1'b1;
+    end
+    else begin
+        saValid <= 1'b0;
     end
 end
 
