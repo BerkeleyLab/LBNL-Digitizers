@@ -271,6 +271,9 @@ calibration #(
     .prbsClk(prbsClk),
     .trainingSignal(TRAINING_SIGNAL),
     .adcClk(adcClk),
+    // This is wrong. acqTDATA contains data with different data
+    // rates and valids
+    .adcsTVALID(acqTVALID[0]),
     .adcsTDATA(acqTDATA[0+:CFG_ADC_CHANNEL_COUNT*ACQ_SAMPLES_WIDTH]));
 
 /////////////////////////////////////////////////////////////////////////////
@@ -286,6 +289,9 @@ adcRangeCheck #(
     .GPIO_OUT(GPIO_OUT),
     .sysReadout(GPIO_IN[GPIO_IDX_ADC_RANGE_CSR]),
     .adcClk(adcClk),
+    // This is wrong. acqTDATA contains data with different data
+    // rates and valids
+    .axiValid(acqTVALID[0]),
     .axiData(acqTDATA[0+:CFG_ADC_CHANNEL_COUNT*ACQ_SAMPLES_WIDTH]));
 
 /////////////////////////////////////////////////////////////////////////////
@@ -306,6 +312,7 @@ acquisitionBRAM #(
     .GPIO_OUT(GPIO_OUT),
     .sysStatus(GPIO_IN[GPIO_IDX_ADC_0_CSR]),
     .adcClk(adcClk),
+    .axiValid(acqTVALID),
     .axiData(acqTDATA));
 `endif
 
@@ -334,6 +341,7 @@ acquisitionBCM #(
     .evrInjectionTrigger(evrTriggerBus[3]),
     .evrTimestamp(evrTimestamp),
     .adcClk(adcClk),
+    .axiValid(acqTVALID),
     .axiData(acqTDATA[0+:CFG_ADC_CHANNEL_COUNT*ACQ_SAMPLES_WIDTH]));
 
 assign BCM_SROC_GND = 0;
@@ -382,6 +390,7 @@ for (i = 0 ; i < NUMBER_OF_BONDED_GROUPS ; i = i + 1) begin
         .evrClk(evrClk),
         .evrTimestamp(evrTimestamp),
         .adcClk(adcClk),
+        .axiValid(acqTVALID[adc]),
         .axiData(acqTDATA[adc*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH]),
         .eventTriggerStrobes(adcEventTriggerStrobes),
         .bondedWriteEnableIn(bondedWriteEnable[0]),
@@ -604,33 +613,52 @@ system
 
 `endif // `ifndef SIMULATE
 
+assign acqTVALID[0] = adcsTVALID[0];
 assign acqTDATA[0*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
     {ACQ_SAMPLES_WIDTH-SAMPLES_WIDTH{adcsTDATA[SAMPLES_WIDTH-1]}},
     adcsTDATA[0*SAMPLES_WIDTH+:SAMPLES_WIDTH]
 };
+
+assign acqTVALID[1] = adcsTVALID[2];
 assign acqTDATA[1*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
     {ACQ_SAMPLES_WIDTH-SAMPLES_WIDTH{adcsTDATA[2*SAMPLES_WIDTH-1]}},
     adcsTDATA[SAMPLES_WIDTH+:SAMPLES_WIDTH]
 };
-assign acqTDATA[2*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] =
-    rfProducts[0+:ACQ_SAMPLES_WIDTH];
-assign acqTDATA[3*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] =
-    rfProducts[PRODUCT_WIDTH+:ACQ_SAMPLES_WIDTH];
+
+assign acqTVALID[2] = prelimProcRfTbtMagValid;
+assign acqTDATA[2*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
+    {ACQ_SAMPLES_WIDTH-MAG_WIDTH{prelimProcRfTbtMag0[MAG_WIDTH-1]}},
+    prelimProcRfTbtMag0
+};
+
+assign acqTVALID[3] = prelimProcRfTbtMagValid;
+assign acqTDATA[3*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
+    {ACQ_SAMPLES_WIDTH-MAG_WIDTH{prelimProcRfTbtMag1[MAG_WIDTH-1]}},
+    prelimProcRfTbtMag1
+};
+
+assign acqTVALID[4] = prelimProcRfFaMagValid;
 assign acqTDATA[4*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
-    {ACQ_SAMPLES_WIDTH-MAG_WIDTH{tbtSums[MAG_WIDTH-1]}},
-    tbtSums[0+:MAG_WIDTH]
+    {ACQ_SAMPLES_WIDTH-MAG_WIDTH{prelimProcRfFaMag0[MAG_WIDTH-1]}},
+    prelimProcRfFaMag0
 };
+
+assign acqTVALID[5] = prelimProcRfFaMagValid;
 assign acqTDATA[5*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
-    {ACQ_SAMPLES_WIDTH-MAG_WIDTH{tbtSums[2*MAG_WIDTH-1]}},
-    tbtSums[MAG_WIDTH+:MAG_WIDTH]
+    {ACQ_SAMPLES_WIDTH-MAG_WIDTH{prelimProcRfFaMag1[MAG_WIDTH-1]}},
+    prelimProcRfFaMag1
 };
+
+assign acqTVALID[6] = prelimProcSaValid;
 assign acqTDATA[6*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
-    {ACQ_SAMPLES_WIDTH-MAG_WIDTH{tbtMags[MAG_WIDTH-1]}},
-    tbtMags[0+:MAG_WIDTH]
+    {ACQ_SAMPLES_WIDTH-MAG_WIDTH{prelimProcRfMag0[MAG_WIDTH-1]}},
+    prelimProcRfMag0
 };
+
+assign acqTVALID[7] = prelimProcSaValid;
 assign acqTDATA[7*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
-    {ACQ_SAMPLES_WIDTH-MAG_WIDTH{tbtMags[2*MAG_WIDTH-1]}},
-    tbtMags[MAG_WIDTH+:MAG_WIDTH]
+    {ACQ_SAMPLES_WIDTH-MAG_WIDTH{prelimProcRfMag1[MAG_WIDTH-1]}},
+    prelimProcRfMag1
 };
 
 //
@@ -641,12 +669,15 @@ wire [32-MAG_WIDTH-1:0] magPAD = 0;
 wire                 adcLoSynced, adcTbtLoadAccumulator, adcTbtLatchAccumulator;
 wire                 adcMtLoadAndLatch;
 wire                 prelimProcTbtToggle;
+wire                 prelimProcRfTbtMagValid;
 wire [MAG_WIDTH-1:0] prelimProcRfTbtMag0, prelimProcRfTbtMag1;
 wire [MAG_WIDTH-1:0] prelimProcRfTbtMag2, prelimProcRfTbtMag3;
 wire                 prelimProcFaToggle;
+wire                 prelimProcRfFaMagValid;
 wire [MAG_WIDTH-1:0] prelimProcRfFaMag0, prelimProcRfFaMag1;
 wire [MAG_WIDTH-1:0] prelimProcRfFaMag2, prelimProcRfFaMag3;
 wire                 prelimProcSaToggle;
+wire                 prelimProcSaValid;
 wire [MAG_WIDTH-1:0] prelimProcRfMag0, prelimProcRfMag1;
 wire [MAG_WIDTH-1:0] prelimProcRfMag2, prelimProcRfMag3;
 wire [MAG_WIDTH-1:0] prelimProcPlMag0, prelimProcPlMag1;
@@ -658,6 +689,7 @@ wire [LO_WIDTH-1:0] rfLOcos, rfLOsin;
 wire [LO_WIDTH-1:0] plLOcos, plLOsin;
 wire [LO_WIDTH-1:0] phLOcos, phLOsin;
 wire [(BD_ADC_CHANNEL_COUNT*ACQ_SAMPLES_WIDTH)-1:0] acqTDATA;
+wire [BD_ADC_CHANNEL_COUNT-1:0] acqTVALID;
 wire prelimProcPtToggle, prelimProcOverflow;
 wire [8*MAG_WIDTH-1:0] tbtSums;
 wire tbtSumsValid;
@@ -738,6 +770,7 @@ preliminaryProcessing #(.SYSCLK_RATE(SYSCLK_RATE),
     .tbtMagsDbg(tbtMags),
     .tbtMagsValidDbg(tbtMagsValid),
     .tbtToggle(),
+    .rfTbtMagValid(prelimProcRfTbtMagValid),
     .rfTbtMag0(prelimProcRfTbtMag0),
     .rfTbtMag1(prelimProcRfTbtMag1),
     .rfTbtMag2(prelimProcRfTbtMag2),
@@ -746,11 +779,13 @@ preliminaryProcessing #(.SYSCLK_RATE(SYSCLK_RATE),
     .adcTbtLoadAccumulator(adcTbtLoadAccumulator),
     .adcTbtLatchAccumulator(adcTbtLatchAccumulator),
     .adcMtLoadAndLatch(adcMtLoadAndLatch),
+    .rfFaMagValid(prelimProcRfFaMagValid),
     .rfFaMag0(prelimProcRfFaMag0),
     .rfFaMag1(prelimProcRfFaMag1),
     .rfFaMag2(prelimProcRfFaMag2),
     .rfFaMag3(prelimProcRfFaMag3),
     .saToggle(prelimProcSaToggle),
+    .saValid(prelimProcSaValid),
     .sysSaTimestamp({GPIO_IN[GPIO_IDX_SA_TIMESTAMP_SEC],
                      GPIO_IN[GPIO_IDX_SA_TIMESTAMP_TICKS]}),
     .rfMag0(prelimProcRfMag0),
