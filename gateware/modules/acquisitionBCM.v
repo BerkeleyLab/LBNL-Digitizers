@@ -193,8 +193,8 @@ endgenerate
 // address and reading the value for all clock crossing to stabilize.
 reg [DPRAM_WIDTH-1:0] dpramMUX;
 always @(posedge sysClk) begin
-    dpramMUX <= (SINGLE_SAMPLE_PER_CLOCK)? :
-        dpramQ[(sysChannelIndex * AXI_SAMPLES_PER_CLOCK) * DPRAM_WIDTH+:DPRAM_WIDTH];
+    dpramMUX <= (SINGLE_SAMPLE_PER_CLOCK)?
+        dpramQ[(sysChannelIndex * AXI_SAMPLES_PER_CLOCK) * DPRAM_WIDTH+:DPRAM_WIDTH] :
         dpramQ[((sysChannelIndex * AXI_SAMPLES_PER_CLOCK) +
                  sysSampleIndex) * DPRAM_WIDTH+:DPRAM_WIDTH];
 end
