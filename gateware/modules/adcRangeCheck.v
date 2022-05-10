@@ -13,6 +13,7 @@ module adcRangeCheck #(
     output wire [31:0] sysReadout,
 
     input                  adcClk,
+    input                  axiValid,
     input [DATA_WIDTH-1:0] axiData
     );
 
@@ -44,21 +45,26 @@ genvar i;
 generate
 for (i = 0 ; i < (AXI_CHANNEL_COUNT * AXI_SAMPLES_PER_CLOCK) ; i = i + 1) begin
                                                                         : sample
+    wire                        adcValid = axiValid;
     wire signed [ADC_WIDTH-1:0] adcVal =
           axiData[(i*AXI_SAMPLE_WIDTH)+(AXI_SAMPLE_WIDTH-ADC_WIDTH)+:ADC_WIDTH];
+    reg                        minMaxValid;
     reg signed [ADC_WIDTH-1:0] min, max;
     always @(posedge adcClk) begin
-        if (adcLatch || (adcVal < min)) min <= adcVal;
-        if (adcLatch || (adcVal > max)) max <= adcVal;
+        minMaxValid <= adcValid;
+        if (adcLatch || (adcValid && adcVal < min)) min <= adcVal;
+        if (adcLatch || (adcValid && adcVal > max)) max <= adcVal;
     end
 end
 endgenerate
 
 // Shuffle values into readout order
 localparam SHIFTREG_WIDTH = 2*AXI_CHANNEL_COUNT*AXI_SAMPLES_PER_CLOCK*ADC_WIDTH;
+wire                      shiftInValid;
 wire [SHIFTREG_WIDTH-1:0] shiftIn;
 generate
 for (i = 0 ; i < (AXI_CHANNEL_COUNT * AXI_SAMPLES_PER_CLOCK) ; i = i + 1) begin
+    assign shiftInValid = sample[i].minMaxValid;
     assign shiftIn[((i*2)+0)*ADC_WIDTH+:ADC_WIDTH] = sample[i].min;
     assign shiftIn[((i*2)+1)*ADC_WIDTH+:ADC_WIDTH] = sample[i].max;
 end
