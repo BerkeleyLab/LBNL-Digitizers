@@ -311,7 +311,7 @@ acquisitionBRAM #(
     .sysCsrStrobe(GPIO_STROBES[GPIO_IDX_ADC_0_CSR]),
     .GPIO_OUT(GPIO_OUT),
     .sysStatus(GPIO_IN[GPIO_IDX_ADC_0_CSR]),
-    .adcClk(adcClk),
+    .adcClk(sysClk),
     .axiValid(acqTVALID),
     .axiData(acqTDATA));
 `endif
@@ -340,7 +340,7 @@ acquisitionBCM #(
     .evrClk(evrClk),
     .evrInjectionTrigger(evrTriggerBus[3]),
     .evrTimestamp(evrTimestamp),
-    .adcClk(adcClk),
+    .adcClk(sysClk),
     .axiValid(acqTVALID),
     .axiData(acqTDATA[0+:CFG_ADC_CHANNEL_COUNT*ACQ_SAMPLES_WIDTH]));
 
@@ -389,7 +389,7 @@ for (i = 0 ; i < NUMBER_OF_BONDED_GROUPS ; i = i + 1) begin
                               GPIO_IN[GPIO_IDX_ADC_0_TICKS+rOff]}),
         .evrClk(evrClk),
         .evrTimestamp(evrTimestamp),
-        .adcClk(adcClk),
+        .adcClk(sysClk),
         .axiValid(acqTVALID[adc]),
         .axiData(acqTDATA[adc*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH]),
         .eventTriggerStrobes(adcEventTriggerStrobes),
@@ -613,12 +613,14 @@ system
 
 `endif // `ifndef SIMULATE
 
+// FIXME. adcsTDATA are in adcClk domain
 assign acqTVALID[0] = adcsTVALID[0];
 assign acqTDATA[0*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
     {ACQ_SAMPLES_WIDTH-SAMPLES_WIDTH{adcsTDATA[SAMPLES_WIDTH-1]}},
     adcsTDATA[0*SAMPLES_WIDTH+:SAMPLES_WIDTH]
 };
 
+// FIXME. adcsTDATA are in adcClk domain
 assign acqTVALID[1] = adcsTVALID[2];
 assign acqTDATA[1*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
     {ACQ_SAMPLES_WIDTH-SAMPLES_WIDTH{adcsTDATA[2*SAMPLES_WIDTH-1]}},
