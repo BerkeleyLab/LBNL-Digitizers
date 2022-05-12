@@ -149,6 +149,7 @@ main(void)
     tftpInit();
     acquisitionInit();
     localOscillatorInit();
+    acqSyncInit();
     for (int i = 0 ; i < CFG_ADC_PHYSICAL_COUNT ; i++) { afeSetGain(i, 16); }
 
     /*

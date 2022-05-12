@@ -27,6 +27,7 @@ all: $(TARGET) $(TARGET).elf $(TARGET).elf.size $(BIN)
 
 __SRC_FILES = \
 	acquisition.c \
+	acqSyncStub.c \
 	afe.c \
 	console.c \
 	display.c \
@@ -54,6 +55,7 @@ SRC_FILES = $(addprefix $(SW_SRC_DIR)/, $(__SRC_FILES))
 
 __HDR_FILES = \
 	acquisition.h \
+	acqSync.h \
 	afe.h \
 	console.h \
 	display.h \

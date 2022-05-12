@@ -53,6 +53,8 @@
 #define GPIO_IDX_PRELIM_PT_HI_MAG_3      39 // ADC 3 high freq pilot tone magnitude
 #define GPIO_IDX_SA_TIMESTAMP_SEC        40 // Slow acquisition time stamp
 #define GPIO_IDX_SA_TIMESTAMP_TICKS      41 // Slow acquisition time stamp
+#define GPIO_IDX_EVR_FA_RELOAD           42 // Fast acquisition divider reload
+#define GPIO_IDX_EVR_SA_RELOAD           43 // Slow acquisition divider reload
 
 #define CFG_AXI_SAMPLES_PER_CLOCK         1 // 1 sample per clock
 #define CFG_LO_RF_ROW_CAPACITY           1024

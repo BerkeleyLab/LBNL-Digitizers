@@ -55,6 +55,7 @@ systemParametersReadback(void)
         systemParameters.pllMultiplier = 77;
         systemParameters.isSinglePass = 0;
         systemParameters.evrPerFaMarker = 152 * 82;
+        systemParameters.evrPerSaMarker = 152 * 82 * 1000;
     }
     debugFlags = systemParameters.startupDebugFlags;
     if (userMGTrefClkAdjust(systemParameters.userMGTrefClkOffsetPPM)) {

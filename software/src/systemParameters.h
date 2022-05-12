@@ -27,6 +27,7 @@ extern struct systemParameters {
     int                 pllMultiplier;
     int                 isSinglePass;
     int                 evrPerFaMarker;
+    int                 evrPerSaMarker;
     uint32_t            checksum;
 } systemParameters;
 
