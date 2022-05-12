@@ -350,24 +350,6 @@ sdAccumulate #(.PRODUCT_WIDTH(PRODUCT_WIDTH),
     .sums(tbtSums),
     .overflowFlag(tbtSumOverflow));
 
-assign tbtSumsDbg = tbtSums;
-
-reg adcTbtToggle_m, adcTbtToggle_m2;
-reg tbtSumsValid;
-always @(posedge adcClk) begin
-    adcTbtToggle_m <= adcTbtToggle;
-    adcTbtToggle_m2 <= adcTbtToggle_m;
-
-    if (adcTbtToggle_m != adcTbtToggle_m2) begin
-        tbtSumsValid <= 1'b1;
-    end
-    else begin
-        tbtSumsValid <= 1'b0;
-    end
-end
-
-assign tbtSumsValidDbg = tbtSumsValid;
-
 // Remainder of accumulators update over identical multi-turn interval.
 // Assume typical case for TURNS_PER_SUM.
 // Multi-turn sum shift will get things back into range if necessary.
@@ -455,25 +437,35 @@ reg sysTbtToggle, sysMtToggle_p, sysMtToggle;
 reg sysTbtMatch, sysMtMatch_p, sysRfMatch, sysPlMatch, sysPhMatch;
 reg sysFaDecimateFlag, sysSaDecimateFlag;
 
+wire sysTbtValid = sysTbtMatch != sysTbtToggle;
+wire sysPlValid = sysPlMatch != sysMtToggle;
+wire sysPhValid = sysPhMatch != sysMtToggle;
+wire sysRfValid = sysRfMatch != sysMtToggle;
+
 wire cordicREADY;
 
-wire sumVALID = ((sysTbtMatch != sysTbtToggle)
-              || (sysPlMatch  != sysMtToggle)
-              || (sysPhMatch  != sysMtToggle)
-              || (sysRfMatch  != sysMtToggle));
+wire sumVALID = ((sysTbtValid)
+              || (sysPlValid)
+              || (sysPhValid)
+              || (sysRfValid));
 
 wire [STREAM_SELECT_WIDTH-1:0] sumSelect =
-                       (sysTbtMatch != sysTbtToggle) ? STREAM_TBT :
-                       (sysPlMatch  != sysMtToggle)  ? STREAM_PL  :
-                       (sysPhMatch  != sysMtToggle)  ? STREAM_PH  : STREAM_RF;
+                       (sysTbtValid) ? STREAM_TBT :
+                       (sysPlValid)  ? STREAM_PL  :
+                       (sysPhValid)  ? STREAM_PH  : STREAM_RF;
 
 wire [(8*MAG_WIDTH)-1:0] sums = (sumSelect == STREAM_TBT) ? tbtSums :
                                 (sumSelect == STREAM_PL)  ? plSums  :
                                 (sumSelect == STREAM_PH)  ? phSums  : rfSums;
 
+
 // Don't bother with any fancy clock domain crossing logic for the sum
 // shift values since changes to these are rare and will at worst cause
 // one (TBT, RF or Pilot Tone) value to be computed improperly.
+
+assign tbtSumsDbg = tbtSums;
+assign tbtSumsValidDbg = sysTbtValid;
+
 reg [3:0] faCICshift = 0;
 wire [2:0] cicStageCount = CIC_STAGES;
 wire [9:0] cicFaDecimate = CIC_FA_DECIMATE;
@@ -500,10 +492,10 @@ always @(posedge clk) begin
     end
     if (cordicREADY) begin
         // Ensure that sumVALID and sumSelect ordering matches this.
-        if (sysTbtMatch != sysTbtToggle) sysTbtMatch <= !sysTbtMatch;
-        else if (sysPlMatch != sysMtToggle) sysPlMatch <= !sysPlMatch;
-        else if (sysPhMatch != sysMtToggle) sysPhMatch <= !sysPhMatch;
-        else if (sysRfMatch != sysMtToggle) sysRfMatch <= !sysRfMatch;
+        if (sysTbtValid) sysTbtMatch <= !sysTbtMatch;
+        else if (sysPlValid) sysPlMatch <= !sysPlMatch;
+        else if (sysPhValid) sysPhMatch <= !sysPhMatch;
+        else if (sysRfValid) sysRfMatch <= !sysRfMatch;
     end
 end
 
@@ -692,22 +684,20 @@ trim #(.MAG_WIDTH(MAG_WIDTH),
     .trimmed({rfTbtMag3, rfTbtMag2, rfTbtMag1, rfTbtMag0}));
 
 // TbT/FA valid generation
-reg tbtToggle_m, tbtToggle_m2;
-reg faToggle_m, faToggle_m2;
-always @(posedge adcClk) begin
+reg tbtToggle_m;
+reg faToggle_m;
+always @(posedge clk) begin
     tbtToggle_m <= tbtToggle;
-    tbtToggle_m2 <= tbtToggle_m;
     faToggle_m <= faToggle;
-    faToggle_m2 <= faToggle_m;
 
-    if (tbtToggle_m != tbtToggle_m2) begin
+    if (tbtToggle != tbtToggle_m) begin
         rfTbtMagValid <= 1'b1;
     end
     else begin
         rfTbtMagValid <= 1'b0;
     end
 
-    if (faToggle_m != faToggle_m2) begin
+    if (faToggle != faToggle_m) begin
         rfFaMagValid <= 1'b1;
     end
     else begin
@@ -812,12 +802,11 @@ always @(posedge clk) begin
 end
 
 // SA valid generation
-reg saToggle_m, saToggle_m2;
-always @(posedge adcClk) begin
+reg saToggle_m;
+always @(posedge clk) begin
     saToggle_m <= saToggle;
-    saToggle_m2 <= saToggle_m;
 
-    if (saToggle_m != saToggle_m2) begin
+    if (saToggle != saToggle_m) begin
         saValid <= 1'b1;
     end
     else begin
