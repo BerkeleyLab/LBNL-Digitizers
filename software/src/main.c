@@ -26,6 +26,7 @@
 #include "tftp.h"
 #include "util.h"
 #include "localOscillator.h"
+#include "autotrim.h"
 
 static void
 sfpString(const char *name, int offset)
@@ -150,6 +151,7 @@ main(void)
     acquisitionInit();
     localOscillatorInit();
     acqSyncInit();
+    autotrimEnable(AUTOTRIM_CSR_MODE_OFF);
     for (int i = 0 ; i < CFG_ADC_PHYSICAL_COUNT ; i++) { afeSetGain(i, 16); }
 
     /*
