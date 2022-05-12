@@ -129,8 +129,10 @@ wire [SEG_GAP_COUNTER_WIDTH:0] laterSegGapCounterLoad =
 // Extract salient bits from AXI stream and note those above trigger threshold.
 wire                             adcDataValid;
 wire [ADC_ALL_SAMPLES_WIDTH-1:0] adcData;
+reg                              sampleTriggerValid = 0;
 reg  [AXI_SAMPLES_PER_CLOCK-1:0] sampleAboveTrigger = 0;
 reg  [AXI_SAMPLES_PER_CLOCK-1:0] sampleBelowTrigger = 0;
+reg                              triggerFlagsValid = 0;
 reg  [AXI_SAMPLES_PER_CLOCK-1:0] triggerFlags;
 reg                              triggersBeenIdle = 0;
 genvar i;
@@ -141,8 +143,12 @@ for (i = 0 ; i < AXI_SAMPLES_PER_CLOCK ; i = i + 1) begin
     always @(posedge adcClk) begin
         adcValid <= axiValid;
         adc <= axiData[i*AXI_SAMPLE_WIDTH+ADC_SHIFT+:ADC_WIDTH];
+
+        sampleTriggerValid <= adcValid;
         sampleAboveTrigger[i] <= (adc > sysTriggerLevel);
         sampleBelowTrigger[i] <= (adc < sysTriggerLevel);
+
+        triggerFlagsValid <= sampleTriggerValid;
         triggerFlags[i] <= sysFallingEdgeTrigger ? sampleBelowTrigger[i]
                                                  : sampleAboveTrigger[i];
     end
@@ -163,8 +169,9 @@ always @(posedge adcClk) begin
     watchForTrigger_d <= watchForTrigger;
     if (watchForTrigger) begin
         if (watchForTrigger_d) begin
-            if (sysFallingEdgeTrigger ? !(|sampleBelowTrigger)
-                                      : !(|sampleAboveTrigger)) begin
+            if (sampleTriggerValid && (
+                sysFallingEdgeTrigger ? !(|sampleBelowTrigger)
+                                      : !(|sampleAboveTrigger))) begin
                 triggersBeenIdle <= 1;
             end
             if (!triggered) begin
@@ -172,7 +179,8 @@ always @(posedge adcClk) begin
                     triggered <= 1;
                     triggerLocation <= 0;
                 end
-                else if (|triggerFlags && triggersBeenIdle) begin
+                else if (|triggerFlags && triggersBeenIdle &&
+                    triggerFlagsValid) begin
                     triggered <= 1;
                     casex (triggerFlags)
                     8'bxxxxxxx1: triggerLocation <= 0;
