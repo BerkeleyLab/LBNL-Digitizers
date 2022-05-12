@@ -664,6 +664,29 @@ assign acqTDATA[7*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
 };
 
 //
+// Create slow (SA) and fast (FA) acquistion triggers
+// based on event system trigger 0 (heartbeat).
+//
+wire evrFaMarker, evrSaMarker;
+wire [31:0] sysFAstatus, sysSAstatus;
+wire evrFaSynced, evrSaSynced;
+acqSync acqSync(
+    .sysClk(sysClk),
+    .sysGPIO_OUT(GPIO_OUT),
+    .sysFAstrobe(GPIO_STROBES[GPIO_IDX_EVR_FA_RELOAD]),
+    .sysSAstrobe(GPIO_STROBES[GPIO_IDX_EVR_SA_RELOAD]),
+    .sysFAstatus(sysFAstatus),
+    .sysSAstatus(sysSAstatus),
+    .evrClk(evrClk),
+    .evrHeartbeat(evrHeartbeat),
+    .evrFaMarker(evrFaMarker),
+    .evrSaMarker(evrSaMarker));
+assign GPIO_IN[GPIO_IDX_EVR_FA_RELOAD] = sysFAstatus;
+assign GPIO_IN[GPIO_IDX_EVR_SA_RELOAD] = sysSAstatus;
+assign evrFaSynced = sysFAstatus[31];
+assign evrSaSynced = sysSAstatus[31];
+
+//
 // Preliminary processing (compute magnitude of ADC signals)
 //
 wire sysSingleTrig;
@@ -729,8 +752,8 @@ preliminaryProcessing #(.SYSCLK_RATE(SYSCLK_RATE),
     .adcExceedsThreshold(1'b0),
     .adcUseThisSample(1'b1),
     .evrClk(evrClk),
-    .evrFaMarker(1'b0),
-    .evrSaMarker(1'b0),
+    .evrFaMarker(evrFaMarker),
+    .evrSaMarker(evrSaMarker),
     .evrTimestamp(evrTimestamp),
     .evrPtTrigger(1'b0),
     .evrSinglePassTrigger(1'b0),
