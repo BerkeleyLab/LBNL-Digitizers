@@ -435,7 +435,8 @@ localparam STREAM_TBT = 2'd0,
 
 // Get ADC 'accumulator ready' toggles into system clock domain
 (* ASYNC_REG="TRUE" *) reg sysTbtToggle_m, sysMtToggle_m;
-reg sysTbtToggle, sysMtToggle_p, sysMtToggle;
+(* ASYNC_REG="TRUE" *) reg sysTbtToggle, sysMtToggle_p;
+reg sysMtToggle;
 reg sysTbtMatch, sysMtMatch_p, sysRfMatch, sysPlMatch, sysPhMatch;
 reg sysFaDecimateFlag, sysSaDecimateFlag;
 
