@@ -49,6 +49,8 @@ module preliminaryProcessing #(
     output wire                  tbtToggle,
     output reg                   rfTbtMagValid,
     output wire  [MAG_WIDTH-1:0] rfTbtMag0, rfTbtMag1, rfTbtMag2, rfTbtMag3,
+    output wire                  cicFaMagValidDbg,
+    output wire  [MAG_WIDTH-1:0] cicFaMag0Dbg, cicFaMag1Dbg, cicFaMag2Dbg, cicFaMag3Dbg,
     output wire                  faToggle,
     output reg                   rfFaMagValid,
     output wire  [MAG_WIDTH-1:0] rfFaMag0, rfFaMag1, rfFaMag2, rfFaMag3,
@@ -610,6 +612,12 @@ faDecimate #(.DATA_WIDTH(MAG_WIDTH),
 
     .outputToggle(rfDecimatedToggle),
     .outputData({cicFaMag3, cicFaMag2, cicFaMag1, cicFaMag0}));
+
+assign cicFaMagValidDbg = faTrimStrobe;
+assign cicFaMag3Dbg = cicFaMag3;
+assign cicFaMag2Dbg = cicFaMag2;
+assign cicFaMag1Dbg = cicFaMag1;
+assign cicFaMag0Dbg = cicFaMag0;
 
 //
 // Auto trim
