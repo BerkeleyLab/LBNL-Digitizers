@@ -85,8 +85,8 @@ assign GPIO_IN[GPIO_IDX_FIRMWARE_BUILD_DATE] = FIRMWARE_BUILD_DATE;
 
 //////////////////////////////////////////////////////////////////////////////
 // Clocks
-wire sysClk, evrClk, adcClk, dacClk, prbsClk;
-wire adcClkLocked, dacClkLocked;
+wire sysClk, evrClk, adcClk, dacClk, prbsClk, evrAdcFBClk;
+wire adcClkLocked, dacClkLocked, evrAdcFBClkLocked;
 wire sysReset_n;
 
 // Get USER MGT reference clock
@@ -165,11 +165,11 @@ assign GPIO_LEDS[0] = evrHeartbeat;
 assign GPIO_LEDS[1] = evrPulsePerSecond;
 
 // Reference clock for RF ADC jitter cleaner
-// EVR clock ~124.91 MHz
+// EVR ADC FB clock ~412 MHz
 OBUFDS OBUFDS_SFP_REC_CLK (
     .O(SFP_REC_CLK_P),
     .OB(SFP_REC_CLK_N),
-    .I(evrClk)
+    .I(evrAdcFBClk)
 );
 
 // Check EVR markers
@@ -460,10 +460,10 @@ reg interlockRelayControl = 0;
 wire interlockResetButton = GPIO_SW_N;
 wire interlockRelayOpen = 1'b0;
 wire interlockRelayClosed = 1'b1;
-assign GPIO_LEDS[7] = interlockResetButton;
-assign GPIO_LEDS[6] = interlockRelayOpen;
-assign GPIO_LEDS[5] = interlockRelayClosed;
-assign GPIO_LEDS[4] = interlockRelayControl;
+assign GPIO_LEDS[7] = 1'b0;
+assign GPIO_LEDS[6] = evrAdcFBClkLocked;
+assign GPIO_LEDS[5] = dacClkLocked;
+assign GPIO_LEDS[4] = adcClkLocked;
 assign GPIO_LEDS[3] = GPIO_IN[GPIO_IDX_SECONDS_SINCE_BOOT][1];
 assign GPIO_LEDS[2] = GPIO_IN[GPIO_IDX_SECONDS_SINCE_BOOT][0];
 always @(posedge sysClk) begin
@@ -521,6 +521,9 @@ system
     .dacClk(dacClk),
     .dacClkLocked(dacClkLocked),
     .clk_dac0_0(rfdc_dac0_clk),
+
+    .evrAdcFBClk(evrAdcFBClk),
+    .evrAdcFBClkLocked(evrAdcFBClkLocked),
 
     // DAC tile 230 distributes clock to all others
     .dac45_clk_n(RF4_CLKO_B_C_N),
