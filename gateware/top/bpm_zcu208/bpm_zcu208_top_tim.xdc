@@ -4,10 +4,10 @@
 create_clock -period 6.4 [get_ports USER_MGT_SI570_CLK_P]
 
 # RFDC clocks
-# 412 MHz
-create_clock -period 2.42 [get_ports FPGA_REFCLK_OUT_C_P]
-# 4.12 MHz
-create_clock -period 242.00 [get_ports SYSREF_FPGA_C_P]
+# 400 MHz
+create_clock -period 2.50 [get_ports FPGA_REFCLK_OUT_C_P]
+# 4.00 MHz
+create_clock -period 250.00 [get_ports SYSREF_FPGA_C_P]
 
 set clk_pl_0_period                   [get_property PERIOD [get_clocks clk_pl_0]]
 set clk_cpllpd_int_reg_0_period       [get_property PERIOD [get_clocks cpllpd_int_reg_0]]
