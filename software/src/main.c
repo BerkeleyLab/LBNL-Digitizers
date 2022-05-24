@@ -27,6 +27,7 @@
 #include "util.h"
 #include "localOscillator.h"
 #include "autotrim.h"
+#include "acqSync.h"
 
 static void
 sfpString(const char *name, int offset)
