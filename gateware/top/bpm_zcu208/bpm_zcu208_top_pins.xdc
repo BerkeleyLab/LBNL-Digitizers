@@ -115,6 +115,9 @@ set_property PACKAGE_PIN M20  [get_ports SFP_REC_CLK_P]
 set_property IOSTANDARD  LVDS [get_ports SFP_REC_CLK_N]
 set_property IOSTANDARD  LVDS [get_ports SFP_REC_CLK_P]
 
+set_property PACKAGE_PIN AU2  [get_ports EVR_FB_CLK]
+set_property IOSTANDARD  LVCMOS18 [get_ports EVR_FB_CLK]
+
 # Note on LVDS_25 used on a 1.8V bank:
 #
 # There is not a specific requirement on the

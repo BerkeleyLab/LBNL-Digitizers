@@ -43,6 +43,8 @@ module bpm_zcu208_top #(
     output wire SFP_REC_CLK_P,
     output wire SFP_REC_CLK_N,
 
+    output wire EVR_FB_CLK,
+
     input             GPIO_SW_W,
     input             GPIO_SW_E,
     input             GPIO_SW_N,
@@ -85,8 +87,8 @@ assign GPIO_IN[GPIO_IDX_FIRMWARE_BUILD_DATE] = FIRMWARE_BUILD_DATE;
 
 //////////////////////////////////////////////////////////////////////////////
 // Clocks
-wire sysClk, evrClk, adcClk, dacClk, prbsClk, evrAdcFBClk;
-wire adcClkLocked, dacClkLocked, evrAdcFBClkLocked;
+wire sysClk, evrClk, adcClk, dacClk, prbsClk;
+wire adcClkLocked, dacClkLocked;
 wire sysReset_n;
 
 // Get USER MGT reference clock
@@ -165,12 +167,30 @@ assign GPIO_LEDS[0] = evrHeartbeat;
 assign GPIO_LEDS[1] = evrPulsePerSecond;
 
 // Reference clock for RF ADC jitter cleaner
-// EVR ADC FB clock ~412 MHz
 OBUFDS OBUFDS_SFP_REC_CLK (
     .O(SFP_REC_CLK_P),
     .OB(SFP_REC_CLK_N),
-    .I(evrAdcFBClk)
+    .I(evrClk)
 );
+
+`ifndef SIMULATE
+// EVR FB clock forwarding for debug
+wire EVR_FB_CLK_m;
+ODDRE1 ODDRE1_EVR_FB_CLK (
+   .Q(EVR_FB_CLK_m),
+   .C(evrClk),
+   .D1(1'b1),
+   .D2(1'b0),
+   .SR(1'b0)
+);
+
+OBUF #(
+   .SLEW("FAST")
+) OBUF_EVR_FB_CLK (
+   .O(EVR_FB_CLK),
+   .I(EVR_FB_CLK_m)
+);
+`endif
 
 // Check EVR markers
 wire [31:0] evrSyncStatus;
@@ -461,7 +481,7 @@ wire interlockResetButton = GPIO_SW_N;
 wire interlockRelayOpen = 1'b0;
 wire interlockRelayClosed = 1'b1;
 assign GPIO_LEDS[7] = 1'b0;
-assign GPIO_LEDS[6] = evrAdcFBClkLocked;
+assign GPIO_LEDS[6] = 1'b0;
 assign GPIO_LEDS[5] = dacClkLocked;
 assign GPIO_LEDS[4] = adcClkLocked;
 assign GPIO_LEDS[3] = GPIO_IN[GPIO_IDX_SECONDS_SINCE_BOOT][1];
@@ -521,9 +541,6 @@ system
     .dacClk(dacClk),
     .dacClkLocked(dacClkLocked),
     .clk_dac0_0(rfdc_dac0_clk),
-
-    .evrAdcFBClk(evrAdcFBClk),
-    .evrAdcFBClkLocked(evrAdcFBClkLocked),
 
     // DAC tile 230 distributes clock to all others
     .dac45_clk_n(RF4_CLKO_B_C_N),
@@ -616,18 +633,16 @@ system
 
 `endif // `ifndef SIMULATE
 
-// FIXME. adcsTDATA are in adcClk domain
-assign acqTVALID[0] = adcsTVALID[0];
+assign acqTVALID[0] = prelimProcRfCicFaMagValid;
 assign acqTDATA[0*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
-    {ACQ_SAMPLES_WIDTH-SAMPLES_WIDTH{adcsTDATA[SAMPLES_WIDTH-1]}},
-    adcsTDATA[0*SAMPLES_WIDTH+:SAMPLES_WIDTH]
+    {ACQ_SAMPLES_WIDTH-MAG_WIDTH{prelimProcRfCicFaMag0[MAG_WIDTH-1]}},
+    prelimProcRfCicFaMag0
 };
 
-// FIXME. adcsTDATA are in adcClk domain
-assign acqTVALID[1] = adcsTVALID[2];
+assign acqTVALID[1] = prelimProcRfCicFaMagValid;
 assign acqTDATA[1*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
-    {ACQ_SAMPLES_WIDTH-SAMPLES_WIDTH{adcsTDATA[2*SAMPLES_WIDTH-1]}},
-    adcsTDATA[SAMPLES_WIDTH+:SAMPLES_WIDTH]
+    {ACQ_SAMPLES_WIDTH-MAG_WIDTH{prelimProcRfCicFaMag1[MAG_WIDTH-1]}},
+    prelimProcRfCicFaMag1
 };
 
 assign acqTVALID[2] = prelimProcRfTbtMagValid;
@@ -704,6 +719,9 @@ wire                 prelimProcFaToggle;
 wire                 prelimProcRfFaMagValid;
 wire [MAG_WIDTH-1:0] prelimProcRfFaMag0, prelimProcRfFaMag1;
 wire [MAG_WIDTH-1:0] prelimProcRfFaMag2, prelimProcRfFaMag3;
+wire                 prelimProcRfCicFaMagValid;
+wire [MAG_WIDTH-1:0] prelimProcRfCicFaMag0, prelimProcRfCicFaMag1;
+wire [MAG_WIDTH-1:0] prelimProcRfCicFaMag2, prelimProcRfCicFaMag3;
 wire                 prelimProcSaToggle;
 wire                 prelimProcSaValid;
 wire [MAG_WIDTH-1:0] prelimProcRfMag0, prelimProcRfMag1;
@@ -760,7 +778,7 @@ preliminaryProcessing #(.SYSCLK_RATE(SYSCLK_RATE),
     .evrTimestamp(evrTimestamp),
     .evrPtTrigger(1'b0),
     .evrSinglePassTrigger(1'b0),
-    .evrHbMarker(1'b0),
+    .evrHbMarker(evrHeartbeat),
     .sysSingleTrig(sysSingleTrig),
     .sysTimestamp(evrTimestamp),
     .PT_P(),
@@ -769,7 +787,7 @@ preliminaryProcessing #(.SYSCLK_RATE(SYSCLK_RATE),
     .localOscillatorAddressStrobe(GPIO_STROBES[GPIO_IDX_LOTABLE_ADDRESS]),
     .localOscillatorCsrStrobe(GPIO_STROBES[GPIO_IDX_LOTABLE_CSR]),
     .localOscillatorCsr(GPIO_IN[GPIO_IDX_LOTABLE_CSR]),
-    .sumShiftCsrStrobe(1'b0),
+    .sumShiftCsrStrobe(GPIO_STROBES[GPIO_IDX_SUM_SHIFT_CSR]),
     .sumShiftCsr(GPIO_IN[GPIO_IDX_SUM_SHIFT_CSR]),
     .autotrimCsrStrobe(GPIO_STROBES[GPIO_IDX_AUTOTRIM_CSR]),
     .autotrimThresholdStrobe(GPIO_STROBES[GPIO_IDX_AUTOTRIM_THRESHOLD]),
@@ -803,6 +821,11 @@ preliminaryProcessing #(.SYSCLK_RATE(SYSCLK_RATE),
     .rfTbtMag1(prelimProcRfTbtMag1),
     .rfTbtMag2(prelimProcRfTbtMag2),
     .rfTbtMag3(prelimProcRfTbtMag3),
+    .cicFaMagValidDbg(prelimProcRfCicFaMagValid),
+    .cicFaMag0Dbg(prelimProcRfCicFaMag0),
+    .cicFaMag1Dbg(prelimProcRfCicFaMag1),
+    .cicFaMag2Dbg(prelimProcRfCicFaMag2),
+    .cicFaMag3Dbg(prelimProcRfCicFaMag3),
     .faToggle(prelimProcFaToggle),
     .adcTbtLoadAccumulator(adcTbtLoadAccumulator),
     .adcTbtLatchAccumulator(adcTbtLatchAccumulator),
