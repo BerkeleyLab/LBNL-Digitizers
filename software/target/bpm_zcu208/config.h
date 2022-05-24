@@ -44,12 +44,12 @@
 /*
  * ADC sampling clock frequency
  */
-#define CFG_ADC_SAMPLING_CLK_FREQ   4944.00
+#define CFG_ADC_SAMPLING_CLK_FREQ   4800.00
 
 /*
  * ADC reference clock
  */
-#define CFG_ADC_REF_CLK_FREQ   4944.00
+#define CFG_ADC_REF_CLK_FREQ   4800.00
 
 /*
  * Application-specific registers

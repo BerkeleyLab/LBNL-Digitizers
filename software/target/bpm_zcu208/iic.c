@@ -504,12 +504,6 @@ lmk04828Bread(int reg)
     // A7 - A0
     buf[1] = (reg & 0xFF);
     buf[2] = 0;
-    if (!spiSend(SPI_MUX_04828B, buf, 3)) return 0;
-
-    /*
-     * Read back value
-     * Transmit values are ignored, so just send the same thing.
-     */
     if (!spiTransfer(SPI_MUX_04828B, buf, 3)) return 0;
     return buf[2];
 }
