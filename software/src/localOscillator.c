@@ -118,6 +118,104 @@ scale(double x)
     return i;
 }
 
+static void
+setSumShift(int sumShift, uint32_t mask, int shift)
+{
+    uint32_t csr = GPIO_READ(GPIO_IDX_SUM_SHIFT_CSR);
+    if (sumShift < 0) sumShift = 0;
+    else if (sumShift > 15) sumShift = 15;
+    csr &= ~mask;
+    csr |= sumShift << shift;
+    GPIO_WRITE(GPIO_IDX_SUM_SHIFT_CSR, csr);
+}
+
+void
+sdAccumulateSetTbtSumShift(int shift)
+{
+    setSumShift(shift, SDACCUMULATOR_TBT_SUM_SHIFT_MASK,
+                       SDACCUMULATOR_TBT_SUM_SHIFT_SHIFT);
+}
+
+void
+sdAccumulateSetMtSumShift(int shift)
+{
+    setSumShift(shift, SDACCUMULATOR_MT_SUM_SHIFT_MASK,
+                       SDACCUMULATOR_MT_SUM_SHIFT_SHIFT);
+}
+
+void
+sdAccumulateSetFaSumShift(int shift)
+{
+    setSumShift(shift, SDACCUMULATOR_FA_CIC_SHIFT_MASK,
+                       SDACCUMULATOR_FA_CIC_SHIFT_SHIFT);
+}
+
+/*
+ * Determine shift to correct for CIC scaling
+ */
+static int
+cicShift(int decimationFactor, int nStages)
+{
+    double x = 1.0;
+    int shift = 0;
+
+    while (nStages--) x *= decimationFactor;
+    while (x > 1) {
+        shift++;
+        x /= 2;
+    }
+    return shift;
+}
+
+/*
+ * Scale FA CIC result by appropriate amount if actual FA decimation factor
+ * exceeds the configured value.
+ */
+static void
+optimizeCicShift(int mtTableLength)
+{
+    uint32_t csr = GPIO_READ(GPIO_IDX_SUM_SHIFT_CSR);
+    int nCICstages = (csr & SDACCUMULATOR_CIC_STAGE_COUNT_MASK) >>
+                                            SDACCUMULATOR_CIC_STAGE_COUNT_SHIFT;
+    printf("optimizeCicShift: nCICstages = %d\n", nCICstages);
+    int faDecimationConfig = (csr & SDACCUMULATOR_FA_DECIMATION_MASK) >>
+                                            SDACCUMULATOR_FA_DECIMATION_SHIFT;
+    printf("optimizeCicShift: faDecimationConfig = %d\n", faDecimationConfig);
+    unsigned int num = systemParameters.evrPerFaMarker *
+                       systemParameters.pllMultiplier * 4;
+    printf("optimizeCicShift: num = %u\n", num);
+    unsigned int den = mtTableLength * systemParameters.rfDivisor;
+    printf("optimizeCicShift: den = %u\n", den);
+    int faDecimationActual = num / den;
+    printf("optimizeCicShift: faDecimationActual = %d\n", faDecimationActual);
+    int remainder = num % den;
+    printf("optimizeCicShift: remainder = %d\n", remainder);
+    int cicShiftConfig, cicShiftActual;
+
+    if (remainder) printf("FA CIC DECIMATION FACTOR ISN'T AN INTEGER\n");
+    if (faDecimationActual != faDecimationConfig) {
+        int shift;
+        printf("\nCIC filter stage count: %d\n", nCICstages);
+        cicShiftConfig = cicShift(faDecimationConfig, nCICstages);
+        cicShiftActual = cicShift(faDecimationActual, nCICstages);
+        shift = cicShiftConfig - cicShiftActual;
+        if (shift > 15) shift = 15;
+        if (shift < 0) {
+            shift = 0;
+            printf("FA CIC SCALING OVERFLOW\n");
+            printf("Increase pilot tone table length or attenuate filter inputs.\n\n");
+        }
+        printf("FA CIC filter FPGA build decimation factor %d (shift %d).\n",
+                                            faDecimationConfig, cicShiftConfig);
+        printf("FA CIC filter actual decimation factor %d", faDecimationActual);
+        if (remainder) printf(" (remainder %d (!!!))", remainder);
+        printf(" (shift %d).\n", cicShiftActual);
+        printf("Set CIC shift to %d.\n", shift);
+        setSumShift(shift, SDACCUMULATOR_FA_CIC_SHIFT_MASK,
+                           SDACCUMULATOR_FA_CIC_SHIFT_SHIFT);
+    }
+}
+
 /*
  * Called when complete file has been uploaded to the TFTP server
  */
@@ -276,7 +374,9 @@ localOscWrite(int32_t *dst, const int32_t *src, int capacity,
     else {
         printf("CORRUPT LOCAL OSCILLATOR TABLE\n");
     }
+
     if (goodTables == 2) localOscRun();
+    if (isPt) optimizeCicShift(rowCount);
 }
 
 

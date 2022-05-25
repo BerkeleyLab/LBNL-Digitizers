@@ -16,4 +16,8 @@ void localOscPtCommit(void);
 
 void localOscillatorInit(void);
 
+void sdAccumulateSetTbtSumShift(int shift);
+void sdAccumulateSetMtSumShift(int shift);
+void sdAccumulateSetFaSumShift(int shift);
+
 #endif
