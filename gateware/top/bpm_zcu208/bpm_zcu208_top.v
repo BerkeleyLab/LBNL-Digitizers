@@ -173,24 +173,7 @@ OBUFDS OBUFDS_SFP_REC_CLK (
     .I(evrClk)
 );
 
-`ifndef SIMULATE
-// EVR FB clock forwarding for debug
-wire EVR_FB_CLK_m;
-ODDRE1 ODDRE1_EVR_FB_CLK (
-   .Q(EVR_FB_CLK_m),
-   .C(evrClk),
-   .D1(1'b1),
-   .D2(1'b0),
-   .SR(1'b0)
-);
-
-OBUF #(
-   .SLEW("FAST")
-) OBUF_EVR_FB_CLK (
-   .O(EVR_FB_CLK),
-   .I(EVR_FB_CLK_m)
-);
-`endif
+assign EVR_FB_CLK = 1'b0;
 
 // Check EVR markers
 wire [31:0] evrSyncStatus;
@@ -705,6 +688,52 @@ assign evrFaSynced = sysFAstatus[31];
 assign evrSaSynced = sysSAstatus[31];
 
 //
+// Create slow (SA) and fast (FA) acquistion triggers
+// based on ADC trigger 0 (fake heartbeat).
+//
+
+localparam MAX_ADC_CLKS_PER_HEARTBEAT = 200000000;
+localparam ADC_HEARTBEAT_WIDTH = $clog2(MAX_ADC_CLKS_PER_HEARTBEAT);
+
+reg [ADC_HEARTBEAT_WIDTH-1:0] sysAdcHeartbeatReload = ~0;
+always @(posedge sysClk) begin
+    if (GPIO_STROBES[GPIO_IDX_ADC_HEARTBEAT_RELOAD]) begin
+        sysAdcHeartbeatReload <= GPIO_OUT[ADC_HEARTBEAT_WIDTH-1:0];
+    end
+end
+
+reg [ADC_HEARTBEAT_WIDTH:0] adcHeartbeatCounter = ~0;
+wire adcHeartbeatCounterDone = adcHeartbeatCounter[ADC_HEARTBEAT_WIDTH];
+wire adcHeartbeat = adcHeartbeatCounter[ADC_HEARTBEAT_WIDTH];
+always @(posedge adcClk) begin
+    if (adcHeartbeatCounterDone) begin
+        adcHeartbeatCounter <= { 1'b0, sysAdcHeartbeatReload };
+    end
+    else begin
+        adcHeartbeatCounter <= adcHeartbeatCounter - 1;
+    end
+end
+
+wire adcFaMarker, adcSaMarker;
+wire [31:0] sysADCFAstatus, sysADCSAstatus;
+wire adcFaSynced, adcSaSynced;
+acqSync acqADCSync(
+    .sysClk(sysClk),
+    .sysGPIO_OUT(GPIO_OUT),
+    .sysFAstrobe(GPIO_STROBES[GPIO_IDX_ADC_FA_RELOAD]),
+    .sysSAstrobe(GPIO_STROBES[GPIO_IDX_ADC_SA_RELOAD]),
+    .sysFAstatus(sysADCFAstatus),
+    .sysSAstatus(sysADCSAstatus),
+    .evrClk(adcClk),
+    .evrHeartbeat(adcHeartbeat),
+    .evrFaMarker(adcFaMarker),
+    .evrSaMarker(adcSaMarker));
+assign GPIO_IN[GPIO_IDX_ADC_FA_RELOAD] = sysADCFAstatus;
+assign GPIO_IN[GPIO_IDX_ADC_SA_RELOAD] = sysADCSAstatus;
+assign adcFaSynced = sysADCFAstatus[31];
+assign adcSaSynced = sysADCSAstatus[31];
+
+//
 // Preliminary processing (compute magnitude of ADC signals)
 //
 wire sysSingleTrig;
@@ -772,13 +801,13 @@ preliminaryProcessing #(.SYSCLK_RATE(SYSCLK_RATE),
     .adc3(adcsTDATA[3*SAMPLES_WIDTH+:SAMPLES_WIDTH]), // Q1
     .adcExceedsThreshold(1'b0),
     .adcUseThisSample(1'b1),
-    .evrClk(evrClk),
-    .evrFaMarker(evrFaMarker),
-    .evrSaMarker(evrSaMarker),
+    .evrClk(adcClk),
+    .evrFaMarker(adcFaMarker),
+    .evrSaMarker(adcSaMarker),
     .evrTimestamp(evrTimestamp),
     .evrPtTrigger(1'b0),
     .evrSinglePassTrigger(1'b0),
-    .evrHbMarker(evrHeartbeat),
+    .evrHbMarker(adcHeartbeat),
     .sysSingleTrig(sysSingleTrig),
     .sysTimestamp(evrTimestamp),
     .PT_P(),
