@@ -734,6 +734,31 @@ assign adcFaSynced = sysADCFAstatus[31];
 assign adcSaSynced = sysADCSAstatus[31];
 
 //
+// Forward the EVR trigger bus and time stamp to the ADC clock domain.
+//
+wire [63:0] adcTimestamp;
+wire [71:0] evrForward, adcForward;
+assign evrForward = { evrTriggerBus, evrTimestamp };
+forwardData #(.DATA_WIDTH(72))
+  forwardEVR(.inClk(evrClk),
+             .inData(evrForward),
+             .outClk(adcClk),
+             .outData(adcForward));
+assign adcTimestamp = adcForward[63:0];
+
+//
+// Forward the EVR trigger bus and time stamp to the system clock domain.
+//
+wire [63:0] sysTimestamp;
+wire [71:0] sysForward;
+forwardData #(.DATA_WIDTH(72))
+  forwardEVR(.inClk(evrClk),
+             .inData(evrForward),
+             .outClk(sysClk),
+             .outData(sysForward));
+assign sysTimestamp = sysForward[63:0];
+
+//
 // Preliminary processing (compute magnitude of ADC signals)
 //
 wire sysSingleTrig;
@@ -804,12 +829,12 @@ preliminaryProcessing #(.SYSCLK_RATE(SYSCLK_RATE),
     .evrClk(adcClk),
     .evrFaMarker(adcFaMarker),
     .evrSaMarker(adcSaMarker),
-    .evrTimestamp(evrTimestamp),
+    .evrTimestamp(adcTimestamp),
     .evrPtTrigger(1'b0),
     .evrSinglePassTrigger(1'b0),
     .evrHbMarker(adcHeartbeat),
     .sysSingleTrig(sysSingleTrig),
-    .sysTimestamp(evrTimestamp),
+    .sysTimestamp(sysTimestamp),
     .PT_P(),
     .PT_N(),
     .gpioData(GPIO_OUT),
