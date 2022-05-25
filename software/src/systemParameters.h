@@ -26,6 +26,7 @@ extern struct systemParameters {
     int                 rfDivisor;
     int                 pllMultiplier;
     int                 isSinglePass;
+    int                 adcHeartbeatMarker;
     int                 evrPerFaMarker;
     int                 evrPerSaMarker;
     uint32_t            checksum;

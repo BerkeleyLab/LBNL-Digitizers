@@ -55,6 +55,9 @@
 #define GPIO_IDX_SA_TIMESTAMP_TICKS      41 // Slow acquisition time stamp
 #define GPIO_IDX_EVR_FA_RELOAD           42 // Fast acquisition divider reload
 #define GPIO_IDX_EVR_SA_RELOAD           43 // Slow acquisition divider reload
+#define GPIO_IDX_ADC_FA_RELOAD           44 // Fast acquisition divider reload
+#define GPIO_IDX_ADC_SA_RELOAD           45 // Slow acquisition divider reload
+#define GPIO_IDX_ADC_HEARTBEAT_RELOAD    46 // ADC heartbeat counter
 
 #define CFG_AXI_SAMPLES_PER_CLOCK         1 // 1 sample per clock
 #define CFG_LO_RF_ROW_CAPACITY           1024
