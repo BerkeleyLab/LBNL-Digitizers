@@ -17,6 +17,8 @@ To build the gateware the following dependencies are needed:
 * Xilinx Vivado (2020.1.1 tested), available [here](https://www.xilinx.com/support/download/index.html/content/xilinx/en/downloadNav/vivado-design-tools.html)
 * Xilinx Vitis (2020.1.1. tested), available [here](https://www.xilinx.com/support/download/index.html/content/xilinx/en/downloadNav/vitis.html)
 
+Make sure `vivado` and `vitis` are in PATH.
+
 #### Software Dependencies
 
 To build the software the following dependencies are needed:
@@ -30,14 +32,6 @@ both gateware and software, plus the SD boot image .bin.
 
 ```bash
 make
-```
-
-Remember that vivado and the ARM toolchain should be in your PATH. If that's
-not the case you can pass the ARM directory in the `CROSS_COMPILE` make
-variable:
-
-```bash
-make CROSS_COMPILE=<ARM_TOOLCHAIN_LOCATION>/bin/aarch64-none-elf-
 ```
 
 A suggestion in running the `make` command is to measure the time
@@ -70,5 +64,5 @@ The following script can download the software via JTAG:
 
 ```bash
 cd software/scripts
-xsct download_elf.tcl ../../gateware/syn/hsd_zcu111/psu_init.tcl ../hsd/HighSpeedDigitizer.elf
+xsct download_elf.tcl ../../gateware/syn/hsd_zcu111/psu_init.tcl ../app/hsd/hsd_zcu111.elf
 ```

@@ -14,6 +14,7 @@ module acquisitionBRAM #(
     output wire [31:0] sysStatus,
 
     input                        adcClk,
+    input                        axiValid,
     input [DPRAM_DATA_WIDTH-1:0] axiData
     );
 
@@ -37,7 +38,7 @@ reg [DPRAM_ADDR_WIDTH-1:0] acqAddress = 0;
 always @(posedge adcClk) begin
     acqEnable_m <= sysAcqEnable;
     acqEnable   <= acqEnable_m;
-    if (acqEnable) begin
+    if (acqEnable && axiValid) begin
         dpram[acqAddress] <= axiData;
         acqAddress <= acqAddress + 1;
     end

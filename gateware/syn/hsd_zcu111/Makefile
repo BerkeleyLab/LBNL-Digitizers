@@ -12,16 +12,16 @@ CMD_SEP = ;
 include ../../../dir_list.mk
 
 # Top level design name
-APP_NAME ?= hsd_zcu111
+TARGET ?= hsd_zcu111
 
 # Top level bitstream name
-all: $(APP_NAME)_top.bit
+all: $(TARGET)_top.bit
 
 # Search for .v files here
 vpath %.v $(DSP_DIR)
 vpath %.v $(MODULES_DIR)
 
-TOP_LVL_DIR = ../../top/$(APP_NAME)
+TOP_LVL_DIR = ../../top/$(TARGET)
 
 # top-level files go here
 vpath %.v $(TOP_LVL_DIR)
@@ -35,8 +35,8 @@ include $(BUILD_DIR)/top_rules.mk
 UNISIM_CRAP += '-e GTYE4_CHANNEL|MMCME4_ADV'
 
 # Top level files for depedency tracking
-SYSTEM_TOP_PINS_XDC = $(APP_NAME)_top_pins.xdc
-SYSTEM_TOP_TIM_XDC = $(APP_NAME)_top_tim.xdc
+SYSTEM_TOP_PINS_XDC = $(TARGET)_top_pins.xdc
+SYSTEM_TOP_TIM_XDC = $(TARGET)_top_tim.xdc
 
 # ip_cores generation scripts/names
 
@@ -123,8 +123,8 @@ vpath %.sh $(GW_SCRIPTS_DIR)
 # List top level depedencies here. Eveything named .bit will be used as
 # a top-level target in top_rules.mk. .v and .sv files will be used as
 # prerequisites as well as a system_top.xdc file
-$(APP_NAME)_top.bit: system_top.xdc $(VIVADO_SYNTH_EXTRA_TCL) $(TOP_LVL_DIR)/$(APP_NAME)_top.v $(BD_bds)
-$(TOP_LVL_DIR)/$(APP_NAME)_top.v: $(TOP_LVL_DIR)/firmwareBuildDate.v $(TOP_LVL_DIR)/gpioIDX.v $(IP_CORES_CUSTOM) $(IP_CORES_TOP_LVL_SRCS) $(BD_TOP_LVL_SRCS)
+$(TARGET)_top.bit: system_top.xdc $(VIVADO_SYNTH_EXTRA_TCL) $(TOP_LVL_DIR)/$(TARGET)_top.v $(BD_bds)
+$(TOP_LVL_DIR)/$(TARGET)_top.v: $(TOP_LVL_DIR)/firmwareBuildDate.v $(TOP_LVL_DIR)/gpioIDX.v $(IP_CORES_CUSTOM) $(IP_CORES_TOP_LVL_SRCS) $(BD_TOP_LVL_SRCS)
 
 # Generate bundled .xdc from other .xdc. Don't change the order of the
 # prerequisites as we need constraints in the order specified
@@ -135,8 +135,8 @@ system_top.xdc: $(SYSTEM_TOP_PINS_XDC) $(IP_CORES_XDCS) $(SYSTEM_TOP_TIM_XDC)
 %firmwareBuildDate.v: set_firmware_build_date.tcl
 	$(VIVADO_CMD) -source $< -tclargs $@
 
-%gpioIDX.v: createVerilogIDX.sh
-	sh $< $(SW_HSD_TGT_DIR)/$(HARDWARE)/config.h $(SW_HSD_TGT_DIR)/$(HARDWARE)/gpio.h > $@
+%gpioIDX.v: $(SW_TGT_DIR)/$(FPGA_APPLICATION)_$(HARDWARE)/config.h $(SW_TGT_DIR)/$(FPGA_APPLICATION)_$(HARDWARE)/gpio.h
+	sh $(GW_SCRIPTS_DIR)/createVerilogIDX.sh $^ > $@
 
 ipcores_repos.tcl:
 	sed -e 's|$$DIRS|$(IP_CORES_CUSTOM_TARGET_DIRS)|g' \

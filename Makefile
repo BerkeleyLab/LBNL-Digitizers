@@ -1,25 +1,25 @@
 include dir_list.mk
 
 CROSS_COMPILE    ?=
-TARGET           ?= zcu111
+PLATFORM         ?= zcu111
+APP              ?= hsd
 
-HSD_APP_NAME     = hsd_$(TARGET)
-HSD_SW_APP_NAME  = HighSpeedDigitizer
-HSD_BIT          = $(GW_HSD_TGT_DIR)/hsd_$(TARGET)_top.bit
+TARGET       = $(APP)_$(PLATFORM)
+GW_TGT_DIR   = $(GW_SYN_DIR)/$(TARGET)
+BIT          = $(GW_TGT_DIR)/$(TARGET)_top.bit
+SW_TGT_DIR   = $(SW_APP_DIR)/$(APP)
 
-GW_HSD_TGT_DIR = $(GW_HSD_DIR)/hsd_$(TARGET)
+.PHONY: all bit sw
 
-.PHONY: all hsd_bit hsd_sw
+all: bit sw
 
-all: hsd_bit hsd_sw
+bit:
+	make -C $(GW_TGT_DIR) TARGET=$(TARGET) $(TARGET)_top.bit
 
-hsd_bit:
-	make -C $(GW_HSD_TGT_DIR) APP_NAME=$(HSD_APP_NAME) $(HSD_APP_NAME)_top.bit
-
-hsd_sw:
-	make -C $(SW_HSD_DIR) TARGET=$(TARGET) APP_NAME=$(HSD_SW_APP_NAME) BIT=$(HSD_BIT) all
+sw:
+	make -C $(SW_TGT_DIR) TARGET=$(TARGET) BIT=$(BIT) all
 
 clean:
-	make -C $(GW_HSD_TGT_DIR) clean
-	make -C $(SW_HSD_DIR) clean
+	make -C $(GW_TGT_DIR) TARGET=$(TARGET) clean
+	make -C $(SW_TGT_DIR) TARGET=$(TARGET) clean
 	rm -f *.log *.jou

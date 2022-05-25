@@ -24,6 +24,7 @@ module acquisitionBCM #(
     input [63:0] evrTimestamp,
 
     input                                                              adcClk,
+    input [CHANNEL_COUNT-1:0]                                          axiValid,
     input [(CHANNEL_COUNT*AXI_SAMPLES_PER_CLOCK*AXI_SAMPLE_WIDTH)-1:0] axiData
     );
 
@@ -32,6 +33,8 @@ localparam PASS_COUNT_WIDTH = $clog2(MAX_PASSES_PER_ACQUISITION) + 1;
 localparam DPRAM_WIDTH = ADC_WIDTH + $clog2(MAX_PASSES_PER_ACQUISITION);
 localparam DPRAM_ADDRESS_WIDTH = $clog2(SAMPLE_CAPACITY/AXI_SAMPLES_PER_CLOCK);
 localparam SAMPLE_INDEX_WIDTH = $clog2(AXI_SAMPLES_PER_CLOCK);
+localparam SAMPLE_INDEX_WIDTH_NONZERO = (SAMPLE_INDEX_WIDTH == 0)? 1 : SAMPLE_INDEX_WIDTH;
+localparam SINGLE_SAMPLE_PER_CLOCK = AXI_SAMPLES_PER_CLOCK == 1;
 localparam CHANNEL_INDEX_WIDTH = $clog2(CHANNEL_COUNT);
 localparam ADC_SHIFT = AXI_SAMPLE_WIDTH - ADC_WIDTH;
 
@@ -41,7 +44,7 @@ localparam ADC_SHIFT = AXI_SAMPLE_WIDTH - ADC_WIDTH;
 reg         [DPRAM_ADDRESS_WIDTH-1:0] sysAddress;
 reg         [DPRAM_ADDRESS_WIDTH-1:0] sysAcqCountReload;
 reg            [PASS_COUNT_WIDTH-1:0] sysPassCountReload;
-reg          [SAMPLE_INDEX_WIDTH-1:0] sysSampleIndex;
+reg          [SAMPLE_INDEX_WIDTH_NONZERO-1:0] sysSampleIndex;
 reg         [CHANNEL_INDEX_WIDTH-1:0] sysChannelIndex;
 reg sysAcqToggle = 0, acqAcqMatch = 0;
 wire sysAcqMatch;
@@ -68,7 +71,8 @@ always @(posedge sysClk) begin
         end
     end
     if (sysAddrStrobe) begin
-        sysSampleIndex <= GPIO_OUT[0+:SAMPLE_INDEX_WIDTH];
+        // Must have a valid slice, so must be NONZERO
+        sysSampleIndex <= GPIO_OUT[0+:SAMPLE_INDEX_WIDTH_NONZERO];
         sysAddress <= GPIO_OUT[SAMPLE_INDEX_WIDTH+:DPRAM_ADDRESS_WIDTH];
         sysChannelIndex <= GPIO_OUT[24+:CHANNEL_INDEX_WIDTH];
     end
@@ -162,25 +166,35 @@ reg  [(CHANNEL_COUNT*AXI_SAMPLES_PER_CLOCK*DPRAM_WIDTH)-1:0] dpram
                                                  [0:(1<<DPRAM_ADDRESS_WIDTH)-1];
 reg  [(CHANNEL_COUNT*AXI_SAMPLES_PER_CLOCK*DPRAM_WIDTH)-1:0] dpramQ;
 wire [(CHANNEL_COUNT*AXI_SAMPLES_PER_CLOCK*DPRAM_WIDTH)-1:0] dpramWriteData;
+wire [(CHANNEL_COUNT*AXI_SAMPLES_PER_CLOCK)-1:0] dpramWriteDataValid;
 always @(posedge adcClk) begin
     dpramQ <= dpram[acqAddress];
-    if (acquiring_d3) dpram[acqAddress_d3] <= dpramWriteData;
+    if (acquiring_d3 && dpramWriteDataValid) dpram[acqAddress_d3] <= dpramWriteData;
 end
 
 genvar i;
 generate
 for (i = 0 ; i < (CHANNEL_COUNT * AXI_SAMPLES_PER_CLOCK) ; i = i + 1) begin
+ wire                          adcValid = axiValid[i/AXI_SAMPLES_PER_CLOCK];
  // ADC values are left adjusted in the AXI_SAMPLE_WIDTH fields.
  wire signed   [ADC_WIDTH-1:0] adcData =
                             axiData[(i*AXI_SAMPLE_WIDTH)+ADC_SHIFT+:ADC_WIDTH];
+ reg                           wideAdcDataValid;
+ reg                           newValueValid;
  reg  signed [DPRAM_WIDTH-1:0] wideAdcData, oldValue, newValue;
  wire signed [DPRAM_WIDTH-1:0] ramValue = dpramQ[i*DPRAM_WIDTH+:DPRAM_WIDTH];
+ assign dpramWriteDataValid[i] = newValueValid;
  assign dpramWriteData[i*DPRAM_WIDTH+:DPRAM_WIDTH] = newValue;
 
  always @(posedge adcClk) begin
+     wideAdcDataValid <= adcValid;
      wideAdcData <= adcData;
      oldValue <= firstPass_d1 ? {DPRAM_WIDTH{1'b0}} : ramValue;
-     newValue <= oldValue + wideAdcData;
+
+     newValueValid <= wideAdcDataValid;
+     if (wideAdcDataValid) begin
+         newValue <= oldValue + wideAdcData;
+     end
  end
 end
 endgenerate
@@ -190,8 +204,10 @@ endgenerate
 // address and reading the value for all clock crossing to stabilize.
 reg [DPRAM_WIDTH-1:0] dpramMUX;
 always @(posedge sysClk) begin
-    dpramMUX <= dpramQ[((sysChannelIndex * AXI_SAMPLES_PER_CLOCK) +
-                                    sysSampleIndex) * DPRAM_WIDTH+:DPRAM_WIDTH];
+    dpramMUX <= (SINGLE_SAMPLE_PER_CLOCK)?
+        dpramQ[(sysChannelIndex * AXI_SAMPLES_PER_CLOCK) * DPRAM_WIDTH+:DPRAM_WIDTH] :
+        dpramQ[((sysChannelIndex * AXI_SAMPLES_PER_CLOCK) +
+                 sysSampleIndex) * DPRAM_WIDTH+:DPRAM_WIDTH];
 end
 assign sysReadoutReg = $signed(dpramMUX) << ADC_SHIFT;
 

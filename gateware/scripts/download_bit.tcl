@@ -11,6 +11,13 @@ set bit_file [file normalize [lindex $argv 0]]
 
 # Connect
 connect
+
+# Reset processor. Ottherwise bistream and elf fails...
+targets 9
+after 1000
+rst
+after 1000
+
 # Select PL unit
 targets 3
 

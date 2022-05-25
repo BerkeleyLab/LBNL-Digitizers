@@ -23,6 +23,7 @@ module acquisitionHSD #(
     input              sysAcqConfig2Strobe,
     input       [31:0] GPIO_OUT,
     output wire [31:0] sysStatus,
+    output wire [31:0] sysData,
     output wire [31:0] sysTriggerLocation,
     output reg  [63:0] sysTriggerTimestamp,
 
@@ -30,6 +31,7 @@ module acquisitionHSD #(
     input [63:0] evrTimestamp,
 
     input                                                adcClk,
+    input                                                axiValid,
     input [(AXI_SAMPLES_PER_CLOCK*AXI_SAMPLE_WIDTH)-1:0] axiData,
     input                        [TRIGGER_BUS_WIDTH-1:0] eventTriggerStrobes,
     input                                                bondedWriteEnableIn,
@@ -81,6 +83,8 @@ reg                  [31:0] sysAcqConfig1 = 0, sysAcqConfig2 = 0;
 localparam ADC_SHIFT = AXI_SAMPLE_WIDTH - ADC_WIDTH;
 localparam ADC_ALL_SAMPLES_WIDTH = AXI_SAMPLES_PER_CLOCK * ADC_WIDTH;
 localparam ADC_MUX_SELECT_WIDTH = $clog2(AXI_SAMPLES_PER_CLOCK);
+localparam ADC_MUX_SELECT_WIDTH_NONZERO = (ADC_MUX_SELECT_WIDTH == 0)? 1 : ADC_MUX_SELECT_WIDTH;
+localparam SINGLE_SAMPLE_PER_CLOCK = AXI_SAMPLES_PER_CLOCK == 1;
 wire [ACQ_COUNTER_WIDTH:0] sysPretriggerCount =
                                            sysAcqConfig1[ACQ_COUNTER_WIDTH-1:0];
 wire [ACQ_COUNTER_WIDTH-1:0] sysContinuousPosttriggerCount =
@@ -123,22 +127,32 @@ wire [SEG_GAP_COUNTER_WIDTH:0] laterSegGapCounterLoad =
 // ADC AXI Clock Domain
 
 // Extract salient bits from AXI stream and note those above trigger threshold.
+wire                             adcDataValid;
 wire [ADC_ALL_SAMPLES_WIDTH-1:0] adcData;
+reg                              sampleTriggerValid = 0;
 reg  [AXI_SAMPLES_PER_CLOCK-1:0] sampleAboveTrigger = 0;
 reg  [AXI_SAMPLES_PER_CLOCK-1:0] sampleBelowTrigger = 0;
+reg                              triggerFlagsValid = 0;
 reg  [AXI_SAMPLES_PER_CLOCK-1:0] triggerFlags;
 reg                              triggersBeenIdle = 0;
 genvar i;
 generate
 for (i = 0 ; i < AXI_SAMPLES_PER_CLOCK ; i = i + 1) begin
+    (*mark_debug=DEBUG*) reg adcValid = 0;
     (*mark_debug=DEBUG*) reg signed [ADC_WIDTH-1:0] adc = 0;
     always @(posedge adcClk) begin
+        adcValid <= axiValid;
         adc <= axiData[i*AXI_SAMPLE_WIDTH+ADC_SHIFT+:ADC_WIDTH];
+
+        sampleTriggerValid <= adcValid;
         sampleAboveTrigger[i] <= (adc > sysTriggerLevel);
         sampleBelowTrigger[i] <= (adc < sysTriggerLevel);
+
+        triggerFlagsValid <= sampleTriggerValid;
         triggerFlags[i] <= sysFallingEdgeTrigger ? sampleBelowTrigger[i]
                                                  : sampleAboveTrigger[i];
     end
+    assign adcDataValid = adcValid;
     assign adcData[i*ADC_WIDTH+:ADC_WIDTH] = adc;
 end
 endgenerate
@@ -148,15 +162,16 @@ endgenerate
 // edge by requiring a full clock's worth of samples to be idle
 // before accepting trigger
 reg watchForTrigger = 0, watchForTrigger_d = 0;
-reg [ADC_MUX_SELECT_WIDTH-1:0] triggerLocation;
+reg [ADC_MUX_SELECT_WIDTH_NONZERO-1:0] triggerLocation;
 reg [ADC_RAM_ADDRESS_WIDTH-1:0] triggerDpramAddr;
 reg triggered = 0;
 always @(posedge adcClk) begin
     watchForTrigger_d <= watchForTrigger;
     if (watchForTrigger) begin
         if (watchForTrigger_d) begin
-            if (sysFallingEdgeTrigger ? !(|sampleBelowTrigger)
-                                      : !(|sampleAboveTrigger)) begin
+            if (sampleTriggerValid && (
+                sysFallingEdgeTrigger ? !(|sampleBelowTrigger)
+                                      : !(|sampleAboveTrigger))) begin
                 triggersBeenIdle <= 1;
             end
             if (!triggered) begin
@@ -164,7 +179,8 @@ always @(posedge adcClk) begin
                     triggered <= 1;
                     triggerLocation <= 0;
                 end
-                else if (|triggerFlags && triggersBeenIdle) begin
+                else if (|triggerFlags && triggersBeenIdle &&
+                    triggerFlagsValid) begin
                     triggered <= 1;
                     casex (triggerFlags)
                     8'bxxxxxxx1: triggerLocation <= 0;
@@ -212,12 +228,12 @@ reg startMatch = 0;
 always @(posedge adcClk) begin
     // DPRAM writes are outside other logic since bonded channels
     // need to be written even though their acqActive is false.
-    if (dpramWriteEnable) begin
+    if (dpramWriteEnable && adcDataValid) begin
         dpramWriteAddress <= dpramWriteAddress + 1;
     end
     channelWriteEnable <= sysIsBonded ? bondedWriteEnableIn:dpramWriteEnable;
     channelWriteAddress <= sysIsBonded ? bondedWriteAddressIn:dpramWriteAddress;
-    if (channelWriteEnable) begin
+    if (channelWriteEnable && adcDataValid) begin
         dpram[channelWriteAddress] <= adcData;
     end
 
@@ -296,8 +312,7 @@ end
 ///////////////////////////////////////////////////////////////////////////////
 // System Clock Domain
 
-reg  [ADC_RAM_ADDRESS_WIDTH+ADC_MUX_SELECT_WIDTH-1:0] sysReadOffset;
-reg [ADC_MUX_SELECT_WIDTH-1:0] sysMuxSelect;
+reg [ADC_MUX_SELECT_WIDTH_NONZERO-1:0] sysMuxSelect;
 reg [ADC_RAM_ADDRESS_WIDTH-1:0] sysDpramRdAddr;
 reg             [ADC_WIDTH-1:0] sysDataMux;
 
@@ -305,7 +320,8 @@ always @(posedge sysClk) begin
     sysAcqFinish_m <= acqFinish;
     sysAcqFinish   <= sysAcqFinish_m;
     if (sysCsrStrobe) begin
-        sysMuxSelect <= GPIO_OUT[0+:ADC_MUX_SELECT_WIDTH];
+        // Must have a valid slice, so must be NONZERO
+        sysMuxSelect <= GPIO_OUT[0+:ADC_MUX_SELECT_WIDTH_NONZERO];
         sysDpramRdAddr <= GPIO_OUT[ADC_MUX_SELECT_WIDTH+:ADC_RAM_ADDRESS_WIDTH]
                                                     - TRIGGER_DETECTION_LATENCY;
         sysAcqActive <= GPIO_OUT[31];
@@ -345,14 +361,24 @@ always @(posedge sysClk) begin
                          ((LONG_SEGMENT_CAPACITY / AXI_SAMPLES_PER_CLOCK) - 2) :
                          ((SHORT_SEGMENT_CAPACITY / AXI_SAMPLES_PER_CLOCK) - 2);
     dpramQ <= dpram[sysDpramRdAddr];
-    sysDataMux <= dpramQ[sysMuxSelect*ADC_WIDTH+:ADC_WIDTH];
+    sysDataMux <= (SINGLE_SAMPLE_PER_CLOCK)? dpramQ[0+:ADC_WIDTH] :
+        dpramQ[sysMuxSelect*ADC_WIDTH+:ADC_WIDTH];
 end
 assign sysStatus = { sysAcqActive, sysFull, sysSegMode,
-                     {32-1-1-2-3-ADC_WIDTH-ADC_SHIFT{1'b0}},
-                     acqState,
-                     sysDataMux, {ADC_SHIFT{1'b0}} };
+                     {32-1-1-2-3{1'b0}},
+                     acqState};
+assign sysData = { sysDataMux, {ADC_SHIFT{1'b0}} };
+
+generate
+if (SINGLE_SAMPLE_PER_CLOCK) begin
+assign sysTriggerLocation = { {32-ADC_WIDTH-ADC_SHIFT{1'b0}},
+                                            triggerDpramAddr };
+end
+else begin
 assign sysTriggerLocation = { {32-ADC_WIDTH-ADC_SHIFT{1'b0}},
                                             triggerDpramAddr, triggerLocation };
+end
+endgenerate
 
 ///////////////////////////////////////////////////////////////////////////////
 // EVR Clock Domain

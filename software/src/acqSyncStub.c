@@ -1,0 +1,3 @@
+void
+acqSyncInit(void)
+{}
