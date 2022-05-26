@@ -54,7 +54,7 @@ systemParametersReadback(void)
         systemParameters.rfDivisor = 352;
         systemParameters.pllMultiplier = 80;
         systemParameters.isSinglePass = 0;
-        systemParameters.adcHeartbeatMarker = 160 * 77 * 10116;
+        systemParameters.adcHeartbeatMarker = 160 * 77 * 10000;
         systemParameters.evrPerFaMarker = 160 * 77;
         systemParameters.evrPerSaMarker = 160 * 77 * 1000;
     }
