@@ -28,6 +28,7 @@
 #include "localOscillator.h"
 #include "autotrim.h"
 #include "acqSync.h"
+#include "publisher.h"
 
 static void
 sfpString(const char *name, int offset)
@@ -149,6 +150,7 @@ main(void)
     /* Set up communications and acquisition */
     epicsInit();
     tftpInit();
+    publisherInit();
     acquisitionInit();
     localOscillatorInit();
     acqSyncInit();
@@ -168,6 +170,7 @@ main(void)
         acquisitionCrank();
         mgtCrankRxAligner();
         xemacif_input(&netif);
+        publisherCheck();
         consoleCheck();
         ffsCheck();
         displayUpdate();
