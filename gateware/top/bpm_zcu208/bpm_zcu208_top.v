@@ -740,7 +740,7 @@ wire [63:0] adcTimestamp;
 wire [71:0] evrForward, adcForward;
 assign evrForward = { evrTriggerBus, evrTimestamp };
 forwardData #(.DATA_WIDTH(72))
-  forwardEVR(.inClk(evrClk),
+  forwardTimestampToADC(.inClk(evrClk),
              .inData(evrForward),
              .outClk(adcClk),
              .outData(adcForward));
@@ -752,7 +752,7 @@ assign adcTimestamp = adcForward[63:0];
 wire [63:0] sysTimestamp;
 wire [71:0] sysForward;
 forwardData #(.DATA_WIDTH(72))
-  forwardEVR(.inClk(evrClk),
+  forwardTimestampToSys(.inClk(evrClk),
              .inData(evrForward),
              .outClk(sysClk),
              .outData(sysForward));
