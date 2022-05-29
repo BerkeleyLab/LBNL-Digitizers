@@ -23,7 +23,7 @@
 #define AUTOTRIM_CSR_FILTER_SHIFT_MAX       7
 
 // Must match gateware
-#define AUTOTRIM_GAIN_FULL_SCALE            (1<<26)
+#define AUTOTRIM_GAIN_FULL_SCALE            (1<<25)
 
 static void
 autotrimSetStaticGains(int channel, int gain)
