@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include "platform_config.h"
 #include "hsdProtocol.h"
 #include "acquisition.h"
 #include "epicsApplicationCommands.h"

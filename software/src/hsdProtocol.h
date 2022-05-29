@@ -1,18 +1,62 @@
 #ifndef _HIGH_SPEED_DIGITIZER_PROTOCOL_
 #define _HIGH_SPEED_DIGITIZER_PROTOCOL_
 
-#include <stdint.h>
+#if defined(PLATFORM_ZYNQMP) || defined(PLATFORM_VERSAL)
+# include <stdint.h>
+  typedef uint8_t  epicsUInt8;
+  typedef int8_t   epicsInt8;
+  typedef uint16_t epicsUInt16;
+  typedef int16_t  epicsInt16;
+  typedef uint32_t epicsUInt32;
+  typedef int32_t  epicsInt32;
+#else
+# include <epicsTypes.h>
+#endif
 
 #define HSD_PROTOCOL_UDP_PORT        50005
+#define HSD_PROTOCOL_PUBLISHER_UDP_PORT 50006
 #define HSD_PROTOCOL_MAGIC           0xBD008426
 #define HSD_PROTOCOL_MAGIC_SWAPPED   0x268400BD
+#define HSD_PROTOCOL_MAGIC_SLOW_ACQUISITION  0xCAFE0004
 #define HSD_PROTOCOL_ARG_CAPACITY    350
+#define HSD_PROTOCOL_ADC_COUNT       4
 
 struct hsdPacket {
     uint32_t    magic;
     uint32_t    nonce;
     uint32_t    command;
     uint32_t    args[HSD_PROTOCOL_ARG_CAPACITY];
+};
+
+/*
+ * Slow acquisition (typically 10 Hz) monitoring
+ */
+struct hsdSlowAcquisition {
+    epicsUInt32 magic;
+    epicsUInt32 packetNumber;
+    epicsUInt32 seconds;
+    epicsUInt32 ticks;
+    epicsUInt8  syncStatus;
+    epicsUInt8  recorderStatus;
+    epicsUInt8  clipStatus;
+    epicsUInt8  cellCommStatus;
+    epicsUInt8  autotrimStatus;
+    epicsUInt8  sdSyncStatus;
+    epicsUInt8  pad1;
+    epicsUInt8  pad2;
+    epicsUInt16 adcPeak[HSD_PROTOCOL_ADC_COUNT];
+    epicsUInt32 rfMag[HSD_PROTOCOL_ADC_COUNT];
+    epicsUInt32 ptLoMag[HSD_PROTOCOL_ADC_COUNT];
+    epicsUInt32 ptHiMag[HSD_PROTOCOL_ADC_COUNT];
+    epicsUInt32 gainFactor[HSD_PROTOCOL_ADC_COUNT];
+    epicsInt32  xPos;
+    epicsInt32  yPos;
+    epicsInt32  skew;
+    epicsInt32  buttonSum;
+    epicsInt32  xRMSwide;
+    epicsInt32  yRMSwide;
+    epicsInt32  xRMSnarrow;
+    epicsInt32  yRMSnarrow;
 };
 
 #define HSD_PROTOCOL_SIZE_TO_ARG_COUNT(s) (HSD_PROTOCOL_ARG_CAPACITY - \
