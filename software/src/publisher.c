@@ -99,9 +99,10 @@ publisherCheck(void)
         if ((saTicks != previousSaTicks) || (saSeconds != previousSaSeconds)) {
             int evrTickDiff = (saTicks - previousSaTicks) +
                                 ((saSeconds-previousSaSeconds) * 124910000);
-            unsigned int sysTicks = MICROSECONDS_SINCE_BOOT();
-            static int sysTicksOld, evrTickDiffOld, sysTickDiffOld;
-            int sysTickDiff = sysTicks - sysTicksOld;
+            unsigned int sysMicroseconds = MICROSECONDS_SINCE_BOOT();
+            static int sysMicrosecondsOld, evrTickDiffOld, sysTickDiffOld;
+            int sysTickDiff = (sysMicroseconds - sysMicrosecondsOld) *
+                ((float) 99999001/1000000);
             if ((debugFlags & DEBUGFLAG_SA_TIMING_CHECK)
              && ((evrTickDiff < 11241900) || (evrTickDiff > 13740100)
               || (sysTickDiff < 9700000) || (sysTickDiff > 10200000))) {
@@ -113,7 +114,7 @@ publisherCheck(void)
                                              evrTickDiff, sysTickDiff,
                                              evrTickDiffOld, sysTickDiffOld);
             }
-            sysTicksOld = sysTicks;
+            sysMicrosecondsOld = sysMicroseconds;
             evrTickDiffOld = evrTickDiff;
             sysTickDiffOld = sysTickDiff;
             previousSaSeconds = saSeconds;
