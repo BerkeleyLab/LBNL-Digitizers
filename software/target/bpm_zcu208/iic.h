@@ -24,7 +24,8 @@
 #define IIC_INDEX_IR38064_A              15
 #define IIC_INDEX_IR38064_B              16
 #define IIC_INDEX_IR38064_C              17
-#define IIC_INDEX_IR38064_D              18
+// Only 3 IR38064 for ZCU208.
+#define IIC_INDEX_PLACEHOLDER_1          18
 #define IIC_INDEX_IRPS5401_A             19
 #define IIC_INDEX_IRPS5401_B             20
 #define IIC_INDEX_IRPS5401_C             21
