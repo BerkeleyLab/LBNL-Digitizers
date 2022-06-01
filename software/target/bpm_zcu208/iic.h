@@ -6,6 +6,10 @@
 
 #include <stdint.h>
 
+// skip SYSMON readout that can get in the way
+// of streaming data for the BPM target
+#define SYSMON_SKIP_PSINFO
+
 #define IIC_INDEX_TCA6416A_PORT           0
 #define IIC_INDEX_INA226_VCCINT           1
 #define IIC_INDEX_INA226_VCCINT_IO_BRAM   2
