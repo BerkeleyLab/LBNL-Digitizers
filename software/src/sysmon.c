@@ -145,18 +145,23 @@ sysmonFetch(uint32_t *args)
     args[aIndex++] = now.ticks;
 
     for (i = 0 ; i < sizeof psInfo / sizeof psInfo[0] ; i++) {
-        uint8_t vBuf[2], iBuf[2];
+        uint8_t vBuf[2] = {0}, iBuf[2] = {0};
+#ifndef SYSMON_SKIP_PSINFO
         iicRead (psInfo[i].iicIndex, 2, vBuf, 2);
         iicRead (psInfo[i].iicIndex, 1, iBuf, 2);
+#endif
         args[aIndex++] = (iBuf[0]<<24)|(iBuf[1]<<16)|(vBuf[0]<<8)|vBuf[1];
     }
     for (i = 0 ; i < sizeof pmbInfo / sizeof pmbInfo[0] ; i++) {
         int iicIndex = pmbInfo[i].iicIndex;
         int page = pmbInfo[i].page;
+        args[aIndex] = 0;
+#ifndef SYSMON_SKIP_PSINFO
         args[aIndex] = pmbusRead(iicIndex, page, pmbInfo[i].vReg) & 0xFFFF;
         if (pmbInfo[i].iReg != 0xFF) {
             args[aIndex] |= pmbusRead(iicIndex, page, pmbInfo[i].iReg) << 16;
         }
+#endif
         aIndex++;
     }
     args[aIndex++] = (readInternalTemperature(XSYSMON_PS) << 16) |
@@ -170,7 +175,9 @@ sysmonFetch(uint32_t *args)
             v = 0;
             shift = 0;
         }
+#ifndef SYSMON_SKIP_PSINFO
         v |= ((pmbusRead(i, 0xFF, 0x8D)*10)/256) << shift;
+#endif
         shift += 16;
     }
     args[aIndex++] = v;
@@ -222,7 +229,7 @@ sysmonDraw(int redrawAll, int page)
                              { "U55 Temperature", "C" },
                              { "U57 Temperature", "C" },
                              { "EVR Rx Power",    "uW" }};
-    
+
     if (redrawAll || (page != currentPage)) {
         state = drawingNames;
         switch (page) {
