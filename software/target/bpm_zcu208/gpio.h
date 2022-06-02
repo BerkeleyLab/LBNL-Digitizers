@@ -59,6 +59,19 @@
 #define GPIO_IDX_ADC_SA_RELOAD           45 // Slow acquisition divider reload
 #define GPIO_IDX_ADC_HEARTBEAT_RELOAD    46 // ADC heartbeat counter
 
+/*
+ * Application-specific registers
+ */
+#define GPIO_IDX_ADC_0_CSR               128 // Acquisition control(W)/status(R)
+#define GPIO_IDX_ADC_0_DATA              129 // Acquisition data(R)
+#define GPIO_IDX_ADC_0_TRIGGER_CONFIG    130 // Acquisition trigger info (W)
+#define GPIO_IDX_ADC_0_TRIGGER_LOCATION  130 // Acquisition trigger location (R)
+#define GPIO_IDX_ADC_0_SECONDS           131 // Acquisition trigger time (R)
+#define GPIO_IDX_ADC_0_CONFIG_1          131 // Acquisition configuration 1 (W)
+#define GPIO_IDX_ADC_0_TICKS             132 // Acquisition trigger time (R)
+#define GPIO_IDX_ADC_0_CONFIG_2          132 // Acquisition configuration 2 (W)
+#define GPIO_IDX_PER_ADC                 (GPIO_IDX_ADC_0_CONFIG_2-GPIO_IDX_ADC_0_CSR+1)
+
 #define CFG_AXI_SAMPLES_PER_CLOCK         1 // 1 sample per clock
 #define CFG_LO_RF_ROW_CAPACITY           1024
 #define CFG_LO_PT_ROW_CAPACITY           8192
