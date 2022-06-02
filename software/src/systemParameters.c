@@ -51,12 +51,12 @@ systemParametersReadback(void)
         systemParameters.netConfig = netDefault;
         systemParameters.userMGTrefClkOffsetPPM = 0;
         systemParameters.startupDebugFlags = 0;
-        systemParameters.rfDivisor = 352;
+        systemParameters.rfDivisor = 357;
         systemParameters.pllMultiplier = 80;
         systemParameters.isSinglePass = 0;
-        systemParameters.adcHeartbeatMarker = 160 * 77 * 10000;
-        systemParameters.evrPerFaMarker = 160 * 77;
-        systemParameters.evrPerSaMarker = 160 * 77 * 1000;
+        systemParameters.adcHeartbeatMarker = 150 * 119 * 10000;
+        systemParameters.evrPerFaMarker = 150 * 119;
+        systemParameters.evrPerSaMarker = 150 * 119 * 1000;
     }
     debugFlags = systemParameters.startupDebugFlags;
     if (userMGTrefClkAdjust(systemParameters.userMGTrefClkOffsetPPM)) {
