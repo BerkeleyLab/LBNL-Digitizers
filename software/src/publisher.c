@@ -29,7 +29,7 @@ static u16_t      subscriberPort;
 static void
 publishSlowAcquisition(unsigned int saSeconds, unsigned int saTicks)
 {
-    int i, ch;
+    int i;
     int adcChannel, chainNumber;
     struct pbuf *p;
     struct hsdSlowAcquisition *pk;

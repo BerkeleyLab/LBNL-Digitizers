@@ -44,7 +44,7 @@ autotrimUsePulsePilot(int flag)
     uint32_t csr;
 
     for (ch = 0 ; ch < CFG_PRELIM_COUNT ; ch++) {
-        csr = GPIO_READ(REG(GPIO_IDX_AUTOTRIM_CSR, ch);
+        csr = GPIO_READ(REG(GPIO_IDX_AUTOTRIM_CSR, ch));
 
         if (flag)
             csr |=  AUTOTRIM_CSR_TIME_MUX_PILOT_PULSES;
