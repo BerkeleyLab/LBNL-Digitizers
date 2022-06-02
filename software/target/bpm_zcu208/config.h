@@ -37,6 +37,11 @@
 #define CFG_ADC_CHANNEL_COUNT    16 // I/Q
 
 /*
+ * Number of DSP chains
+ */
+#define CFG_PRELIM_COUNT         ((CFG_ADC_CHANNEL_COUNT + 3)/4)
+
+/*
  * Number of physical ADC channels required by application
  */
 #define CFG_ADC_PHYSICAL_COUNT    8

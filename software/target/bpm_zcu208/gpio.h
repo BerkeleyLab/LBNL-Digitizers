@@ -30,34 +30,40 @@
 #define GPIO_IDX_EVENT_LOG_TICKS         16 // Event logger ticks
 #define GPIO_IDX_ADC_RANGE_CSR           17 // Monitor ADC ranges
 #define GPIO_IDX_CLK104_SPI_MUX_CSR      18 // Select CLK104 SPI MUX
-#define GPIO_IDX_LOTABLE_ADDRESS         19 // Local oscillator table write address
-#define GPIO_IDX_LOTABLE_CSR             20 // Local oscillator tables
-#define GPIO_IDX_SUM_SHIFT_CSR           21 // Accumulator scaling values
-#define GPIO_IDX_AUTOTRIM_CSR            22 // Auto gain compensation control/status
-#define GPIO_IDX_AUTOTRIM_THRESHOLD      23 // Auto gain compensation tone threshold
-#define GPIO_IDX_ADC_GAIN_FACTOR_0       24 // Gain factor for ADC 0
-#define GPIO_IDX_ADC_GAIN_FACTOR_1       25 // Gain factor for ADC 1
-#define GPIO_IDX_ADC_GAIN_FACTOR_2       26 // Gain factor for ADC 2
-#define GPIO_IDX_ADC_GAIN_FACTOR_3       27 // Gain factor for ADC 3
-#define GPIO_IDX_PRELIM_RF_MAG_0         28 // ADC 0 RF (SA) magnitude
-#define GPIO_IDX_PRELIM_RF_MAG_1         29 // ADC 1 RF (SA) magnitude
-#define GPIO_IDX_PRELIM_RF_MAG_2         30 // ADC 2 RF (SA) magnitude
-#define GPIO_IDX_PRELIM_RF_MAG_3         31 // ADC 3 RF (SA) magnitude
-#define GPIO_IDX_PRELIM_PT_LO_MAG_0      32 // ADC 0 low freq pilot tone magnitude
-#define GPIO_IDX_PRELIM_PT_LO_MAG_1      33 // ADC 1 low freq pilot tone magnitude
-#define GPIO_IDX_PRELIM_PT_LO_MAG_2      34 // ADC 2 low freq pilot tone magnitude
-#define GPIO_IDX_PRELIM_PT_LO_MAG_3      35 // ADC 3 low freq pilot tone magnitude
-#define GPIO_IDX_PRELIM_PT_HI_MAG_0      36 // ADC 0 high freq pilot tone magnitude
-#define GPIO_IDX_PRELIM_PT_HI_MAG_1      37 // ADC 1 high freq pilot tone magnitude
-#define GPIO_IDX_PRELIM_PT_HI_MAG_2      38 // ADC 2 high freq pilot tone magnitude
-#define GPIO_IDX_PRELIM_PT_HI_MAG_3      39 // ADC 3 high freq pilot tone magnitude
-#define GPIO_IDX_SA_TIMESTAMP_SEC        40 // Slow acquisition time stamp
-#define GPIO_IDX_SA_TIMESTAMP_TICKS      41 // Slow acquisition time stamp
-#define GPIO_IDX_EVR_FA_RELOAD           42 // Fast acquisition divider reload
-#define GPIO_IDX_EVR_SA_RELOAD           43 // Slow acquisition divider reload
-#define GPIO_IDX_ADC_FA_RELOAD           44 // Fast acquisition divider reload
-#define GPIO_IDX_ADC_SA_RELOAD           45 // Slow acquisition divider reload
-#define GPIO_IDX_ADC_HEARTBEAT_RELOAD    46 // ADC heartbeat counter
+#define GPIO_IDX_EVR_FA_RELOAD           19 // Fast acquisition divider reload
+#define GPIO_IDX_EVR_SA_RELOAD           20 // Slow acquisition divider reload
+#define GPIO_IDX_ADC_FA_RELOAD           21 // Fast acquisition divider reload
+#define GPIO_IDX_ADC_SA_RELOAD           22 // Slow acquisition divider reload
+#define GPIO_IDX_ADC_HEARTBEAT_RELOAD    23 // ADC heartbeat counter
+
+/*
+ * Preliminary processing chain
+ */
+#define GPIO_IDX_LOTABLE_ADDRESS         32 // Local oscillator table write address
+#define GPIO_IDX_LOTABLE_CSR             33 // Local oscillator tables
+#define GPIO_IDX_SUM_SHIFT_CSR           34 // Accumulator scaling values
+#define GPIO_IDX_AUTOTRIM_CSR            35 // Auto gain compensation control/status
+#define GPIO_IDX_AUTOTRIM_THRESHOLD      36 // Auto gain compensation tone threshold
+#define GPIO_IDX_ADC_GAIN_FACTOR_0       37 // Gain factor for ADC 0
+#define GPIO_IDX_ADC_GAIN_FACTOR_1       38 // Gain factor for ADC 1
+#define GPIO_IDX_ADC_GAIN_FACTOR_2       39 // Gain factor for ADC 2
+#define GPIO_IDX_ADC_GAIN_FACTOR_3       40 // Gain factor for ADC 3
+#define GPIO_IDX_PRELIM_RF_MAG_0         41 // ADC 0 RF (SA) magnitude
+#define GPIO_IDX_PRELIM_RF_MAG_1         42 // ADC 1 RF (SA) magnitude
+#define GPIO_IDX_PRELIM_RF_MAG_2         43 // ADC 2 RF (SA) magnitude
+#define GPIO_IDX_PRELIM_RF_MAG_3         44 // ADC 3 RF (SA) magnitude
+#define GPIO_IDX_PRELIM_PT_LO_MAG_0      45 // ADC 0 low freq pilot tone magnitude
+#define GPIO_IDX_PRELIM_PT_LO_MAG_1      46 // ADC 1 low freq pilot tone magnitude
+#define GPIO_IDX_PRELIM_PT_LO_MAG_2      47 // ADC 2 low freq pilot tone magnitude
+#define GPIO_IDX_PRELIM_PT_LO_MAG_3      48 // ADC 3 low freq pilot tone magnitude
+#define GPIO_IDX_PRELIM_PT_HI_MAG_0      49 // ADC 0 high freq pilot tone magnitude
+#define GPIO_IDX_PRELIM_PT_HI_MAG_1      50 // ADC 1 high freq pilot tone magnitude
+#define GPIO_IDX_PRELIM_PT_HI_MAG_2      51 // ADC 2 high freq pilot tone magnitude
+#define GPIO_IDX_PRELIM_PT_HI_MAG_3      52 // ADC 3 high freq pilot tone magnitude
+#define GPIO_IDX_SA_TIMESTAMP_SEC        53 // Slow acquisition time stamp
+#define GPIO_IDX_SA_TIMESTAMP_TICKS      54 // Slow acquisition time stamp
+
+#define GPIO_IDX_PER_PRELIM              (GPIO_IDX_SA_TIMESTAMP_TICKS-GPIO_IDX_LOTABLE_ADDRESS+1)
 
 /*
  * Application-specific registers
