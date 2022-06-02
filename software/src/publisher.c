@@ -15,6 +15,10 @@
 #include "systemParameters.h"
 #include "util.h"
 
+#define MAX_CHANNELS_PER_CHAIN (HSD_PROTOCOL_ADC_COUNT/CFG_PRELIM_COUNT)
+
+#define REG(base,chan)  ((base) + (GPIO_IDX_PER_PRELIM * (chan)))
+
 static struct udp_pcb *pcb;
 static ip_addr_t  subscriberAddr;
 static u16_t      subscriberPort;
@@ -25,7 +29,8 @@ static u16_t      subscriberPort;
 static void
 publishSlowAcquisition(unsigned int saSeconds, unsigned int saTicks)
 {
-    int i;
+    int i, ch;
+    int adcChannel, chainNumber;
     struct pbuf *p;
     struct hsdSlowAcquisition *pk;
     static epicsUInt32 packetNumber = 1;
@@ -55,10 +60,16 @@ publishSlowAcquisition(unsigned int saSeconds, unsigned int saTicks)
     pk->cellCommStatus = 0;
     pk->autotrimStatus = 0;
     for (i = 0 ; i < HSD_PROTOCOL_ADC_COUNT ; i++) {
-        pk->rfMag[i] = GPIO_READ(GPIO_IDX_PRELIM_RF_MAG_0+i);
-        pk->ptLoMag[i] = GPIO_READ(GPIO_IDX_PRELIM_PT_LO_MAG_0+i);
-        pk->ptHiMag[i] = GPIO_READ(GPIO_IDX_PRELIM_PT_HI_MAG_0+i);
-        pk->gainFactor[i] = GPIO_READ(GPIO_IDX_ADC_GAIN_FACTOR_0+i);
+        adcChannel = i % MAX_CHANNELS_PER_CHAIN;
+        chainNumber = i / MAX_CHANNELS_PER_CHAIN;
+        pk->rfMag[i] = GPIO_READ(REG(GPIO_IDX_PRELIM_RF_MAG_0 +
+                adcChannel, chainNumber));
+        pk->ptLoMag[i] = GPIO_READ(REG(GPIO_IDX_PRELIM_PT_LO_MAG_0 +
+                adcChannel, chainNumber));
+        pk->ptHiMag[i] = GPIO_READ(REG(GPIO_IDX_PRELIM_PT_HI_MAG_0 +
+                adcChannel, chainNumber));
+        pk->gainFactor[i] = GPIO_READ(REG(GPIO_IDX_ADC_GAIN_FACTOR_0 +
+                adcChannel, chainNumber));
     }
     r = 0;
     pk->adcPeak[0] = r;

@@ -56,6 +56,8 @@
  */
 #define SCALE_FACTOR    ((double)0x1FFFF)
 
+#define REG(base,chan)  ((base) + (GPIO_IDX_PER_PRELIM * (chan)))
+
 static int32_t rfTable[2+(2*CFG_LO_RF_ROW_CAPACITY)];
 static int32_t ptTable[2+(4*CFG_LO_PT_ROW_CAPACITY)];
 
@@ -84,10 +86,13 @@ checkSum(const int32_t *ip, int rowCount, int colCount)
 static void
 writeTable(int bankIndex, int row, int isSin, int value)
 {
+    int ch;
     uint32_t address = (row << 1) | (isSin != 0);
     uint32_t csr = (bankIndex << BANKSELECT_SHIFT) | (value & VALUE_MASK);
-    GPIO_WRITE(GPIO_IDX_LOTABLE_ADDRESS, address);
-    GPIO_WRITE(GPIO_IDX_LOTABLE_CSR, csr);
+    for (ch = 0 ; ch < CFG_PRELIM_COUNT ; ch++) {
+        GPIO_WRITE(REG(GPIO_IDX_LOTABLE_ADDRESS, ch), address);
+        GPIO_WRITE(REG(GPIO_IDX_LOTABLE_CSR, ch), csr);
+    }
 }
 
 /*
@@ -96,9 +101,14 @@ writeTable(int bankIndex, int row, int isSin, int value)
 static void
 writeCSR(uint32_t value, uint32_t mask)
 {
-    uint32_t v = GPIO_READ(GPIO_IDX_LOTABLE_CSR);
-    v = (v & ~mask) | (value & mask);
-    GPIO_WRITE(GPIO_IDX_LOTABLE_CSR, (BANKINDEX_NONE << BANKSELECT_SHIFT) | v);
+    int ch;
+    uint32_t v;
+    for (ch = 0 ; ch < CFG_PRELIM_COUNT ; ch++) {
+        v = GPIO_READ(REG(GPIO_IDX_LOTABLE_CSR, ch));
+        v = (v & ~mask) | (value & mask);
+        GPIO_WRITE(REG(GPIO_IDX_LOTABLE_CSR, ch),
+                (BANKINDEX_NONE << BANKSELECT_SHIFT) | v);
+    }
 }
 
 /*
@@ -121,12 +131,16 @@ scale(double x)
 static void
 setSumShift(int sumShift, uint32_t mask, int shift)
 {
-    uint32_t csr = GPIO_READ(GPIO_IDX_SUM_SHIFT_CSR);
-    if (sumShift < 0) sumShift = 0;
-    else if (sumShift > 15) sumShift = 15;
-    csr &= ~mask;
-    csr |= sumShift << shift;
-    GPIO_WRITE(GPIO_IDX_SUM_SHIFT_CSR, csr);
+    int ch;
+    uint32_t csr;
+    for (ch = 0 ; ch < CFG_PRELIM_COUNT ; ch++) {
+        csr = GPIO_READ(REG(GPIO_IDX_SUM_SHIFT_CSR, ch));
+        if (sumShift < 0) sumShift = 0;
+        else if (sumShift > 15) sumShift = 15;
+        csr &= ~mask;
+        csr |= sumShift << shift;
+        GPIO_WRITE(REG(GPIO_IDX_SUM_SHIFT_CSR, ch), csr);
+    }
 }
 
 void

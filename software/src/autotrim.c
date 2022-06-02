@@ -25,32 +25,47 @@
 // Must match gateware
 #define AUTOTRIM_GAIN_FULL_SCALE            (1<<25)
 
+#define REG(base,chan)  ((base) + (GPIO_IDX_PER_PRELIM * (chan)))
+
 static void
 autotrimSetStaticGains(int channel, int gain)
 {
-    GPIO_WRITE(GPIO_IDX_ADC_GAIN_FACTOR_0 + channel, gain);
+    int ch;
+    for (ch = 0 ; ch < CFG_PRELIM_COUNT ; ch++) {
+        GPIO_WRITE(REG(GPIO_IDX_ADC_GAIN_FACTOR_0 + channel, ch),
+                gain);
+    }
 }
 
 void
 autotrimUsePulsePilot(int flag)
 {
-    uint32_t csr = GPIO_READ(GPIO_IDX_AUTOTRIM_CSR);
+    int ch;
+    uint32_t csr;
 
-    if (flag)
-        csr |=  AUTOTRIM_CSR_TIME_MUX_PILOT_PULSES;
-    else
-        csr &= ~AUTOTRIM_CSR_TIME_MUX_PILOT_PULSES;
-    GPIO_WRITE(GPIO_IDX_AUTOTRIM_CSR, csr);
+    for (ch = 0 ; ch < CFG_PRELIM_COUNT ; ch++) {
+        csr = GPIO_READ(REG(GPIO_IDX_AUTOTRIM_CSR, ch);
+
+        if (flag)
+            csr |=  AUTOTRIM_CSR_TIME_MUX_PILOT_PULSES;
+        else
+            csr &= ~AUTOTRIM_CSR_TIME_MUX_PILOT_PULSES;
+        GPIO_WRITE(REG(GPIO_IDX_AUTOTRIM_CSR, ch), csr);
+    }
 }
 
 static void
 setMode(int mode)
 {
-    uint32_t csr = GPIO_READ(GPIO_IDX_AUTOTRIM_CSR);
+    int ch;
+    uint32_t csr;
+    for (ch = 0 ; ch < CFG_PRELIM_COUNT ; ch++) {
+        csr = GPIO_READ(REG(GPIO_IDX_AUTOTRIM_CSR, ch));
 
-    csr &= ~AUTOTRIM_CSR_MODE_MASK;
-    csr |= (mode & AUTOTRIM_CSR_MODE_MASK);
-    GPIO_WRITE(GPIO_IDX_AUTOTRIM_CSR, csr);
+        csr &= ~AUTOTRIM_CSR_MODE_MASK;
+        csr |= (mode & AUTOTRIM_CSR_MODE_MASK);
+        GPIO_WRITE(REG(GPIO_IDX_AUTOTRIM_CSR, ch), csr);
+    }
 }
 
 void
@@ -94,12 +109,16 @@ autotrimGetThreshold(void)
 void
 autotrimSetFilterShift(unsigned int filterShift)
 {
-    uint32_t csr = GPIO_READ(GPIO_IDX_AUTOTRIM_CSR);
+    int ch;
+    uint32_t csr;
+    for (ch = 0 ; ch < CFG_PRELIM_COUNT ; ch++) {
+        csr = GPIO_READ(REG(GPIO_IDX_AUTOTRIM_CSR, ch));
 
-    csr &= ~AUTOTRIM_CSR_FILTER_SHIFT_MASK;
-    csr |= (filterShift << AUTOTRIM_CSR_FILTER_SHIFT_SHIFT) &
-                                                 AUTOTRIM_CSR_FILTER_SHIFT_MASK;
-    GPIO_WRITE(GPIO_IDX_AUTOTRIM_CSR, csr);
+        csr &= ~AUTOTRIM_CSR_FILTER_SHIFT_MASK;
+        csr |= (filterShift << AUTOTRIM_CSR_FILTER_SHIFT_SHIFT) &
+            AUTOTRIM_CSR_FILTER_SHIFT_MASK;
+        GPIO_WRITE(REG(GPIO_IDX_AUTOTRIM_CSR, ch), csr);
+    }
 }
 
 unsigned int
