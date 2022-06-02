@@ -48,10 +48,12 @@ def ptTable(name, Foffset, Frf, refDivider, refMultiplier, sampleCount):
             f.write("%9.6f,%9.6f,%9.6f,%9.6f\n" % (cl, sl, ch, sh))
 
 rfTable('rfTableSR.csv', 500, 328,  77, 77)
+rfTable('rfTableSR_80_357.csv', 500, 357,  80, 80)
 rfTable('rfTableTL.csv', 500, 328,  77, 77)
 rfTable('rfTableBR.csv', 500, 500, 116, 29)
 
 ptTable('ptTableSR_1_2.csv', (500.0/328.0)*(1.0/2.0), 500, 328, 77, 77*2)
+ptTable('ptTableSR_80_357_1_2.csv', (500.0/357.0)*(1.0/2.0), 500, 357, 80, 80*2)
 ptTable('ptTableSR_11_19.csv', (500.0/328.0)*(11.0/19.0), 500, 328, 77, 77*19)
 ptTable('ptTableTL.csv', 0, 500, 328,  77,  77)
 ptTable('ptTableBR_1_2.csv', (500.0/125.0)*(1.0/2.0), 500, 500, 116,  29*2)
