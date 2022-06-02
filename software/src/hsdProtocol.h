@@ -22,10 +22,10 @@
 #define HSD_PROTOCOL_ADC_COUNT       16
 
 struct hsdPacket {
-    uint32_t    magic;
-    uint32_t    nonce;
-    uint32_t    command;
-    uint32_t    args[HSD_PROTOCOL_ARG_CAPACITY];
+    epicsUInt32    magic;
+    epicsUInt32    nonce;
+    epicsUInt32    command;
+    epicsUInt32    args[HSD_PROTOCOL_ARG_CAPACITY];
 };
 
 /*
@@ -60,14 +60,14 @@ struct hsdSlowAcquisition {
 };
 
 #define HSD_PROTOCOL_SIZE_TO_ARG_COUNT(s) (HSD_PROTOCOL_ARG_CAPACITY - \
-                    ((sizeof(struct hsdPacket)-(s))/sizeof(uint32_t)))
+                    ((sizeof(struct hsdPacket)-(s))/sizeof(epicsUInt32)))
 #define HSD_PROTOCOL_ARG_COUNT_TO_SIZE(a) (sizeof(struct hsdPacket) - \
-                        ((HSD_PROTOCOL_ARG_CAPACITY - (a)) * sizeof(uint32_t)))
+                        ((HSD_PROTOCOL_ARG_CAPACITY - (a)) * sizeof(epicsUInt32)))
 #define HSD_PROTOCOL_ARG_COUNT_TO_U32_COUNT(a) \
-                    ((sizeof(struct hsdPacket) / sizeof(uint32_t)) - \
+                    ((sizeof(struct hsdPacket) / sizeof(epicsUInt32)) - \
                                             (HSD_PROTOCOL_ARG_CAPACITY - (a)))
 #define HSD_PROTOCOL_U32_COUNT_TO_ARG_COUNT(u) (HSD_PROTOCOL_ARG_CAPACITY - \
-                    (((sizeof(struct hsdPacket)/sizeof(uint32_t)))-(u)))
+                    (((sizeof(struct hsdPacket)/sizeof(epicsUInt32)))-(u)))
 
 #define HSD_PROTOCOL_CMD_MASK_HI             0xF000
 #define HSD_PROTOCOL_CMD_MASK_LO             0x0F80
