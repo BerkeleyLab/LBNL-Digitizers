@@ -54,9 +54,9 @@ systemParametersReadback(void)
         systemParameters.rfDivisor = 357;
         systemParameters.pllMultiplier = 80;
         systemParameters.isSinglePass = 0;
-        systemParameters.adcHeartbeatMarker = 150 * 119 * 10000;
-        systemParameters.evrPerFaMarker = 150 * 119;
-        systemParameters.evrPerSaMarker = 150 * 119 * 1000;
+        systemParameters.adcHeartbeatMarker = 480 * 119 * 2000;
+        systemParameters.evrPerFaMarker = 480 * 119;
+        systemParameters.evrPerSaMarker = 480 * 119 * 200;
     }
     debugFlags = systemParameters.startupDebugFlags;
     if (userMGTrefClkAdjust(systemParameters.userMGTrefClkOffsetPPM)) {
