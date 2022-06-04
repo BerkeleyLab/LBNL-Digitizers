@@ -847,6 +847,7 @@ assign GPIO_IN[GPIO_IDX_PRELIM_PT_HI_MAG_3 + ch*GPIO_IDX_PER_PRELIM] = {
 preliminaryProcessing #(.SYSCLK_RATE(SYSCLK_RATE),
                         .ADC_WIDTH(AXI_SAMPLE_WIDTH),
                         .MAG_WIDTH(MAG_WIDTH),
+                        .IQ_DATA("TRUE"),
                         .SAMPLES_PER_TURN(SITE_SAMPLES_PER_TURN),
                         .LO_WIDTH(LO_WIDTH),
                         .CIC_STAGES(SITE_CIC_STAGES),
@@ -858,9 +859,13 @@ preliminaryProcessing #(.SYSCLK_RATE(SYSCLK_RATE),
     .clk(sysClk),
     .adcClk(adcClk),
     .adc0(adcsTDATA[(ch*CFG_PRELIM_COUNT + 0)*SAMPLES_WIDTH+:SAMPLES_WIDTH]), // I0
-    .adc1(adcsTDATA[(ch*CFG_PRELIM_COUNT + 1)*SAMPLES_WIDTH+:SAMPLES_WIDTH]), // Q0
-    .adc2(adcsTDATA[(ch*CFG_PRELIM_COUNT + 2)*SAMPLES_WIDTH+:SAMPLES_WIDTH]), // I1
-    .adc3(adcsTDATA[(ch*CFG_PRELIM_COUNT + 3)*SAMPLES_WIDTH+:SAMPLES_WIDTH]), // Q1
+    .adc1(adcsTDATA[(ch*CFG_PRELIM_COUNT + 2)*SAMPLES_WIDTH+:SAMPLES_WIDTH]), // I1
+    .adc2(adcsTDATA[(ch*CFG_PRELIM_COUNT + 4)*SAMPLES_WIDTH+:SAMPLES_WIDTH]), // I2
+    .adc3(adcsTDATA[(ch*CFG_PRELIM_COUNT + 6)*SAMPLES_WIDTH+:SAMPLES_WIDTH]), // I3
+    .adcQ0(adcsTDATA[(ch*CFG_PRELIM_COUNT + 1)*SAMPLES_WIDTH+:SAMPLES_WIDTH]), // Q0
+    .adcQ1(adcsTDATA[(ch*CFG_PRELIM_COUNT + 3)*SAMPLES_WIDTH+:SAMPLES_WIDTH]), // Q1
+    .adcQ2(adcsTDATA[(ch*CFG_PRELIM_COUNT + 5)*SAMPLES_WIDTH+:SAMPLES_WIDTH]), // Q2
+    .adcQ3(adcsTDATA[(ch*CFG_PRELIM_COUNT + 7)*SAMPLES_WIDTH+:SAMPLES_WIDTH]), // Q3
     .adcExceedsThreshold(1'b0),
     .adcUseThisSample(1'b1),
     .evrClk(adcClk),
