@@ -15,9 +15,9 @@
 #include "systemParameters.h"
 #include "util.h"
 
-#define MAX_CHANNELS_PER_CHAIN (HSD_PROTOCOL_ADC_COUNT/CFG_PRELIM_COUNT)
+#define MAX_CHANNELS_PER_CHAIN (HSD_PROTOCOL_ADC_COUNT/CFG_BPM_COUNT)
 
-#define REG(base,chan)  ((base) + (GPIO_IDX_PER_PRELIM * (chan)))
+#define REG(base,chan)  ((base) + (GPIO_IDX_PER_BPM * (chan)))
 
 static struct udp_pcb *pcb;
 static ip_addr_t  subscriberAddr;

@@ -63,7 +63,7 @@
 #define GPIO_IDX_SA_TIMESTAMP_SEC        53 // Slow acquisition time stamp
 #define GPIO_IDX_SA_TIMESTAMP_TICKS      54 // Slow acquisition time stamp
 
-#define GPIO_IDX_PER_PRELIM              (GPIO_IDX_SA_TIMESTAMP_TICKS-GPIO_IDX_LOTABLE_ADDRESS+1)
+#define GPIO_IDX_PER_BPM                 (GPIO_IDX_SA_TIMESTAMP_TICKS-GPIO_IDX_LOTABLE_ADDRESS+1)
 
 /*
  * Application-specific registers
