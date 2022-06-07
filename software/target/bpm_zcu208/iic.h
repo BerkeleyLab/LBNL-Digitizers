@@ -6,6 +6,10 @@
 
 #include <stdint.h>
 
+// skip SYSMON readout that can get in the way
+// of streaming data for the BPM target
+#define SYSMON_SKIP_PSINFO
+
 #define IIC_INDEX_TCA6416A_PORT           0
 #define IIC_INDEX_INA226_VCCINT           1
 #define IIC_INDEX_INA226_VCCINT_IO_BRAM   2
@@ -24,7 +28,8 @@
 #define IIC_INDEX_IR38064_A              15
 #define IIC_INDEX_IR38064_B              16
 #define IIC_INDEX_IR38064_C              17
-#define IIC_INDEX_IR38064_D              18
+// Only 3 IR38064 for ZCU208.
+#define IIC_INDEX_PLACEHOLDER_1          18
 #define IIC_INDEX_IRPS5401_A             19
 #define IIC_INDEX_IRPS5401_B             20
 #define IIC_INDEX_IRPS5401_C             21

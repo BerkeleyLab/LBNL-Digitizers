@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <lwip/udp.h>
+#include "platform_config.h"
 #include "hsdProtocol.h"
 #include "afe.h"
 #include "acquisition.h"

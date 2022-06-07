@@ -32,6 +32,7 @@
 #include "gpio.h"
 #include "mgt.h"
 #include "util.h"
+#include "rfadc.h"
 
 #define CSR_W_RX_BIT_SLIDE          0x80
 #define CSR_W_BB_TX_STRT_REQUEST    0x08

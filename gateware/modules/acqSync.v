@@ -27,7 +27,7 @@ wire evrHeartbeatStrobe = evrHeartbeat && !evrHeartbeat_d;
 // Instantiate synchronization blocks
 //
 eventSync #(.BUS_WIDTH(BUS_WIDTH),
-            .MAX_RELOAD(30000))
+            .MAX_RELOAD(300000))
   eventFaSync(.sysClk(sysClk),
               .sysGPIO_OUT(sysGPIO_OUT),
               .sysCSRstrobe(sysFAstrobe),
