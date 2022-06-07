@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <stdio.h>
 #include "acqSync.h"
 #include "gpio.h"
 #include "systemParameters.h"

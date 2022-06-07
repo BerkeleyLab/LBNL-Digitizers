@@ -42,6 +42,7 @@ __SRC_FILES = \
 	mgt.c \
 	mmcm.c \
 	platform_zynqmp.c \
+	publisher.c \
 	rfadc.c \
 	rfclk.c \
 	sysmon.c \
@@ -73,6 +74,7 @@ __HDR_FILES = \
 	mmcm.h \
 	platform.h \
 	platform_config.h \
+	publisher.h \
 	rfadc.h \
 	rfclk.h \
 	sysmon.h \

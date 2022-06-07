@@ -50,16 +50,3 @@
  * ADC reference clock
  */
 #define CFG_ADC_REF_CLK_FREQ   4000.00
-
-/*
- * Application-specific registers
- */
-#define GPIO_IDX_ADC_0_CSR               32 // Acquisition control(W)/status(R)
-#define GPIO_IDX_ADC_0_DATA              33 // Acquisition data(R)
-#define GPIO_IDX_ADC_0_TRIGGER_CONFIG    34 // Acquisition trigger info (W)
-#define GPIO_IDX_ADC_0_TRIGGER_LOCATION  34 // Acquisition trigger location (R)
-#define GPIO_IDX_ADC_0_SECONDS           35 // Acquisition trigger time (R)
-#define GPIO_IDX_ADC_0_CONFIG_1          35 // Acquisition configuration 1 (W)
-#define GPIO_IDX_ADC_0_TICKS             36 // Acquisition trigger time (R)
-#define GPIO_IDX_ADC_0_CONFIG_2          36 // Acquisition configuration 2 (W)
-#define GPIO_IDX_PER_ADC             5

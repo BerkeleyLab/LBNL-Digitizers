@@ -66,9 +66,9 @@ static struct deviceInfo deviceTable[] = {
     { 0,            0, 0x4D }, // INA226 ADC_AVCCAUX
     { 0,            0, 0x4E }, // INA226 DAC_AVCC
     { 0,            2, 0x40 }, // IR38064 A
-    { 0,            2, 0x41 }, // IR38064 B
-    { 0,            2, 0x42 }, // IR38064 C
-    { 0,            2, 0x46 }, // IR38064 D
+    { 0,            2, 0x43 }, // IR38064 B
+    { 0,            2, 0x4C }, // IR38064 C
+    { 0,            2, 0x4C }, // PLACEHOLDER 1. Use the same address as above
     { 0,            2, 0x43 }, // IRPS5401 A
     { 0,            2, 0x44 }, // IRPS5401 B
     { 0,            2, 0x45 }, // IRPS5401 C
@@ -553,7 +553,7 @@ sfpGetStatus(uint32_t *buf)
     uint8_t rxBuf[10];
     uint16_t temp, vcc, txPower, rxPower;
 
-    if (iicRead (IIC_INDEX_SFP_0_STATUS, 96, rxBuf, 10)) {
+    if (iicRead (IIC_INDEX_SFP_2_STATUS, 96, rxBuf, 10)) {
         temp = (rxBuf[0] << 8) + rxBuf[1];
         vcc = (rxBuf[2] << 8) + rxBuf[3];
         txPower = (rxBuf[6] << 8) | rxBuf[7];
@@ -572,7 +572,7 @@ int
 sfpGetTemperature(void)
 {
     uint8_t rxBuf[2];
-    if (iicRead (IIC_INDEX_SFP_0_STATUS, 96, rxBuf, 2)) {
+    if (iicRead (IIC_INDEX_SFP_2_STATUS, 96, rxBuf, 2)) {
         return ((int16_t)((rxBuf[0] << 8) + rxBuf[1]) * 10) / 256;
     }
     return 2550;
@@ -582,7 +582,7 @@ int
 sfpGetRxPower(void)
 {
     uint8_t rxBuf[2];
-    if (iicRead (IIC_INDEX_SFP_0_STATUS, 96+8, rxBuf, 2)) {
+    if (iicRead (IIC_INDEX_SFP_2_STATUS, 96+8, rxBuf, 2)) {
         return (rxBuf[0] << 8) + rxBuf[1];
     }
     return 0;

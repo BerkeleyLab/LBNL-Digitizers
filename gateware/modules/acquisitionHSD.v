@@ -257,7 +257,9 @@ always @(posedge adcClk) begin
             acqState <= ACQ_S_FILL;
         end
         ACQ_S_FILL: begin
-            acqCounter <= acqCounter - 1;
+            if (axiValid) begin
+                acqCounter <= acqCounter - 1;
+            end
             if (acqCounterDone) begin
                 watchForTrigger <= 1;
                 acqState <= ACQ_S_ARMED;
@@ -274,9 +276,12 @@ always @(posedge adcClk) begin
             end
         end
         ACQ_S_ACQUIRE: begin
+            // Does this counter counts samples or clock cycles?
             segGapCounter <= earlySegmentsCounterDone ? laterSegGapCounterLoad :
                                                         earlySegGapCounterLoad;
-            acqCounter <= acqCounter - 1;
+            if (axiValid) begin
+               acqCounter <= acqCounter - 1;
+            end
             if (acqCounterDone) begin
                 segmentCounter <= segmentCounter - 1;
                 dpramWriteEnable <= 0;

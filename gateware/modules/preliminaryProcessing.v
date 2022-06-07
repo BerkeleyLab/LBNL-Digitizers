@@ -4,6 +4,7 @@
 module preliminaryProcessing #(
     parameter SYSCLK_RATE             = 100000000,
     parameter MAG_WIDTH               = 26,
+    parameter IQ_DATA                 = "FALSE",
     parameter SAMPLES_PER_TURN        = 77,
     parameter NADC                    = 4,
     parameter ADC_WIDTH               = 16,
@@ -32,6 +33,8 @@ module preliminaryProcessing #(
     input                 [63:0] sysTimestamp,
     input                        adcClk,
     input        [ADC_WIDTH-1:0] adc0, adc1, adc2, adc3,
+    // Only used when IQ_DATA == "TRUE"
+    input        [ADC_WIDTH-1:0] adcQ0, adcQ1, adcQ2, adcQ3,
     input                        adcExceedsThreshold, adcUseThisSample,
     output wire                  adcLoSynced,
     input                        evrClk,
@@ -237,6 +240,7 @@ assign phLOsinDbg = adcPhSin;
 // the scaled ADC value taking the place of the local oscillator can
 // never take on negative full scale value.
 wire [4*ADC_WIDTH-1:0] adcs = { adc3, adc2, adc1, adc0 };
+wire [4*ADC_WIDTH-1:0] adcsQ = { adcQ3, adcQ2, adcQ1, adcQ0 };
 wire [8*PRODUCT_WIDTH-1:0] rfProducts, plProducts, phProducts;
 
 genvar i; generate
@@ -253,11 +257,16 @@ for (i = 0 ; i < NADC ; i = i + 1) begin : adcDemod
 //    ensure that the 'local oscillator' value can never take on the full
 //    scale negative value.
 wire [ADC_WIDTH-1:0] adc = adcs[i*ADC_WIDTH+:ADC_WIDTH];
+wire [ADC_WIDTH-1:0] adcQ = adcsQ[i*ADC_WIDTH+:ADC_WIDTH];
 wire [LO_WIDTH-1:0] adcLO={adc[ADC_WIDTH-1], adc, {LO_WIDTH-ADC_WIDTH-1{1'b0}}};
 wire [ADC_WIDTH-1:0] rfADC = adcPtWarning || (adcUseRMS && !adcUseThisSample) ?
                                                         {ADC_WIDTH{1'b0}} : adc;
+wire [ADC_WIDTH-1:0] rfADCQ = adcPtWarning || (adcUseRMS && !adcUseThisSample) ?
+                                                        {ADC_WIDTH{1'b0}} : adcQ;
 wire [ADC_WIDTH-1:0] ptADC = adcUsePulsePt && adcUseRMS && !adcUseThisSample ?
                                                         {ADC_WIDTH{1'b0}} : adc;
+wire [ADC_WIDTH-1:0] ptADCQ = adcUsePulsePt && adcUseRMS && !adcUseThisSample ?
+                                                        {ADC_WIDTH{1'b0}} : adcQ;
 // Set multiplier to ADC value for RMS computation or table entry for I-Q.
 wire [LO_WIDTH-1:0] rfLOcos = adcUseRMS ? adcLO : adcRfCos;
 wire [LO_WIDTH-1:0] rfLOsin = adcUseRMS ? {LO_WIDTH{1'b0}} : adcRfSin;
@@ -268,18 +277,87 @@ wire [LO_WIDTH-1:0] phLOsin = adcUseRMS ? {LO_WIDTH{1'b0}} : adcPhSin;
 wire signed [PRODUCT_WIDTH-1:0] adcRfPrdI, adcRfPrdQ;
 wire signed [PRODUCT_WIDTH-1:0] adcPlPrdI, adcPlPrdQ, adcPhPrdI, adcPhPrdQ;
 
-mixer #(.dwi(ADC_WIDTH), .davr(LO_WIDTH-1), .dwlo(LO_WIDTH))
-    dmMulRfI(.clk(adcClk), .adcf(rfADC), .mult(rfLOcos), .mixout(adcRfPrdI));
-mixer #(.dwi(ADC_WIDTH), .davr(LO_WIDTH-1), .dwlo(LO_WIDTH))
-    dmMulRfQ(.clk(adcClk), .adcf(rfADC), .mult(rfLOsin), .mixout(adcRfPrdQ));
-mixer #(.dwi(ADC_WIDTH), .davr(LO_WIDTH-1), .dwlo(LO_WIDTH))
-    dmMulPlI(.clk(adcClk), .adcf(ptADC), .mult(plLOcos), .mixout(adcPlPrdI));
-mixer #(.dwi(ADC_WIDTH), .davr(LO_WIDTH-1), .dwlo(LO_WIDTH))
-    dmMulPlQ(.clk(adcClk), .adcf(ptADC), .mult(plLOsin), .mixout(adcPlPrdQ));
-mixer #(.dwi(ADC_WIDTH), .davr(LO_WIDTH-1), .dwlo(LO_WIDTH))
-    dmMulPhI(.clk(adcClk), .adcf(ptADC), .mult(phLOcos), .mixout(adcPhPrdI));
-mixer #(.dwi(ADC_WIDTH), .davr(LO_WIDTH-1), .dwlo(LO_WIDTH))
-    dmMulPhQ(.clk(adcClk), .adcf(ptADC), .mult(phLOsin), .mixout(adcPhPrdQ));
+if (IQ_DATA == "TRUE") begin
+
+complexMixer #(.AWIDTH(ADC_WIDTH),
+               .BWIDTH(LO_WIDTH),
+               .SIZEOUT(PRODUCT_WIDTH))
+  dmMulRf(.clk(adcClk),
+    .sload(1'b1),
+    .ar(rfADC),
+    .ai(rfADCQ),
+    .br(rfLOcos),
+    .bi(rfLOsin),
+    .pr(adcRfPrdI),
+    .pi(adcRfPrdQ));
+complexMixer #(.AWIDTH(ADC_WIDTH),
+               .BWIDTH(LO_WIDTH),
+               .SIZEOUT(PRODUCT_WIDTH))
+  dmMulPl(.clk(adcClk),
+    .sload(1'b1),
+    .ar(ptADC),
+    .ai(ptADCQ),
+    .br(plLOcos),
+    .bi(plLOsin),
+    .pr(adcPlPrdI),
+    .pi(adcPlPrdQ));
+complexMixer #(.AWIDTH(ADC_WIDTH),
+               .BWIDTH(LO_WIDTH),
+               .SIZEOUT(PRODUCT_WIDTH))
+  dmMulPh(.clk(adcClk),
+    .sload(1'b1),
+    .ar(ptADC),
+    .ai(ptADCQ),
+    .br(phLOcos),
+    .bi(phLOsin),
+    .pr(adcPhPrdI),
+    .pi(adcPhPrdQ));
+end
+else if (IQ_DATA == "FALSE") begin
+
+mixer #(.dwi(ADC_WIDTH),
+        .davr(LO_WIDTH-1),
+        .dwlo(LO_WIDTH))
+  dmMulRfI(.clk(adcClk),
+    .adcf(rfADC),
+    .mult(rfLOcos),
+    .mixout(adcRfPrdI));
+mixer #(.dwi(ADC_WIDTH),
+        .davr(LO_WIDTH-1),
+        .dwlo(LO_WIDTH))
+  dmMulRfQ(.clk(adcClk),
+      .adcf(rfADC),
+      .mult(rfLOsin),
+      .mixout(adcRfPrdQ));
+mixer #(.dwi(ADC_WIDTH),
+        .davr(LO_WIDTH-1),
+        .dwlo(LO_WIDTH))
+  dmMulPlI(.clk(adcClk),
+    .adcf(ptADC),
+    .mult(plLOcos),
+    .mixout(adcPlPrdI));
+mixer #(.dwi(ADC_WIDTH),
+        .davr(LO_WIDTH-1),
+        .dwlo(LO_WIDTH))
+  dmMulPlQ(.clk(adcClk),
+    .adcf(ptADC),
+    .mult(plLOsin),
+    .mixout(adcPlPrdQ));
+mixer #(.dwi(ADC_WIDTH),
+        .davr(LO_WIDTH-1),
+        .dwlo(LO_WIDTH))
+  dmMulPhI(.clk(adcClk),
+    .adcf(ptADC),
+    .mult(phLOcos),
+    .mixout(adcPhPrdI));
+mixer #(.dwi(ADC_WIDTH),
+    .davr(LO_WIDTH-1),
+    .dwlo(LO_WIDTH))
+  dmMulPhQ(.clk(adcClk),
+    .adcf(ptADC),
+    .mult(phLOsin),
+    .mixout(adcPhPrdQ));
+end
 
 assign rfProducts[i*2*PRODUCT_WIDTH+:2*PRODUCT_WIDTH] = {adcRfPrdQ, adcRfPrdI};
 assign plProducts[i*2*PRODUCT_WIDTH+:2*PRODUCT_WIDTH] = {adcPlPrdQ, adcPlPrdI};
@@ -610,7 +688,6 @@ faDecimate #(.DATA_WIDTH(MAG_WIDTH),
     .inputValid(cordicTVALID && (cordicStream == STREAM_RF)),
     .cicShift(faCICshift),
     .decimateFlag(cordicFaDecimateFlag),
-
     .outputToggle(rfDecimatedToggle),
     .outputData({cicFaMag3, cicFaMag2, cicFaMag1, cicFaMag0}));
 
@@ -822,5 +899,61 @@ always @(posedge clk) begin
         saValid <= 1'b0;
     end
 end
+
+//`ifndef SIMULATE
+//
+//wire [255:0] probe;
+//ila_td256_s4096_cap ila_td256_s4096_cap_inst (
+//    .clk(clk),
+//    .probe0(probe)
+//);
+//
+//assign probe[0] = sysPtTimeMuxMode;
+//assign probe[1] = sysPtStable;
+//assign probe[2] = sysPtStable_d;
+//assign probe[3] = ptToggle;
+//assign probe[4] = ptToggle_d;
+//assign probe[5] = sysPtStable;
+//assign probe[6] = sysPtStable_m;
+//assign probe[7] = ptDecimatedToggle;
+//assign probe[8] = ptDecimatedMatch;
+//assign probe[9] = awaitGainsAndRf;
+//assign probe[10] = gainDoneMatch;
+//assign probe[11] = rfDecimatedMatch;
+//assign probe[12] = rfDecimatedToggle;
+//assign probe[13] = faTrimStrobe;
+//assign probe[14] = adcMtLoadAndLatch;
+//assign probe[15] = rfFaMagValid;
+//assign probe[16] = faTrimStrobe;
+//assign probe[18:17] = cordicADC;
+//assign probe[19] = cordicTVALID;
+//assign probe[21:20] = cordicStream;
+//assign probe[22] = adcFaSync;
+//assign probe[23] = adcFaDecimateFlag;
+//assign probe[24] = sysFaDecimateFlag;
+//assign probe[25] = sysMtMatch_p;
+//assign probe[26] = sysMtToggle_p;
+//assign probe[27] = evrFaMarker;
+//assign probe[28] = adcFaEvent_m;
+//assign probe[29] = adcFaEvent;
+//assign probe[30] = adcFaEvent_d1;
+//assign probe[31] = adcMtLoadAndLatchToggle;
+//assign probe[32] = saDecimateFlag;
+//assign probe[33] = saDecimatedToggle;
+//assign probe[34] = saValid;
+//assign probe[35] = faToggle;
+//assign probe[36] = evrSaMarker;
+//assign probe[37] = adcSaSync;
+//assign probe[38] = adcSaDecimateFlag;
+//assign probe[39] = sysSaDecimateFlag;
+//assign probe[40] = cordicSaDecimateFlag;
+//assign probe[41] = cordicFaDecimateFlag;
+//
+//assign probe[64+MAG_WIDTH-1:64] = rfFaMag0;
+//assign probe[96+MAG_WIDTH-1:96] = cicFaMag0;
+//assign probe[128+MAG_WIDTH-1:128] = cordicMagnitude;
+//assign probe[160+MAG_WIDTH-1:160] = rfSaMag0;
+//
+//`endif
 
 endmodule

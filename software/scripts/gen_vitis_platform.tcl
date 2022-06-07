@@ -12,6 +12,16 @@ proc gen_vitis_platform {platform_name xsa_file} {
     bsp setlib -name libmetal
     bsp setlib -name lwip211
 
+    # LwIP overrides
+    bsp config mem_size 1048576
+    bsp config pbuf_pool_size 4096
+    bsp config memp_n_udp_pcb 32
+    bsp config n_rx_descriptors 128
+    bsp config n_tx_descriptors 128
+    # bsp config lwip_stats true
+    # bsp config lwip_debug true
+    # bsp config pbuf_debug true
+
     # Generate platform
     platform generate
 }

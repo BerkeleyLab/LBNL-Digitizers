@@ -8,9 +8,9 @@ module bpm_zcu208_top #(
     parameter MAG_WIDTH                 = 26,
     parameter PRODUCT_WIDTH             = AXI_SAMPLE_WIDTH + LO_WIDTH - 1,
     parameter ACQ_WIDTH                 = 32,
-    parameter SITE_SAMPLES_PER_TURN     = 77,
-    parameter SITE_CIC_FA_DECIMATE      = 76,
-    parameter SITE_CIC_SA_DECIMATE      = 1000,
+    parameter SITE_SAMPLES_PER_TURN     = 80,
+    parameter SITE_CIC_FA_DECIMATE      = 320,
+    parameter SITE_CIC_SA_DECIMATE      = 200,
     parameter SITE_CIC_STAGES           = 2) (
     input  USER_MGT_SI570_CLK_P, USER_MGT_SI570_CLK_N,
     input  SFP2_RX_P, SFP2_RX_N,
@@ -616,52 +616,52 @@ system
 
 `endif // `ifndef SIMULATE
 
-assign acqTVALID[0] = prelimProcRfCicFaMagValid;
+assign acqTVALID[0] = prelimProcRfCicFaMagValid[0];
 assign acqTDATA[0*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
-    {ACQ_SAMPLES_WIDTH-MAG_WIDTH{prelimProcRfCicFaMag0[MAG_WIDTH-1]}},
-    prelimProcRfCicFaMag0
+    {ACQ_SAMPLES_WIDTH-MAG_WIDTH{prelimProcRfCicFaMag0[0][MAG_WIDTH-1]}},
+    prelimProcRfCicFaMag0[0]
 };
 
-assign acqTVALID[1] = prelimProcRfCicFaMagValid;
+assign acqTVALID[1] = prelimProcRfCicFaMagValid[0];
 assign acqTDATA[1*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
-    {ACQ_SAMPLES_WIDTH-MAG_WIDTH{prelimProcRfCicFaMag1[MAG_WIDTH-1]}},
-    prelimProcRfCicFaMag1
+    {ACQ_SAMPLES_WIDTH-MAG_WIDTH{prelimProcRfCicFaMag1[0][MAG_WIDTH-1]}},
+    prelimProcRfCicFaMag1[0]
 };
 
-assign acqTVALID[2] = prelimProcRfTbtMagValid;
+assign acqTVALID[2] = prelimProcRfTbtMagValid[0];
 assign acqTDATA[2*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
-    {ACQ_SAMPLES_WIDTH-MAG_WIDTH{prelimProcRfTbtMag0[MAG_WIDTH-1]}},
-    prelimProcRfTbtMag0
+    {ACQ_SAMPLES_WIDTH-MAG_WIDTH{prelimProcRfTbtMag0[0][MAG_WIDTH-1]}},
+    prelimProcRfTbtMag0[0]
 };
 
-assign acqTVALID[3] = prelimProcRfTbtMagValid;
+assign acqTVALID[3] = prelimProcRfTbtMagValid[0];
 assign acqTDATA[3*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
-    {ACQ_SAMPLES_WIDTH-MAG_WIDTH{prelimProcRfTbtMag1[MAG_WIDTH-1]}},
-    prelimProcRfTbtMag1
+    {ACQ_SAMPLES_WIDTH-MAG_WIDTH{prelimProcRfTbtMag1[0][MAG_WIDTH-1]}},
+    prelimProcRfTbtMag1[0]
 };
 
-assign acqTVALID[4] = prelimProcRfFaMagValid;
+assign acqTVALID[4] = prelimProcRfFaMagValid[0];
 assign acqTDATA[4*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
-    {ACQ_SAMPLES_WIDTH-MAG_WIDTH{prelimProcRfFaMag0[MAG_WIDTH-1]}},
-    prelimProcRfFaMag0
+    {ACQ_SAMPLES_WIDTH-MAG_WIDTH{prelimProcRfFaMag0[0][MAG_WIDTH-1]}},
+    prelimProcRfFaMag0[0]
 };
 
-assign acqTVALID[5] = prelimProcRfFaMagValid;
+assign acqTVALID[5] = prelimProcRfFaMagValid[0];
 assign acqTDATA[5*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
-    {ACQ_SAMPLES_WIDTH-MAG_WIDTH{prelimProcRfFaMag1[MAG_WIDTH-1]}},
-    prelimProcRfFaMag1
+    {ACQ_SAMPLES_WIDTH-MAG_WIDTH{prelimProcRfFaMag1[0][MAG_WIDTH-1]}},
+    prelimProcRfFaMag1[0]
 };
 
-assign acqTVALID[6] = prelimProcSaValid;
+assign acqTVALID[6] = prelimProcSaValid[0];
 assign acqTDATA[6*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
-    {ACQ_SAMPLES_WIDTH-MAG_WIDTH{prelimProcRfMag0[MAG_WIDTH-1]}},
-    prelimProcRfMag0
+    {ACQ_SAMPLES_WIDTH-MAG_WIDTH{prelimProcRfMag0[0][MAG_WIDTH-1]}},
+    prelimProcRfMag0[0]
 };
 
-assign acqTVALID[7] = prelimProcSaValid;
+assign acqTVALID[7] = prelimProcSaValid[0];
 assign acqTDATA[7*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
-    {ACQ_SAMPLES_WIDTH-MAG_WIDTH{prelimProcRfMag1[MAG_WIDTH-1]}},
-    prelimProcRfMag1
+    {ACQ_SAMPLES_WIDTH-MAG_WIDTH{prelimProcRfMag1[0][MAG_WIDTH-1]}},
+    prelimProcRfMag1[0]
 };
 
 //
@@ -734,57 +734,120 @@ assign adcFaSynced = sysADCFAstatus[31];
 assign adcSaSynced = sysADCSAstatus[31];
 
 //
+// Forward the EVR trigger bus and time stamp to the ADC clock domain.
+//
+wire [63:0] adcTimestamp;
+wire [71:0] evrForward, adcForward;
+assign evrForward = { evrTriggerBus, evrTimestamp };
+forwardData #(.DATA_WIDTH(72))
+  forwardTimestampToADC(.inClk(evrClk),
+             .inData(evrForward),
+             .outClk(adcClk),
+             .outData(adcForward));
+assign adcTimestamp = adcForward[63:0];
+
+//
+// Forward the EVR trigger bus and time stamp to the system clock domain.
+//
+wire [63:0] sysTimestamp;
+wire [71:0] sysForward;
+forwardData #(.DATA_WIDTH(72))
+  forwardTimestampToSys(.inClk(evrClk),
+             .inData(evrForward),
+             .outClk(sysClk),
+             .outData(sysForward));
+assign sysTimestamp = sysForward[63:0];
+
+//
 // Preliminary processing (compute magnitude of ADC signals)
 //
-wire sysSingleTrig;
+wire sysSingleTrig [0:CFG_PRELIM_COUNT-1];
 wire [32-MAG_WIDTH-1:0] magPAD = 0;
-wire                 adcLoSynced, adcTbtLoadAccumulator, adcTbtLatchAccumulator;
-wire                 adcMtLoadAndLatch;
-wire                 prelimProcTbtToggle;
-wire                 prelimProcRfTbtMagValid;
-wire [MAG_WIDTH-1:0] prelimProcRfTbtMag0, prelimProcRfTbtMag1;
-wire [MAG_WIDTH-1:0] prelimProcRfTbtMag2, prelimProcRfTbtMag3;
-wire                 prelimProcFaToggle;
-wire                 prelimProcRfFaMagValid;
-wire [MAG_WIDTH-1:0] prelimProcRfFaMag0, prelimProcRfFaMag1;
-wire [MAG_WIDTH-1:0] prelimProcRfFaMag2, prelimProcRfFaMag3;
-wire                 prelimProcRfCicFaMagValid;
-wire [MAG_WIDTH-1:0] prelimProcRfCicFaMag0, prelimProcRfCicFaMag1;
-wire [MAG_WIDTH-1:0] prelimProcRfCicFaMag2, prelimProcRfCicFaMag3;
-wire                 prelimProcSaToggle;
-wire                 prelimProcSaValid;
-wire [MAG_WIDTH-1:0] prelimProcRfMag0, prelimProcRfMag1;
-wire [MAG_WIDTH-1:0] prelimProcRfMag2, prelimProcRfMag3;
-wire [MAG_WIDTH-1:0] prelimProcPlMag0, prelimProcPlMag1;
-wire [MAG_WIDTH-1:0] prelimProcPlMag2, prelimProcPlMag3;
-wire [MAG_WIDTH-1:0] prelimProcPhMag0, prelimProcPhMag1;
-wire [MAG_WIDTH-1:0] prelimProcPhMag2, prelimProcPhMag3;
-wire [8*PRODUCT_WIDTH-1:0] rfProducts, plProducts, phProducts;
-wire [LO_WIDTH-1:0] rfLOcos, rfLOsin;
-wire [LO_WIDTH-1:0] plLOcos, plLOsin;
-wire [LO_WIDTH-1:0] phLOcos, phLOsin;
+wire                 adcLoSynced[0:CFG_PRELIM_COUNT-1];
+wire                 adcTbtLoadAccumulator[0:CFG_PRELIM_COUNT-1];
+wire                 adcTbtLatchAccumulator[0:CFG_PRELIM_COUNT-1];
+wire                 adcMtLoadAndLatch[0:CFG_PRELIM_COUNT-1];
+wire                 prelimProcTbtToggle[0:CFG_PRELIM_COUNT-1];
+wire                 prelimProcRfTbtMagValid[0:CFG_PRELIM_COUNT-1];
+wire [MAG_WIDTH-1:0] prelimProcRfTbtMag0[0:CFG_PRELIM_COUNT-1];
+wire [MAG_WIDTH-1:0] prelimProcRfTbtMag1[0:CFG_PRELIM_COUNT-1];
+wire [MAG_WIDTH-1:0] prelimProcRfTbtMag2[0:CFG_PRELIM_COUNT-1];
+wire [MAG_WIDTH-1:0] prelimProcRfTbtMag3[0:CFG_PRELIM_COUNT-1];
+wire                 prelimProcFaToggle[0:CFG_PRELIM_COUNT-1];
+wire                 prelimProcRfFaMagValid[0:CFG_PRELIM_COUNT-1];
+wire [MAG_WIDTH-1:0] prelimProcRfFaMag0[0:CFG_PRELIM_COUNT-1];
+wire [MAG_WIDTH-1:0] prelimProcRfFaMag1[0:CFG_PRELIM_COUNT-1];
+wire [MAG_WIDTH-1:0] prelimProcRfFaMag2[0:CFG_PRELIM_COUNT-1];
+wire [MAG_WIDTH-1:0] prelimProcRfFaMag3[0:CFG_PRELIM_COUNT-1];
+wire                 prelimProcRfCicFaMagValid[0:CFG_PRELIM_COUNT-1];
+wire [MAG_WIDTH-1:0] prelimProcRfCicFaMag0[0:CFG_PRELIM_COUNT-1];
+wire [MAG_WIDTH-1:0] prelimProcRfCicFaMag1[0:CFG_PRELIM_COUNT-1];
+wire [MAG_WIDTH-1:0] prelimProcRfCicFaMag2[0:CFG_PRELIM_COUNT-1];
+wire [MAG_WIDTH-1:0] prelimProcRfCicFaMag3[0:CFG_PRELIM_COUNT-1];
+wire                 prelimProcSaToggle[0:CFG_PRELIM_COUNT-1];
+wire                 prelimProcSaValid[0:CFG_PRELIM_COUNT-1];
+wire [MAG_WIDTH-1:0] prelimProcRfMag0[0:CFG_PRELIM_COUNT-1];
+wire [MAG_WIDTH-1:0] prelimProcRfMag1[0:CFG_PRELIM_COUNT-1];
+wire [MAG_WIDTH-1:0] prelimProcRfMag2[0:CFG_PRELIM_COUNT-1];
+wire [MAG_WIDTH-1:0] prelimProcRfMag3[0:CFG_PRELIM_COUNT-1];
+wire [MAG_WIDTH-1:0] prelimProcPlMag0[0:CFG_PRELIM_COUNT-1];
+wire [MAG_WIDTH-1:0] prelimProcPlMag1[0:CFG_PRELIM_COUNT-1];
+wire [MAG_WIDTH-1:0] prelimProcPlMag2[0:CFG_PRELIM_COUNT-1];
+wire [MAG_WIDTH-1:0] prelimProcPlMag3[0:CFG_PRELIM_COUNT-1];
+wire [MAG_WIDTH-1:0] prelimProcPhMag0[0:CFG_PRELIM_COUNT-1];
+wire [MAG_WIDTH-1:0] prelimProcPhMag1[0:CFG_PRELIM_COUNT-1];
+wire [MAG_WIDTH-1:0] prelimProcPhMag2[0:CFG_PRELIM_COUNT-1];
+wire [MAG_WIDTH-1:0] prelimProcPhMag3[0:CFG_PRELIM_COUNT-1];
+wire [8*PRODUCT_WIDTH-1:0] rfProducts[0:CFG_PRELIM_COUNT-1];
+wire [8*PRODUCT_WIDTH-1:0] plProducts[0:CFG_PRELIM_COUNT-1];
+wire [8*PRODUCT_WIDTH-1:0] phProducts[0:CFG_PRELIM_COUNT-1];
+wire [LO_WIDTH-1:0] rfLOcos[0:CFG_PRELIM_COUNT-1];
+wire [LO_WIDTH-1:0] rfLOsin[0:CFG_PRELIM_COUNT-1];
+wire [LO_WIDTH-1:0] plLOcos[0:CFG_PRELIM_COUNT-1];
+wire [LO_WIDTH-1:0] plLOsin[0:CFG_PRELIM_COUNT-1];
+wire [LO_WIDTH-1:0] phLOcos[0:CFG_PRELIM_COUNT-1];
+wire [LO_WIDTH-1:0] phLOsin[0:CFG_PRELIM_COUNT-1];
+wire prelimProcPtToggle[0:CFG_PRELIM_COUNT-1];
+wire prelimProcOverflow[0:CFG_PRELIM_COUNT-1];
+wire [8*MAG_WIDTH-1:0] tbtSums[0:CFG_PRELIM_COUNT-1];
+wire tbtSumsValid[0:CFG_PRELIM_COUNT-1];
+wire [4*MAG_WIDTH-1:0] tbtMags[0:CFG_PRELIM_COUNT-1];
+wire tbtMagsValid[0:CFG_PRELIM_COUNT-1];
 wire [(BD_ADC_CHANNEL_COUNT*ACQ_SAMPLES_WIDTH)-1:0] acqTDATA;
 wire [BD_ADC_CHANNEL_COUNT-1:0] acqTVALID;
-wire prelimProcPtToggle, prelimProcOverflow;
-wire [8*MAG_WIDTH-1:0] tbtSums;
-wire tbtSumsValid;
-wire [4*MAG_WIDTH-1:0] tbtMags;
-wire tbtMagsValid;
-assign GPIO_IN[GPIO_IDX_PRELIM_RF_MAG_0] = { magPAD, prelimProcRfMag0 };
-assign GPIO_IN[GPIO_IDX_PRELIM_RF_MAG_1] = { magPAD, prelimProcRfMag1 };
-assign GPIO_IN[GPIO_IDX_PRELIM_RF_MAG_2] = { magPAD, prelimProcRfMag2 };
-assign GPIO_IN[GPIO_IDX_PRELIM_RF_MAG_3] = { magPAD, prelimProcRfMag3 };
-assign GPIO_IN[GPIO_IDX_PRELIM_PT_LO_MAG_0] = { magPAD, prelimProcPlMag0 };
-assign GPIO_IN[GPIO_IDX_PRELIM_PT_LO_MAG_1] = { magPAD, prelimProcPlMag1 };
-assign GPIO_IN[GPIO_IDX_PRELIM_PT_LO_MAG_2] = { magPAD, prelimProcPlMag2 };
-assign GPIO_IN[GPIO_IDX_PRELIM_PT_LO_MAG_3] = { magPAD, prelimProcPlMag3 };
-assign GPIO_IN[GPIO_IDX_PRELIM_PT_HI_MAG_0] = { magPAD, prelimProcPhMag0 };
-assign GPIO_IN[GPIO_IDX_PRELIM_PT_HI_MAG_1] = { magPAD, prelimProcPhMag1 };
-assign GPIO_IN[GPIO_IDX_PRELIM_PT_HI_MAG_2] = { magPAD, prelimProcPhMag2 };
-assign GPIO_IN[GPIO_IDX_PRELIM_PT_HI_MAG_3] = { magPAD, prelimProcPhMag3 };
+
+genvar ch;
+generate
+for (ch = 0 ; ch < CFG_PRELIM_COUNT ; ch = ch + 1) begin : prelim_chain
+
+assign GPIO_IN[GPIO_IDX_PRELIM_RF_MAG_0 + ch*GPIO_IDX_PER_PRELIM] = {
+    magPAD, prelimProcRfMag0[ch] };
+assign GPIO_IN[GPIO_IDX_PRELIM_RF_MAG_1 + ch*GPIO_IDX_PER_PRELIM] = {
+    magPAD, prelimProcRfMag1[ch] };
+assign GPIO_IN[GPIO_IDX_PRELIM_RF_MAG_2 + ch*GPIO_IDX_PER_PRELIM] = {
+    magPAD, prelimProcRfMag2[ch] };
+assign GPIO_IN[GPIO_IDX_PRELIM_RF_MAG_3 + ch*GPIO_IDX_PER_PRELIM] = {
+    magPAD, prelimProcRfMag3[ch] };
+assign GPIO_IN[GPIO_IDX_PRELIM_PT_LO_MAG_0 + ch*GPIO_IDX_PER_PRELIM] = {
+    magPAD, prelimProcPlMag0[ch] };
+assign GPIO_IN[GPIO_IDX_PRELIM_PT_LO_MAG_1 + ch*GPIO_IDX_PER_PRELIM] = {
+    magPAD, prelimProcPlMag1[ch] };
+assign GPIO_IN[GPIO_IDX_PRELIM_PT_LO_MAG_2 + ch*GPIO_IDX_PER_PRELIM] = {
+    magPAD, prelimProcPlMag2[ch] };
+assign GPIO_IN[GPIO_IDX_PRELIM_PT_LO_MAG_3 + ch*GPIO_IDX_PER_PRELIM] = {
+    magPAD, prelimProcPlMag3[ch] };
+assign GPIO_IN[GPIO_IDX_PRELIM_PT_HI_MAG_0 + ch*GPIO_IDX_PER_PRELIM] = {
+    magPAD, prelimProcPhMag0[ch] };
+assign GPIO_IN[GPIO_IDX_PRELIM_PT_HI_MAG_1 + ch*GPIO_IDX_PER_PRELIM] = {
+    magPAD, prelimProcPhMag1[ch] };
+assign GPIO_IN[GPIO_IDX_PRELIM_PT_HI_MAG_2 + ch*GPIO_IDX_PER_PRELIM] = {
+    magPAD, prelimProcPhMag2[ch] };
+assign GPIO_IN[GPIO_IDX_PRELIM_PT_HI_MAG_3 + ch*GPIO_IDX_PER_PRELIM] = {
+    magPAD, prelimProcPhMag3[ch] };
 preliminaryProcessing #(.SYSCLK_RATE(SYSCLK_RATE),
                         .ADC_WIDTH(AXI_SAMPLE_WIDTH),
                         .MAG_WIDTH(MAG_WIDTH),
+                        .IQ_DATA("TRUE"),
                         .SAMPLES_PER_TURN(SITE_SAMPLES_PER_TURN),
                         .LO_WIDTH(LO_WIDTH),
                         .CIC_STAGES(SITE_CIC_STAGES),
@@ -795,94 +858,101 @@ preliminaryProcessing #(.SYSCLK_RATE(SYSCLK_RATE),
   prelimProc(
     .clk(sysClk),
     .adcClk(adcClk),
-    .adc0(adcsTDATA[0*SAMPLES_WIDTH+:SAMPLES_WIDTH]), // I0
-    .adc1(adcsTDATA[1*SAMPLES_WIDTH+:SAMPLES_WIDTH]), // Q0
-    .adc2(adcsTDATA[2*SAMPLES_WIDTH+:SAMPLES_WIDTH]), // I1
-    .adc3(adcsTDATA[3*SAMPLES_WIDTH+:SAMPLES_WIDTH]), // Q1
+    .adc0(adcsTDATA[(ch*CFG_PRELIM_COUNT + 0)*SAMPLES_WIDTH+:SAMPLES_WIDTH]), // I0
+    .adc1(adcsTDATA[(ch*CFG_PRELIM_COUNT + 2)*SAMPLES_WIDTH+:SAMPLES_WIDTH]), // I1
+    .adc2(adcsTDATA[(ch*CFG_PRELIM_COUNT + 4)*SAMPLES_WIDTH+:SAMPLES_WIDTH]), // I2
+    .adc3(adcsTDATA[(ch*CFG_PRELIM_COUNT + 6)*SAMPLES_WIDTH+:SAMPLES_WIDTH]), // I3
+    .adcQ0(adcsTDATA[(ch*CFG_PRELIM_COUNT + 1)*SAMPLES_WIDTH+:SAMPLES_WIDTH]), // Q0
+    .adcQ1(adcsTDATA[(ch*CFG_PRELIM_COUNT + 3)*SAMPLES_WIDTH+:SAMPLES_WIDTH]), // Q1
+    .adcQ2(adcsTDATA[(ch*CFG_PRELIM_COUNT + 5)*SAMPLES_WIDTH+:SAMPLES_WIDTH]), // Q2
+    .adcQ3(adcsTDATA[(ch*CFG_PRELIM_COUNT + 7)*SAMPLES_WIDTH+:SAMPLES_WIDTH]), // Q3
     .adcExceedsThreshold(1'b0),
     .adcUseThisSample(1'b1),
     .evrClk(adcClk),
     .evrFaMarker(adcFaMarker),
     .evrSaMarker(adcSaMarker),
-    .evrTimestamp(evrTimestamp),
+    .evrTimestamp(adcTimestamp),
     .evrPtTrigger(1'b0),
     .evrSinglePassTrigger(1'b0),
     .evrHbMarker(adcHeartbeat),
-    .sysSingleTrig(sysSingleTrig),
-    .sysTimestamp(evrTimestamp),
+    .sysSingleTrig(sysSingleTrig[ch]),
+    .sysTimestamp(sysTimestamp),
     .PT_P(),
     .PT_N(),
     .gpioData(GPIO_OUT),
-    .localOscillatorAddressStrobe(GPIO_STROBES[GPIO_IDX_LOTABLE_ADDRESS]),
-    .localOscillatorCsrStrobe(GPIO_STROBES[GPIO_IDX_LOTABLE_CSR]),
-    .localOscillatorCsr(GPIO_IN[GPIO_IDX_LOTABLE_CSR]),
-    .sumShiftCsrStrobe(GPIO_STROBES[GPIO_IDX_SUM_SHIFT_CSR]),
-    .sumShiftCsr(GPIO_IN[GPIO_IDX_SUM_SHIFT_CSR]),
-    .autotrimCsrStrobe(GPIO_STROBES[GPIO_IDX_AUTOTRIM_CSR]),
-    .autotrimThresholdStrobe(GPIO_STROBES[GPIO_IDX_AUTOTRIM_THRESHOLD]),
-    .autotrimGainStrobes({GPIO_STROBES[GPIO_IDX_ADC_GAIN_FACTOR_3],
-                          GPIO_STROBES[GPIO_IDX_ADC_GAIN_FACTOR_2],
-                          GPIO_STROBES[GPIO_IDX_ADC_GAIN_FACTOR_1],
-                          GPIO_STROBES[GPIO_IDX_ADC_GAIN_FACTOR_0]}),
-    .autotrimCsr(GPIO_IN[GPIO_IDX_AUTOTRIM_CSR]),
-    .autotrimThreshold(GPIO_IN[GPIO_IDX_AUTOTRIM_THRESHOLD]),
-    .gainRBK0(GPIO_IN[GPIO_IDX_ADC_GAIN_FACTOR_0]),
-    .gainRBK1(GPIO_IN[GPIO_IDX_ADC_GAIN_FACTOR_1]),
-    .gainRBK2(GPIO_IN[GPIO_IDX_ADC_GAIN_FACTOR_2]),
-    .gainRBK3(GPIO_IN[GPIO_IDX_ADC_GAIN_FACTOR_3]),
-    .adcLoSynced(adcLoSynced),
-    .rfProductsDbg(rfProducts),
-    .plProductsDbg(plProducts),
-    .phProductsDbg(phProducts),
-    .rfLOcosDbg(rfLOcos),
-    .rfLOsinDbg(rfLOsin),
-    .plLOcosDbg(plLOcos),
-    .plLOsinDbg(plLOsin),
-    .phLOcosDbg(phLOcos),
-    .phLOsinDbg(phLOsin),
-    .tbtSumsDbg(tbtSums),
-    .tbtSumsValidDbg(tbtSumsValid),
-    .tbtMagsDbg(tbtMags),
-    .tbtMagsValidDbg(tbtMagsValid),
-    .tbtToggle(),
-    .rfTbtMagValid(prelimProcRfTbtMagValid),
-    .rfTbtMag0(prelimProcRfTbtMag0),
-    .rfTbtMag1(prelimProcRfTbtMag1),
-    .rfTbtMag2(prelimProcRfTbtMag2),
-    .rfTbtMag3(prelimProcRfTbtMag3),
-    .cicFaMagValidDbg(prelimProcRfCicFaMagValid),
-    .cicFaMag0Dbg(prelimProcRfCicFaMag0),
-    .cicFaMag1Dbg(prelimProcRfCicFaMag1),
-    .cicFaMag2Dbg(prelimProcRfCicFaMag2),
-    .cicFaMag3Dbg(prelimProcRfCicFaMag3),
-    .faToggle(prelimProcFaToggle),
-    .adcTbtLoadAccumulator(adcTbtLoadAccumulator),
-    .adcTbtLatchAccumulator(adcTbtLatchAccumulator),
-    .adcMtLoadAndLatch(adcMtLoadAndLatch),
-    .rfFaMagValid(prelimProcRfFaMagValid),
-    .rfFaMag0(prelimProcRfFaMag0),
-    .rfFaMag1(prelimProcRfFaMag1),
-    .rfFaMag2(prelimProcRfFaMag2),
-    .rfFaMag3(prelimProcRfFaMag3),
-    .saToggle(prelimProcSaToggle),
-    .saValid(prelimProcSaValid),
-    .sysSaTimestamp({GPIO_IN[GPIO_IDX_SA_TIMESTAMP_SEC],
-                     GPIO_IN[GPIO_IDX_SA_TIMESTAMP_TICKS]}),
-    .rfMag0(prelimProcRfMag0),
-    .rfMag1(prelimProcRfMag1),
-    .rfMag2(prelimProcRfMag2),
-    .rfMag3(prelimProcRfMag3),
-    .plMag0(prelimProcPlMag0),
-    .plMag1(prelimProcPlMag1),
-    .plMag2(prelimProcPlMag2),
-    .plMag3(prelimProcPlMag3),
-    .phMag0(prelimProcPhMag0),
-    .phMag1(prelimProcPhMag1),
-    .phMag2(prelimProcPhMag2),
-    .phMag3(prelimProcPhMag3),
-    .ptToggle(prelimProcPtToggle),
-    .overflowFlag(prelimProcOverflow)
+    .localOscillatorAddressStrobe(GPIO_STROBES[GPIO_IDX_LOTABLE_ADDRESS + ch*GPIO_IDX_PER_PRELIM]),
+    .localOscillatorCsrStrobe(GPIO_STROBES[GPIO_IDX_LOTABLE_CSR + ch*GPIO_IDX_PER_PRELIM]),
+    .localOscillatorCsr(GPIO_IN[GPIO_IDX_LOTABLE_CSR + ch*GPIO_IDX_PER_PRELIM]),
+    .sumShiftCsrStrobe(GPIO_STROBES[GPIO_IDX_SUM_SHIFT_CSR + ch*GPIO_IDX_PER_PRELIM]),
+    .sumShiftCsr(GPIO_IN[GPIO_IDX_SUM_SHIFT_CSR + ch*GPIO_IDX_PER_PRELIM]),
+    .autotrimCsrStrobe(GPIO_STROBES[GPIO_IDX_AUTOTRIM_CSR + ch*GPIO_IDX_PER_PRELIM]),
+    .autotrimThresholdStrobe(GPIO_STROBES[GPIO_IDX_AUTOTRIM_THRESHOLD + ch*GPIO_IDX_PER_PRELIM]),
+    .autotrimGainStrobes({GPIO_STROBES[GPIO_IDX_ADC_GAIN_FACTOR_3 + ch*GPIO_IDX_PER_PRELIM],
+                          GPIO_STROBES[GPIO_IDX_ADC_GAIN_FACTOR_2 + ch*GPIO_IDX_PER_PRELIM],
+                          GPIO_STROBES[GPIO_IDX_ADC_GAIN_FACTOR_1 + ch*GPIO_IDX_PER_PRELIM],
+                          GPIO_STROBES[GPIO_IDX_ADC_GAIN_FACTOR_0 + ch*GPIO_IDX_PER_PRELIM]}),
+    .autotrimCsr(GPIO_IN[GPIO_IDX_AUTOTRIM_CSR + ch*GPIO_IDX_PER_PRELIM]),
+    .autotrimThreshold(GPIO_IN[GPIO_IDX_AUTOTRIM_THRESHOLD + ch*GPIO_IDX_PER_PRELIM]),
+    .gainRBK0(GPIO_IN[GPIO_IDX_ADC_GAIN_FACTOR_0 + ch*GPIO_IDX_PER_PRELIM]),
+    .gainRBK1(GPIO_IN[GPIO_IDX_ADC_GAIN_FACTOR_1 + ch*GPIO_IDX_PER_PRELIM]),
+    .gainRBK2(GPIO_IN[GPIO_IDX_ADC_GAIN_FACTOR_2 + ch*GPIO_IDX_PER_PRELIM]),
+    .gainRBK3(GPIO_IN[GPIO_IDX_ADC_GAIN_FACTOR_3 + ch*GPIO_IDX_PER_PRELIM]),
+    .adcLoSynced(adcLoSynced[ch]),
+    .rfProductsDbg(rfProducts[ch]),
+    .plProductsDbg(plProducts[ch]),
+    .phProductsDbg(phProducts[ch]),
+    .rfLOcosDbg(rfLOcos[ch]),
+    .rfLOsinDbg(rfLOsin[ch]),
+    .plLOcosDbg(plLOcos[ch]),
+    .plLOsinDbg(plLOsin[ch]),
+    .phLOcosDbg(phLOcos[ch]),
+    .phLOsinDbg(phLOsin[ch]),
+    .tbtSumsDbg(tbtSums[ch]),
+    .tbtSumsValidDbg(tbtSumsValid[ch]),
+    .tbtMagsDbg(tbtMags[ch]),
+    .tbtMagsValidDbg(tbtMagsValid[ch]),
+    .tbtToggle(prelimProcTbtToggle[ch]),
+    .rfTbtMagValid(prelimProcRfTbtMagValid[ch]),
+    .rfTbtMag0(prelimProcRfTbtMag0[ch]),
+    .rfTbtMag1(prelimProcRfTbtMag1[ch]),
+    .rfTbtMag2(prelimProcRfTbtMag2[ch]),
+    .rfTbtMag3(prelimProcRfTbtMag3[ch]),
+    .cicFaMagValidDbg(prelimProcRfCicFaMagValid[ch]),
+    .cicFaMag0Dbg(prelimProcRfCicFaMag0[ch]),
+    .cicFaMag1Dbg(prelimProcRfCicFaMag1[ch]),
+    .cicFaMag2Dbg(prelimProcRfCicFaMag2[ch]),
+    .cicFaMag3Dbg(prelimProcRfCicFaMag3[ch]),
+    .faToggle(prelimProcFaToggle[ch]),
+    .adcTbtLoadAccumulator(adcTbtLoadAccumulator[ch]),
+    .adcTbtLatchAccumulator(adcTbtLatchAccumulator[ch]),
+    .adcMtLoadAndLatch(adcMtLoadAndLatch[ch]),
+    .rfFaMagValid(prelimProcRfFaMagValid[ch]),
+    .rfFaMag0(prelimProcRfFaMag0[ch]),
+    .rfFaMag1(prelimProcRfFaMag1[ch]),
+    .rfFaMag2(prelimProcRfFaMag2[ch]),
+    .rfFaMag3(prelimProcRfFaMag3[ch]),
+    .saToggle(prelimProcSaToggle[ch]),
+    .saValid(prelimProcSaValid[ch]),
+    .sysSaTimestamp({GPIO_IN[GPIO_IDX_SA_TIMESTAMP_SEC + ch*GPIO_IDX_PER_PRELIM],
+                     GPIO_IN[GPIO_IDX_SA_TIMESTAMP_TICKS + ch*GPIO_IDX_PER_PRELIM]}),
+    .rfMag0(prelimProcRfMag0[ch]),
+    .rfMag1(prelimProcRfMag1[ch]),
+    .rfMag2(prelimProcRfMag2[ch]),
+    .rfMag3(prelimProcRfMag3[ch]),
+    .plMag0(prelimProcPlMag0[ch]),
+    .plMag1(prelimProcPlMag1[ch]),
+    .plMag2(prelimProcPlMag2[ch]),
+    .plMag3(prelimProcPlMag3[ch]),
+    .phMag0(prelimProcPhMag0[ch]),
+    .phMag1(prelimProcPhMag1[ch]),
+    .phMag2(prelimProcPhMag2[ch]),
+    .phMag3(prelimProcPhMag3[ch]),
+    .ptToggle(prelimProcPtToggle[ch]),
+    .overflowFlag(prelimProcOverflow[ch])
 );
+
+end // for
+endgenerate // generate
 
 evrLogger evrLogger (
     .sysClk(sysClk),

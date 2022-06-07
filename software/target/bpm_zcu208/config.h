@@ -42,6 +42,11 @@
 #define CFG_ADC_PHYSICAL_COUNT    8
 
 /*
+ * Number of DSP chains
+ */
+#define CFG_PRELIM_COUNT         ((CFG_ADC_PHYSICAL_COUNT + 3)/4)
+
+/*
  * ADC sampling clock frequency
  */
 #define CFG_ADC_SAMPLING_CLK_FREQ   4800.00
@@ -50,16 +55,3 @@
  * ADC reference clock
  */
 #define CFG_ADC_REF_CLK_FREQ   4800.00
-
-/*
- * Application-specific registers
- */
-#define GPIO_IDX_ADC_0_CSR               64 // Acquisition control(W)/status(R)
-#define GPIO_IDX_ADC_0_DATA              65 // Acquisition data(R)
-#define GPIO_IDX_ADC_0_TRIGGER_CONFIG    66 // Acquisition trigger info (W)
-#define GPIO_IDX_ADC_0_TRIGGER_LOCATION  66 // Acquisition trigger location (R)
-#define GPIO_IDX_ADC_0_SECONDS           67 // Acquisition trigger time (R)
-#define GPIO_IDX_ADC_0_CONFIG_1          67 // Acquisition configuration 1 (W)
-#define GPIO_IDX_ADC_0_TICKS             68 // Acquisition trigger time (R)
-#define GPIO_IDX_ADC_0_CONFIG_2          68 // Acquisition configuration 2 (W)
-#define GPIO_IDX_PER_ADC             5
