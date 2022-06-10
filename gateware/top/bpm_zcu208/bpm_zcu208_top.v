@@ -954,6 +954,84 @@ preliminaryProcessing #(.SYSCLK_RATE(SYSCLK_RATE),
 end // for
 endgenerate // generate
 
+//
+// Position calculation
+//
+wire [31:0] positionCalcCSR[0:CFG_BPM_COUNT-1];
+wire [31:0] positionCalcXcal[0:CFG_BPM_COUNT-1];
+wire [31:0] positionCalcYcal[0:CFG_BPM_COUNT-1];
+wire [31:0] positionCalcQcal[0:CFG_BPM_COUNT-1];
+wire [31:0] positionCalcTbtX[0:CFG_BPM_COUNT-1];
+wire [31:0] positionCalcTbtY[0:CFG_BPM_COUNT-1];
+wire [31:0] positionCalcTbtQ[0:CFG_BPM_COUNT-1];
+wire [31:0] positionCalcTbtS[0:CFG_BPM_COUNT-1];
+wire [31:0] positionCalcFaX[0:CFG_BPM_COUNT-1];
+wire [31:0] positionCalcFaY[0:CFG_BPM_COUNT-1];
+wire [31:0] positionCalcFaQ[0:CFG_BPM_COUNT-1];
+wire [31:0] positionCalcFaS[0:CFG_BPM_COUNT-1];
+wire [31:0] positionCalcSaX[0:CFG_BPM_COUNT-1];
+wire [31:0] positionCalcSaY[0:CFG_BPM_COUNT-1];
+wire [31:0] positionCalcSaQ[0:CFG_BPM_COUNT-1];
+wire [31:0] positionCalcSaS[0:CFG_BPM_COUNT-1];
+wire positionCalcTbtToggle[0:CFG_BPM_COUNT-1];
+wire positionCalcFaToggle[0:CFG_BPM_COUNT-1];
+wire positionCalcSaToggle[0:CFG_BPM_COUNT-1];
+
+generate
+for (bpm = 0 ; bpm < CFG_BPM_COUNT ; bpm = bpm + 1) begin : pos_chain
+assign GPIO_IN[GPIO_IDX_POSITION_CALC_CSR + bpm*GPIO_IDX_PER_BPM] = positionCalcCSR[bpm];
+assign GPIO_IN[GPIO_IDX_POSITION_CALC_XCAL + bpm*GPIO_IDX_PER_BPM] = positionCalcXcal[bpm];
+assign GPIO_IN[GPIO_IDX_POSITION_CALC_YCAL + bpm*GPIO_IDX_PER_BPM] = positionCalcYcal[bpm];
+assign GPIO_IN[GPIO_IDX_POSITION_CALC_QCAL + bpm*GPIO_IDX_PER_BPM] = positionCalcQcal[bpm];
+assign GPIO_IN[GPIO_IDX_POSITION_CALC_SA_X + bpm*GPIO_IDX_PER_BPM] = positionCalcSaX[bpm];
+assign GPIO_IN[GPIO_IDX_POSITION_CALC_SA_Y + bpm*GPIO_IDX_PER_BPM] = positionCalcSaY[bpm];
+assign GPIO_IN[GPIO_IDX_POSITION_CALC_SA_Q + bpm*GPIO_IDX_PER_BPM] = positionCalcSaQ[bpm];
+assign GPIO_IN[GPIO_IDX_POSITION_CALC_SA_S + bpm*GPIO_IDX_PER_BPM] = positionCalcSaS[bpm];
+positionCalc #(.MAG_WIDTH(MAG_WIDTH))
+  positionCalc(
+    .clk(sysClk),
+    .gpioData(GPIO_OUT),
+    .csrStrobe(GPIO_STROBES[GPIO_IDX_POSITION_CALC_CSR + bpm*GPIO_IDX_PER_BPM]),
+    .xCalStrobe(GPIO_STROBES[GPIO_IDX_POSITION_CALC_XCAL + bpm*GPIO_IDX_PER_BPM]),
+    .yCalStrobe(GPIO_STROBES[GPIO_IDX_POSITION_CALC_YCAL + bpm*GPIO_IDX_PER_BPM]),
+    .qCalStrobe(GPIO_STROBES[GPIO_IDX_POSITION_CALC_QCAL + bpm*GPIO_IDX_PER_BPM]),
+    .tbt0(prelimProcRfTbtMag0[bpm]),
+    .tbt1(prelimProcRfTbtMag1[bpm]),
+    .tbt2(prelimProcRfTbtMag2[bpm]),
+    .tbt3(prelimProcRfTbtMag3[bpm]),
+    .tbtInToggle(prelimProcTbtToggle[bpm]),
+    .fa0(prelimProcRfFaMag0[bpm]),
+    .fa1(prelimProcRfFaMag1[bpm]),
+    .fa2(prelimProcRfFaMag2[bpm]),
+    .fa3(prelimProcRfFaMag3[bpm]),
+    .faInToggle(prelimProcFaToggle[bpm]),
+    .sa0(prelimProcRfMag0[bpm]),
+    .sa1(prelimProcRfMag1[bpm]),
+    .sa2(prelimProcRfMag2[bpm]),
+    .sa3(prelimProcRfMag3[bpm]),
+    .saInToggle(prelimProcSaToggle[bpm]),
+    .csr(positionCalcCSR[bpm]),
+    .xCalibration(positionCalcXcal[bpm]),
+    .yCalibration(positionCalcYcal[bpm]),
+    .qCalibration(positionCalcQcal[bpm]),
+    .tbtX(positionCalcTbtX[bpm]),
+    .tbtY(positionCalcTbtY[bpm]),
+    .tbtQ(positionCalcTbtQ[bpm]),
+    .tbtS(positionCalcTbtS[bpm]),
+    .tbtToggle(positionCalcTbtToggle[bpm]),
+    .faX(positionCalcFaX[bpm]),
+    .faY(positionCalcFaY[bpm]),
+    .faQ(positionCalcFaQ[bpm]),
+    .faS(positionCalcFaS[bpm]),
+    .faToggle(positionCalcFaToggle[bpm]),
+    .saX(positionCalcSaX[bpm]),
+    .saY(positionCalcSaY[bpm]),
+    .saQ(positionCalcSaQ[bpm]),
+    .saS(positionCalcSaS[bpm]),
+    .saToggle(positionCalcSaToggle[bpm]));
+end // for
+endgenerate // generate
+
 evrLogger evrLogger (
     .sysClk(sysClk),
     .sysCsrStrobe(GPIO_STROBES[GPIO_IDX_EVENT_LOG_CSR]),
