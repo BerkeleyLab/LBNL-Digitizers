@@ -20,6 +20,7 @@
 #define HSD_PROTOCOL_MAGIC_SLOW_ACQUISITION  0xCAFE0004
 #define HSD_PROTOCOL_ARG_CAPACITY    350
 #define HSD_PROTOCOL_ADC_COUNT       8
+#define HSD_PROTOCOL_DSP_COUNT       2
 
 struct hsdPacket {
     epicsUInt32    magic;
@@ -49,14 +50,14 @@ struct hsdSlowAcquisition {
     epicsUInt32 ptLoMag[HSD_PROTOCOL_ADC_COUNT];
     epicsUInt32 ptHiMag[HSD_PROTOCOL_ADC_COUNT];
     epicsUInt32 gainFactor[HSD_PROTOCOL_ADC_COUNT];
-    epicsInt32  xPos;
-    epicsInt32  yPos;
-    epicsInt32  skew;
-    epicsInt32  buttonSum;
-    epicsInt32  xRMSwide;
-    epicsInt32  yRMSwide;
-    epicsInt32  xRMSnarrow;
-    epicsInt32  yRMSnarrow;
+    epicsInt32  xPos[HSD_PROTOCOL_DSP_COUNT];
+    epicsInt32  yPos[HSD_PROTOCOL_DSP_COUNT];
+    epicsInt32  skew[HSD_PROTOCOL_DSP_COUNT];
+    epicsInt32  buttonSum[HSD_PROTOCOL_DSP_COUNT];
+    epicsInt32  xRMSwide[HSD_PROTOCOL_DSP_COUNT];
+    epicsInt32  yRMSwide[HSD_PROTOCOL_DSP_COUNT];
+    epicsInt32  xRMSnarrow[HSD_PROTOCOL_DSP_COUNT];
+    epicsInt32  yRMSnarrow[HSD_PROTOCOL_DSP_COUNT];
 };
 
 #define HSD_PROTOCOL_SIZE_TO_ARG_COUNT(s) (HSD_PROTOCOL_ARG_CAPACITY - \

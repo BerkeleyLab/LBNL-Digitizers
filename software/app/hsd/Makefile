@@ -43,6 +43,7 @@ __SRC_FILES = \
 	mgt.c \
 	mmcm.c \
 	platform_zynqmp.c \
+	positionCalcStub.c \
 	publisherStub.c \
 	rfadc.c \
 	rfclk.c \
@@ -75,6 +76,7 @@ __HDR_FILES = \
 	mmcm.h \
 	platform.h \
 	platform_config.h \
+	positionCalc.h \
 	publisher.h \
 	rfadc.h \
 	rfclk.h \

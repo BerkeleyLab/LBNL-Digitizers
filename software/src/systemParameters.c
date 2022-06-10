@@ -57,6 +57,13 @@ systemParametersReadback(void)
         systemParameters.adcHeartbeatMarker = 480 * 111 * 2000;
         systemParameters.evrPerFaMarker = 480 * 111;
         systemParameters.evrPerSaMarker = 480 * 111 * 200;
+        // position calc order = A = 3, B = 1, C = 2, D = 0
+        systemParameters.adcOrder = 3120;
+        systemParameters.xCalibration = 16.0;
+        systemParameters.yCalibration = 16.0;
+        systemParameters.qCalibration = 16.0;
+        systemParameters.buttonRotation = 45;
+        memset(systemParameters.afeTrim, 0, sizeof systemParameters.afeTrim);
     }
     debugFlags = systemParameters.startupDebugFlags;
     if (userMGTrefClkAdjust(systemParameters.userMGTrefClkOffsetPPM)) {

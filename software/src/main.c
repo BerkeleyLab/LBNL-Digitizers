@@ -29,6 +29,7 @@
 #include "autotrim.h"
 #include "acqSync.h"
 #include "publisher.h"
+#include "positionCalc.h"
 
 static void
 sfpString(const char *name, int offset)
@@ -154,6 +155,7 @@ main(void)
     acquisitionInit();
     localOscillatorInit();
     acqSyncInit();
+    positionCalcInit();
     autotrimEnable(AUTOTRIM_CSR_MODE_OFF);
     for (int i = 0 ; i < CFG_ADC_PHYSICAL_COUNT ; i++) { afeSetGain(i, 16); }
 

@@ -25,13 +25,13 @@
 // Must match gateware
 #define AUTOTRIM_GAIN_FULL_SCALE            (1<<25)
 
-#define REG(base,chan)  ((base) + (GPIO_IDX_PER_PRELIM * (chan)))
+#define REG(base,chan)  ((base) + (GPIO_IDX_PER_BPM * (chan)))
 
 static void
 autotrimSetStaticGains(int channel, int gain)
 {
     int ch;
-    for (ch = 0 ; ch < CFG_PRELIM_COUNT ; ch++) {
+    for (ch = 0 ; ch < CFG_BPM_COUNT ; ch++) {
         GPIO_WRITE(REG(GPIO_IDX_ADC_GAIN_FACTOR_0 + channel, ch),
                 gain);
     }
@@ -43,7 +43,7 @@ autotrimUsePulsePilot(int flag)
     int ch;
     uint32_t csr;
 
-    for (ch = 0 ; ch < CFG_PRELIM_COUNT ; ch++) {
+    for (ch = 0 ; ch < CFG_BPM_COUNT ; ch++) {
         csr = GPIO_READ(REG(GPIO_IDX_AUTOTRIM_CSR, ch));
 
         if (flag)
@@ -59,7 +59,7 @@ setMode(int mode)
 {
     int ch;
     uint32_t csr;
-    for (ch = 0 ; ch < CFG_PRELIM_COUNT ; ch++) {
+    for (ch = 0 ; ch < CFG_BPM_COUNT ; ch++) {
         csr = GPIO_READ(REG(GPIO_IDX_AUTOTRIM_CSR, ch));
 
         csr &= ~AUTOTRIM_CSR_MODE_MASK;
@@ -111,7 +111,7 @@ autotrimSetFilterShift(unsigned int filterShift)
 {
     int ch;
     uint32_t csr;
-    for (ch = 0 ; ch < CFG_PRELIM_COUNT ; ch++) {
+    for (ch = 0 ; ch < CFG_BPM_COUNT ; ch++) {
         csr = GPIO_READ(REG(GPIO_IDX_AUTOTRIM_CSR, ch));
 
         csr &= ~AUTOTRIM_CSR_FILTER_SHIFT_MASK;

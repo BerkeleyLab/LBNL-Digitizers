@@ -44,7 +44,7 @@
 /*
  * Number of DSP chains
  */
-#define CFG_PRELIM_COUNT         ((CFG_ADC_PHYSICAL_COUNT + 3)/4)
+#define CFG_BPM_COUNT         ((CFG_ADC_PHYSICAL_COUNT + 3)/4)
 
 /*
  * ADC sampling clock frequency

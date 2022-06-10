@@ -64,6 +64,10 @@ work/
 !/gateware/platform/xilinx/*/*/trimMultiplier/trimMultiplier.xci
 /gateware/platform/xilinx/*/*/adcCordic/
 !/gateware/platform/xilinx/*/*/adcCordic/adcCordic.xci
+/gateware/platform/xilinx/*/*/positionCalcDivider/
+!/gateware/platform/xilinx/*/*/positionCalcDivider/positionCalcDivider.xci
+/gateware/platform/xilinx/*/*/positionCalcMultiplier/
+!/gateware/platform/xilinx/*/*/positionCalcMultiplier/positionCalcMultiplier.xci
 
 # NCO tables
 *csv

@@ -56,7 +56,7 @@
  */
 #define SCALE_FACTOR    ((double)0x1FFFF)
 
-#define REG(base,chan)  ((base) + (GPIO_IDX_PER_PRELIM * (chan)))
+#define REG(base,chan)  ((base) + (GPIO_IDX_PER_BPM * (chan)))
 
 static int32_t rfTable[2+(2*CFG_LO_RF_ROW_CAPACITY)];
 static int32_t ptTable[2+(4*CFG_LO_PT_ROW_CAPACITY)];
@@ -89,7 +89,7 @@ writeTable(int bankIndex, int row, int isSin, int value)
     int ch;
     uint32_t address = (row << 1) | (isSin != 0);
     uint32_t csr = (bankIndex << BANKSELECT_SHIFT) | (value & VALUE_MASK);
-    for (ch = 0 ; ch < CFG_PRELIM_COUNT ; ch++) {
+    for (ch = 0 ; ch < CFG_BPM_COUNT ; ch++) {
         GPIO_WRITE(REG(GPIO_IDX_LOTABLE_ADDRESS, ch), address);
         GPIO_WRITE(REG(GPIO_IDX_LOTABLE_CSR, ch), csr);
     }
@@ -103,7 +103,7 @@ writeCSR(uint32_t value, uint32_t mask)
 {
     int ch;
     uint32_t v;
-    for (ch = 0 ; ch < CFG_PRELIM_COUNT ; ch++) {
+    for (ch = 0 ; ch < CFG_BPM_COUNT ; ch++) {
         v = GPIO_READ(REG(GPIO_IDX_LOTABLE_CSR, ch));
         v = (v & ~mask) | (value & mask);
         GPIO_WRITE(REG(GPIO_IDX_LOTABLE_CSR, ch),
@@ -133,7 +133,7 @@ setSumShift(int sumShift, uint32_t mask, int shift)
 {
     int ch;
     uint32_t csr;
-    for (ch = 0 ; ch < CFG_PRELIM_COUNT ; ch++) {
+    for (ch = 0 ; ch < CFG_BPM_COUNT ; ch++) {
         csr = GPIO_READ(REG(GPIO_IDX_SUM_SHIFT_CSR, ch));
         if (sumShift < 0) sumShift = 0;
         else if (sumShift > 15) sumShift = 15;
