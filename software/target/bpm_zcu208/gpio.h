@@ -62,8 +62,16 @@
 #define GPIO_IDX_PRELIM_PT_HI_MAG_3      52 // ADC 3 high freq pilot tone magnitude
 #define GPIO_IDX_SA_TIMESTAMP_SEC        53 // Slow acquisition time stamp
 #define GPIO_IDX_SA_TIMESTAMP_TICKS      54 // Slow acquisition time stamp
+#define GPIO_IDX_POSITION_CALC_CSR       55 // Position calculation control/status
+#define GPIO_IDX_POSITION_CALC_XCAL      56 // X calibration factor
+#define GPIO_IDX_POSITION_CALC_YCAL      57 // Y calibration factor
+#define GPIO_IDX_POSITION_CALC_QCAL      58 // Q calibration factor
+#define GPIO_IDX_POSITION_CALC_SA_X      59 // Slow acquisition X position
+#define GPIO_IDX_POSITION_CALC_SA_Y      60 // Slow acquisition Y position
+#define GPIO_IDX_POSITION_CALC_SA_Q      61 // Slow acquisition skew
+#define GPIO_IDX_POSITION_CALC_SA_S      62 // Slow acquisition sum
 
-#define GPIO_IDX_PER_BPM                 (GPIO_IDX_SA_TIMESTAMP_TICKS-GPIO_IDX_LOTABLE_ADDRESS+1)
+#define GPIO_IDX_PER_BPM                 (GPIO_IDX_POSITION_CALC_SA_S-GPIO_IDX_LOTABLE_ADDRESS+1)
 
 /*
  * Application-specific registers

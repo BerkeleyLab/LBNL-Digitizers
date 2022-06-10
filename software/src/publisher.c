@@ -45,14 +45,17 @@ publishSlowAcquisition(unsigned int saSeconds, unsigned int saTicks)
     pk->seconds = saSeconds;
     pk->ticks = saTicks;
     pk->magic = HSD_PROTOCOL_MAGIC_SLOW_ACQUISITION;
-    pk->xPos = 0;
-    pk->yPos = 0;
-    pk->skew = 0;
-    pk->buttonSum = 0;
-    pk->xRMSwide = 0;
-    pk->yRMSwide = 0;
-    pk->xRMSnarrow = 0;
-    pk->yRMSnarrow = 0;
+    for (i = 0 ; i < HSD_PROTOCOL_DSP_COUNT ; i++) {
+        chainNumber = i;
+        pk->xPos[i] = GPIO_READ(REG(GPIO_IDX_POSITION_CALC_SA_X, chainNumber));
+        pk->yPos[i] = GPIO_READ(REG(GPIO_IDX_POSITION_CALC_SA_Y, chainNumber));
+        pk->skew[i] = GPIO_READ(REG(GPIO_IDX_POSITION_CALC_SA_Q, chainNumber));
+        pk->buttonSum[i] = GPIO_READ(REG(GPIO_IDX_POSITION_CALC_SA_S, chainNumber));
+        pk->xRMSwide[i] = 0;
+        pk->yRMSwide[i] = 0;
+        pk->xRMSnarrow[i] = 0;
+        pk->yRMSnarrow[i] = 0;
+    }
     pk->recorderStatus = 0;
     pk->syncStatus = 0;
     pk->clipStatus = 0;
