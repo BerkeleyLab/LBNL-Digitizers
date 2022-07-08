@@ -5,7 +5,7 @@ SOFTWARE_DIR       = $(TOP)software
 
 # Gateware
 
-SUBMODULES_DIR     = $(GATEWARE_DIR)/ip_cores
+SUBMODULES_DIR     = $(GATEWARE_DIR)/submodules
 MODULES_DIR        = $(GATEWARE_DIR)/modules
 PLATFORM_DIR       = $(GATEWARE_DIR)/platform
 GW_SCRIPTS_DIR     = $(GATEWARE_DIR)/scripts
