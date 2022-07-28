@@ -54,6 +54,20 @@ gw_hsd_zcu208:
       - gateware/syn/hsd_zcu208/_xilinx/hsd_zcu208_top/*.runs/impl_1/*.rpt
       - gateware/syn/hsd_zcu208/system.xsa
 
+gw_bcm_zcu111:
+  before_script:
+    - cd gateware/syn/bcm_zcu111 && ls /non-free
+  stage: gateware
+  script:
+    - make clean && PATH=$XILINX_VIVADO/bin:$PATH time make bcm_zcu111_top.bit
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_REF_NAME"
+    expire_in: 7 days
+    paths:
+      - gateware/syn/bcm_zcu111/bcm_zcu111_top.bit
+      - gateware/syn/bcm_zcu111/_xilinx/bcm_zcu111_top/*.runs/impl_1/*.rpt
+      - gateware/syn/bcm_zcu111/system.xsa
+
 gw_bpm_zcu208:
   before_script:
     - cd gateware/syn/bpm_zcu208 && ls /non-free
@@ -109,6 +123,25 @@ sw_hsd_zcu208:
       - software/app/hsd/hsd_zcu208/platform/export/platform/sw/platform/boot/pmufw.elf
       - software/app/hsd/hsd_zcu208.elf
       - software/app/hsd/BOOT.bin
+
+sw_bcm_zcu111:
+  before_script:
+    - cd software/app/bcm
+  stage: software
+  script:
+    - make TARGET=bcm_zcu111 clean && PATH=$XILINX_VITIS/bin:$XILINX_VITIS/gnu/aarch64/lin/aarch64-none/bin:$PATH time make TARGET=bcm_zcu111
+  # Get artifacts from this job, needed to compile the sofware
+  needs:
+    - job: gw_bcm_zcu111
+      artifacts: true
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_REF_NAME"
+    expire_in: 7 days
+    paths:
+      - software/app/bcm/bcm_zcu111/platform/zynqmp_fsbl/fsbl_a53.elf
+      - software/app/bcm/bcm_zcu111/platform/export/platform/sw/platform/boot/pmufw.elf
+      - software/app/bcm/bcm_zcu111.elf
+      - software/app/bcm/BOOT.bin
 
 sw_bpm_zcu208:
   before_script:
