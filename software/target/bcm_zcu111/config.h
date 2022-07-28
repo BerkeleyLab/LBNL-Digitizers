@@ -3,12 +3,8 @@
  * Same restrictions as noted in gpio.h.
  */
 #define VERILOG_FIRMWARE_STYLE_BCM
-#define CFG_ACQUISITION_BUFFER_CAPACITY     (1<<14)
-#define CFG_LONG_SEGMENT_CAPACITY           (1<<9)
-#define CFG_SHORT_SEGMENT_CAPACITY          (1<<6)
-#define CFG_EARLY_SEGMENTS_COUNT            5
-#define CFG_SEGMENT_PRETRIGGER_COUNT        32
-#define CFG_ADCS_PER_BONDED_GROUP           4
+#define CFG_ACQUISITION_BUFFER_CAPACITY     (1<<17)
+#define CFG_MAX_PASSES_PER_ACQUISITION      (1<<12)
 
 /*
  * ADC AXI MMCM (adcClk source) configuration
@@ -32,12 +28,12 @@
 /*
  * Number of ADC channels required by application
  */
-#define CFG_ADC_CHANNEL_COUNT    8
+#define CFG_ADC_CHANNEL_COUNT    2
 
 /*
  * Number of physical ADC channels required by application
  */
-#define CFG_ADC_PHYSICAL_COUNT    8
+#define CFG_ADC_PHYSICAL_COUNT    2
 
 /*
  * ADC sampling clock frequency
