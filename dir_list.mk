@@ -33,6 +33,11 @@ SW_APP_DIR         = $(SOFTWARE_DIR)/app
 SW_HSD_DIR         = $(SW_APP_DIR)/hsd
 SW_HSD_SCRIPTS_DIR = $(SW_HSD_DIR)/scripts
 
+# BCM Sofware
+
+SW_BCM_DIR         = $(SW_APP_DIR)/bcm
+SW_BCM_SCRIPTS_DIR = $(SW_BCM_DIR)/scripts
+
 # BPM Sofware
 
 SW_BPM_DIR         = $(SW_APP_DIR)/bpm
