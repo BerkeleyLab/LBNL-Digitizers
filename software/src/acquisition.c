@@ -670,6 +670,8 @@ acquisitionSetPassCount(unsigned int n)
     needParameters &= ~NEED_PASSCOUNT;
 }
 
+void acquisitionArm(int channel, int enable) { }
+uint32_t acquisitionStatus(void) { }
 void acquisitionScaleChanged(int channel) { }
 void acquisitionSetTriggerEdge(int channel, int v){ }
 void acquisitionSetTriggerLevel(int channel, int microvolts){ }
