@@ -14,8 +14,8 @@ for some High Speed digitizers.
 To build the gateware the following dependencies are needed:
 
 * GNU Make
-* Xilinx Vivado (2020.1.1 tested), available [here](https://www.xilinx.com/support/download/index.html/content/xilinx/en/downloadNav/vivado-design-tools.html)
-* Xilinx Vitis (2020.1.1. tested), available [here](https://www.xilinx.com/support/download/index.html/content/xilinx/en/downloadNav/vitis.html)
+* Xilinx Vivado (2020.2.2 tested), available [here](https://www.xilinx.com/support/download/index.html/content/xilinx/en/downloadNav/vivado-design-tools.html)
+* Xilinx Vitis (2020.2.2 tested), available [here](https://www.xilinx.com/support/download/index.html/content/xilinx/en/downloadNav/vitis.html)
 
 Make sure `vivado` and `vitis` are in PATH.
 
