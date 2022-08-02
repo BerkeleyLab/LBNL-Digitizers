@@ -5,7 +5,7 @@ SOFTWARE_DIR       = $(TOP)software
 
 # Gateware
 
-SUBMODULES_DIR     = $(GATEWARE_DIR)/ip_cores
+SUBMODULES_DIR     = $(GATEWARE_DIR)/submodules
 MODULES_DIR        = $(GATEWARE_DIR)/modules
 PLATFORM_DIR       = $(GATEWARE_DIR)/platform
 GW_SCRIPTS_DIR     = $(GATEWARE_DIR)/scripts
@@ -32,6 +32,11 @@ SW_APP_DIR         = $(SOFTWARE_DIR)/app
 
 SW_HSD_DIR         = $(SW_APP_DIR)/hsd
 SW_HSD_SCRIPTS_DIR = $(SW_HSD_DIR)/scripts
+
+# BCM Sofware
+
+SW_BCM_DIR         = $(SW_APP_DIR)/bcm
+SW_BCM_SCRIPTS_DIR = $(SW_BCM_DIR)/scripts
 
 # BPM Sofware
 

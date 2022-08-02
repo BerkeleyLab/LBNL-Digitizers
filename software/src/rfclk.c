@@ -16,7 +16,7 @@ void
 rfClkInitLMK04xx(void)
 {
     int i;
-#if defined (__TARGET_HSD_ZCU111__)
+#if defined (__TARGET_HSD_ZCU111__) || defined (__TARGET_BCM_ZCU111__)
     static const uint32_t lmk04208[] = {
 #include "lmk04208.h"
     };

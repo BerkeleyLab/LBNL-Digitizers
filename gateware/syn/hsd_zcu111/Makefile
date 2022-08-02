@@ -32,7 +32,7 @@ VIVADO_SYNTH_EXTRA_TCL = prop.tcl ipcores_repos.tcl
 include $(BUILD_DIR)/top_rules.mk
 
 # ignore xilinx primitives
-UNISIM_CRAP += '-e GTYE4_CHANNEL|MMCME4_ADV'
+UNISIM_CRAP += -e 'GTYE4_CHANNEL|MMCME4_ADV'
 
 # Top level files for depedency tracking
 SYSTEM_TOP_PINS_XDC = $(TARGET)_top_pins.xdc

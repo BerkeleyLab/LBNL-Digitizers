@@ -1,18 +1,18 @@
-HARDWARE = zcu208
-PROJECT_PART = xczu48dr-fsvg1517-2-e
-PROJECT_BOARD = xilinx.com:zcu208:part0:2.0
+HARDWARE = zcu111
+PROJECT_PART = xczu28dr-ffvg1517-2-e
+PROJECT_BOARD = xilinx.com:zcu111:part0:1.1
 COMMUNICATION = gty
 XILINX_TOOL := VIVADO
 FPGA_VENDOR := xilinx
-FPGA_PLATFORM := zu48
-FPGA_APPLICATION := bpm
+FPGA_PLATFORM := zu28
+FPGA_APPLICATION := bcm
 
 CMD_SEP = ;
 
 include ../../../dir_list.mk
 
 # Top level design name
-TARGET ?= bpm_zcu208
+TARGET ?= bcm_zcu111
 
 # Top level bitstream name
 all: $(TARGET)_top.bit
@@ -27,7 +27,7 @@ TOP_LVL_DIR = ../../top/$(TARGET)
 vpath %.v $(TOP_LVL_DIR)
 vpath %.xdc $(TOP_LVL_DIR)
 
-VIVADO_SYNTH_EXTRA_TCL = prop.tcl ipcores_repos.tcl prio_xci_files.tcl
+VIVADO_SYNTH_EXTRA_TCL = top_level.tcl prop.tcl ipcores_repos.tcl
 
 include $(BUILD_DIR)/top_rules.mk
 
@@ -44,24 +44,14 @@ SYSTEM_TOP_TIM_XDC = $(TARGET)_top_tim.xdc
 include $(MODULES_DIR)/evr_axi_rules.mk
 include $(MODULES_DIR)/axi_lite_generic_reg_rules.mk
 
-IP_CORES += evrGTY prbsMMCM trimMultiplier positionCalcDivider positionCalcMultiplier adcCordic ila_td256_s4096_cap
-evrGTY_DIR = $(PLATFORM_ZU48_BPM_DIR)/evrGTY
+IP_CORES += evrGTY prbsMMCM
+evrGTY_DIR = $(PLATFORM_ZU28_HSD_DIR)/evrGTY
 evrGTY_TOP = $(evrGTY_DIR)/synth/evrGTY.v
-prbsMMCM_DIR = $(PLATFORM_ZU48_BPM_DIR)/prbsMMCM
+prbsMMCM_DIR = $(PLATFORM_ZU28_HSD_DIR)/prbsMMCM
 prbsMMCM_TOP = $(prbsMMCM_DIR)/prbsMMCM.v
-trimMultiplier_DIR = $(PLATFORM_ZU48_BPM_DIR)/trimMultiplier
-trimMultiplier_TOP = $(trimMultiplier_DIR)/synth/trimMultiplier.vhd
-positionCalcDivider_DIR = $(PLATFORM_ZU48_BPM_DIR)/positionCalcDivider
-positionCalcDivider_TOP = $(positionCalcDivider_DIR)/synth/positionCalcDivider.vhd
-positionCalcMultiplier_DIR = $(PLATFORM_ZU48_BPM_DIR)/positionCalcMultiplier
-positionCalcMultiplier_TOP = $(positionCalcMultiplier_DIR)/synth/positionCalcMultiplier.vhd
-adcCordic_DIR = $(PLATFORM_ZU48_BPM_DIR)/adcCordic
-adcCordic_TOP = $(adcCordic_DIR)/synth/adcCordic.vhd
-ila_td256_s4096_cap_DIR = $(PLATFORM_ZU48_BPM_DIR)/ila_td256_s4096_cap
-ila_td256_s4096_cap_TOP = $(ila_td256_s4096_cap_DIR)/synth/ila_td256_s4096_cap.v
 
-IP_CORES_TOP_LVL_SRCS += $(evrGTY_TOP) $(prbsMMCM_TOP) $(trimMultiplier_TOP) $(positionCalcDivider_TOP) $(positionCalcMultiplier_TOP) $(adcCordic_TOP) $(ila_td256_s4096_cap_TOP)
-IP_CORES_DIRS += $(evrGTY_DIR) $(prbsMMCM_DIR) $(trimMultiplier_DIR) $(positionCalcDivider_DIR) $(positionCalcMultiplier_DIR) $(adcCordic_DIR) $(ila_td256_s4096_cap_DIR)
+IP_CORES_TOP_LVL_SRCS += $(evrGTY_TOP) $(prbsMMCM_TOP)
+IP_CORES_DIRS += $(evrGTY_DIR) $(prbsMMCM_DIR)
 IP_CORES_XDCS += $(evrGTY_TOP:%.v=%.xdc) $(prbsMMCM_TOP:%.v=%.xdc)
 
 IP_CORES_SRCS_DIRS = $(IP_CORES_DIRS)
@@ -69,7 +59,7 @@ IP_CORES_SRCS_DIRS += $(addsuffix /synth, $(IP_CORES_DIRS))
 IP_CORES_SRCS_DIRS += $(addsuffix /hdl, $(IP_CORES_DIRS))
 
 BD += system
-system_DIR = $(PLATFORM_ZU48_BPM_DIR)/system
+system_DIR = $(PLATFORM_ZU28_HSD_DIR)/system
 system_TOP = $(system_DIR)/synth/system.v
 
 BD_TOP_LVL_SRCS += $(system_TOP)
@@ -114,32 +104,18 @@ VFLAGS_DEP += $(addprefix -I, $(BD_SRCS_DIRS))
 # the switches that will be consumed by iverilog later
 evrGTY_VFLAGS_COMMAND_FILE = evrGTY_iverilog_cfile.txt
 prbsMMCM_VFLAGS_COMMAND_FILE = prbsMMCM_iverilog_cfile.txt
-trimMultiplier_VFLAGS_COMMAND_FILE = trimMultiplier_iverilog_cfile.txt
-positionCalcDivider_VFLAGS_COMMAND_FILE = positionCalcDivider_iverilog_cfile.txt
-positionCalcMultiplier_VFLAGS_COMMAND_FILE = positionCalcMultiplier_iverilog_cfile.txt
-adcCordic_VFLAGS_COMMAND_FILE = adcCordic_iverilog_cfile.txt
-ila_td256_s4096_cap_VFLAGS_COMMAND_FILE = ila_td256_s4096_cap_iverilog_cfile.txt
 
 VFLAGS_COMMAND_FILE += \
 					  $(evrGTY_VFLAGS_COMMAND_FILE) \
 					  $(prbsMMCM_VFLAGS_COMMAND_FILE)
-# $(trimMultiplier_VFLAGS_COMMAND_FILE)
-# $(positionCalcDivider_VFLAGS_COMMAND_FILE)
-# $(positionCalcMultiplier_VFLAGS_COMMAND_FILE)
-# $(adcCordic_VFLAGS_COMMAND_FILE)
-# using ILA with verilog gives an error:
-# input buffer overflow, can't enlarge buffer because scanner uses REJECT,
-# but we don't need it for iverilog as we only use it when not simulating
-# $(ila_td256_s4096_cap_VFLAGS_COMMAND_FILE)
 
 VFLAGS_DEP += $(addprefix -c, $(VFLAGS_COMMAND_FILE))
 
 VFLAGS_DEP += -DSIMULATE
 
-# Search prerequisites for generated .v/.vh/.vhd/.xdc here
+# Search prerequisites for generated .v/.vh/.xdc here
 vpath %.v $(IP_CORES_SRCS_DIRS) $(BD_SRCS_DIRS)
 vpath %.vh $(IP_CORES_SRCS_DIRS) $(BD_SRCS_DIRS)
-vpath %.vhd $(IP_CORES_SRCS_DIRS) $(BD_SRCS_DIRS)
 vpath %.xdc $(IP_CORES_SRCS_DIRS) $(BD_SRCS_DIRS)
 vpath %.tcl $(GW_SCRIPTS_DIR)
 vpath %.sh $(GW_SCRIPTS_DIR)
@@ -147,7 +123,7 @@ vpath %.sh $(GW_SCRIPTS_DIR)
 # List top level depedencies here. Eveything named .bit will be used as
 # a top-level target in top_rules.mk. .v and .sv files will be used as
 # prerequisites as well as a system_top.xdc file
-$(TARGET)_top.bit: system_top.xdc $(VIVADO_SYNTH_EXTRA_TCL) $(TOP_LVL_DIR)/$(TARGET)_top.v $(BD_bds) trimMultiplier.xci positionCalcDivider.xci positionCalcMultiplier.xci adcCordic.xci ila_td256_s4096_cap.xci
+$(TARGET)_top.bit: system_top.xdc $(VIVADO_SYNTH_EXTRA_TCL) $(TOP_LVL_DIR)/$(TARGET)_top.v $(BD_bds)
 $(TOP_LVL_DIR)/$(TARGET)_top.v: $(TOP_LVL_DIR)/firmwareBuildDate.v $(TOP_LVL_DIR)/gpioIDX.v $(IP_CORES_CUSTOM) $(IP_CORES_TOP_LVL_SRCS) $(BD_TOP_LVL_SRCS)
 
 # Generate bundled .xdc from other .xdc. Don't change the order of the
@@ -165,10 +141,6 @@ system_top.xdc: $(SYSTEM_TOP_PINS_XDC) $(IP_CORES_XDCS) $(SYSTEM_TOP_TIM_XDC)
 ipcores_repos.tcl:
 	sed -e 's|$$DIRS|$(IP_CORES_CUSTOM_TARGET_DIRS)|g' \
 		ipcores_repos.tcl.in > $@
-
-prio_xci_files.tcl: ila_td256_s4096_cap.xci
-	sed -e 's|$$XCI_FILES|$<|g' \
-		prio_xci_files.tcl.in > $@
 
 # ip_cores commands. Keep track only of the top-level. If this changed or doesn't
 # exist regenerate eveything. Otherwise, consider this up to date
@@ -210,16 +182,10 @@ CLEAN += $(VFLAGS_COMMAND_FILE)
 # Not adding it to VFLAGS_COMMAND_FILE because iverilog gives an error:
 # input buffer overflow, can't enlarge buffer because scanner uses REJECT,
 # but we don't need it for iverilog as we only use it when not simulating
-CLEAN += $(ila_td256_s4096_cap_VFLAGS_COMMAND_FILE)
-CLEAN += $(trimMultiplier_VFLAGS_COMMAND_FILE)
-CLEAN += $(positionCalcDivider_VFLAGS_COMMAND_FILE)
-CLEAN += $(positionCalcMultiplier_VFLAGS_COMMAND_FILE)
-CLEAN += $(adcCordic_VFLAGS_COMMAND_FILE)
 CLEAN += *.log *.jou *.str
 CLEAN += *.xsa
 CLEAN += psu_init*
 CLEAN += ipcores_repos.tcl
-CLEAN += prio_xci_files.tcl
 CLEAN_DIRS +=  _xilinx .Xil .ip_user_files .hbs $(IP_CORES_CUSTOM_TARGET_DIRS)
 CLEAN_DIRS += _gen
 

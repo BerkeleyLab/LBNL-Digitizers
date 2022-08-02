@@ -8,23 +8,6 @@
 #include "gpio.h"
 #include "util.h"
 
-void
-acquisitionInit(void)
-{
-    int channel;
-    for (channel = 0 ; channel < CFG_ADC_CHANNEL_COUNT ; channel++) {
-        acquisitionSetPretriggerCount(channel, 1);
-        acquisitionSetTriggerLevel(channel, 10000000);
-    }
-}
-
-/*
- * Hook for acquisition polling.
- * Empty for generic HSD and BRAM acquisition.
- */
-void
-acquisitionCrank(void) { }
-
 #ifdef VERILOG_FIRMWARE_STYLE_HSD
 
 #define CSR_W_ARM                       0x80000000
@@ -65,6 +48,23 @@ static struct acqConfig {
     uint32_t    earlySegmentInterval;
     uint32_t    laterSegmentInterval;
 } acqConfig[CFG_ADC_CHANNEL_COUNT];
+
+void
+acquisitionInit(void)
+{
+    int channel;
+    for (channel = 0 ; channel < CFG_ADC_CHANNEL_COUNT ; channel++) {
+        acquisitionSetPretriggerCount(channel, 1);
+        acquisitionSetTriggerLevel(channel, 10000000);
+    }
+}
+
+/*
+ * Hook for acquisition polling.
+ * Empty for generic HSD and BRAM acquisition.
+ */
+void
+acquisitionCrank(void) { }
 
 void
 acquisitionArm(int channel, int enable)
@@ -324,6 +324,9 @@ acquisitionSetLaterSegmentInterval(int channel, int adcClockTicks)
     if ((channel < 0) || (channel >= CFG_ADC_CHANNEL_COUNT)) return;
     acqConfig[channel].laterSegmentInterval = adcClockTicks;
 }
+
+void acquisitionSetSize(unsigned int n) { }
+void acquisitionSetPassCount(unsigned int n) { }
 #endif
 
 #ifdef VERILOG_FIRMWARE_STYLE_BRAM
@@ -335,6 +338,23 @@ acquisitionSetLaterSegmentInterval(int channel, int adcClockTicks)
 
 static int haveNewData;
 static struct evrTimestamp whenStarted;
+
+void
+acquisitionInit(void)
+{
+    int channel;
+    for (channel = 0 ; channel < CFG_ADC_CHANNEL_COUNT ; channel++) {
+        acquisitionSetPretriggerCount(channel, 1);
+        acquisitionSetTriggerLevel(channel, 10000000);
+    }
+}
+
+/*
+ * Hook for acquisition polling.
+ * Empty for generic HSD and BRAM acquisition.
+ */
+void
+acquisitionCrank(void) { }
 
 void
 acquisitionArm(int channel, int enable)
@@ -410,4 +430,256 @@ void acquisitionSetPretriggerCount(int channel, int n){ }
 void acquisitionSetSegmentedMode(int channel, int isSegmented){ }
 void acquisitionSetEarlySegmentInterval(int channel, int adcClockTicks){ }
 void acquisitionSetLaterSegmentInterval(int channel, int adcClockTicks){ }
+void acquisitionSetSize(unsigned int n) { }
+void acquisitionSetPassCount(unsigned int n) { }
+#endif
+
+#ifdef VERILOG_FIRMWARE_STYLE_BCM
+
+#include <stdio.h>
+#include <stdint.h>
+#include "acquisition.h"
+#include "afe.h"
+#include "bcmProtocol.h"
+#include "gpio.h"
+#include "rfadc.h"
+#include "util.h"
+
+#define EVENT_TRIGGER_TIMEOUT_US 3000000
+
+#define DEBUGFLAG_SOFT_TRIGGER 0x100000
+#define DEBUGFLAG_READ_TIMEOUT 0x200000
+
+#define ACQ_CHANNEL_COUNT       2
+
+#define CSR_W_START             0x80000000
+#define CSR_RW_SOFT_TRIGGER     0x40000000
+
+#define CSR_R_ACTIVE            0x80000000
+#define CSR_R_FOLLOWS_INJECTION 0x20000000
+
+#define CSR_SAMPLE_COUNT_RELOAD_MASK    0x3FFF
+#define CSR_PASS_COUNT_RELOAD_SHIFT     14
+#define CSR_PASS_COUNT_RELOAD_MASK      (((CFG_MAX_PASSES_PER_ACQUISITION << \
+                                         1) - 1) << CSR_PASS_COUNT_RELOAD_SHIFT)
+
+#define ADDR_CHANNEL_SHIFT              24
+#define ADDR_DPRAM_ADDRESS_SHIFT        3
+
+#if ((1UL << CSR_PASS_COUNT_RELOAD_SHIFT) != \
+    (CFG_ACQUISITION_BUFFER_CAPACITY >> ADDR_DPRAM_ADDRESS_SHIFT))
+# error("ACQUISITION CSR DOESN'T MATCH config.h")
+#endif
+#if (CFG_MAX_PASSES_PER_ACQUISITION & (CFG_MAX_PASSES_PER_ACQUISITION - 1))
+# error("CFG_MAX_PASSES_PER_ACQUISITION IS NOT A POWER OF 2")
+#endif
+
+#define CSR_WRITE(x) GPIO_WRITE(GPIO_IDX_ACQUISITION_CSR, (x))
+#define CSR_READ() GPIO_READ(GPIO_IDX_ACQUISITION_CSR)
+#define ADDR_WRITE(x) GPIO_WRITE(GPIO_IDX_ACQUISITION_READOUT, (x))
+#define DATA_READ() GPIO_READ(GPIO_IDX_ACQUISITION_READOUT)
+
+#define MUX_CHANNEL_MASK    0x3
+#define MUX_CHANNEL_SHIFT   4
+#define ACQ_DATA_CHANNEL    0
+#define ACQ_TRIG_CHANNEL    1
+
+#define SYSREF_CSR_ADC_CLK_FAULT            (1 << 31)
+#define SYSREF_CSR_ADC_CLK_DIVISOR_SHIFT    16
+#define SYSREF_CSR_REF_CLK_FAULT            (1 << 15)
+#define SYSREF_CSR_REF_CLK_DIVISOR_SHIFT    0
+
+static uint32_t size = CFG_ACQUISITION_BUFFER_CAPACITY, acqSize;
+static uint32_t passCount = CFG_MAX_PASSES_PER_ACQUISITION, acqPassCount;
+static uint32_t usWhenStarted;
+static int wasStarted = 0;
+
+#define NEED_SIZE       0x1
+#define NEED_PASSCOUNT  0x2
+static int needParameters = NEED_SIZE | NEED_PASSCOUNT;
+
+void
+acquisitionInit(void)
+{
+}
+
+/*
+ * Scale acquired values to signed 16 bit range
+ */
+static int
+scaleValue(uint32_t v)
+{
+    return (int32_t)v / (int32_t)acqPassCount;
+}
+
+static void
+acquisitionStart(void)
+{
+    uint32_t passCountReload, sampleCountReload;
+    static int oldAcqSize;
+
+    acqPassCount = passCount;
+    passCountReload = acqPassCount - 2;
+    acqSize = size;
+    sampleCountReload = (acqSize / CFG_AXI_SAMPLES_PER_CLOCK) - 2;
+    if (!(CSR_READ() & CSR_R_ACTIVE)) {
+        uint32_t csr = ((passCountReload << CSR_PASS_COUNT_RELOAD_SHIFT) &
+                                                   CSR_PASS_COUNT_RELOAD_MASK) |
+                       (sampleCountReload & CSR_SAMPLE_COUNT_RELOAD_MASK);
+        if (acqSize != oldAcqSize) {
+            /*
+             * Allow time for acquisition size change to take effect
+             */
+          CSR_WRITE(csr);
+          oldAcqSize = acqSize;
+          microsecondSpin(50);
+        }
+        CSR_WRITE(CSR_W_START | csr);
+        usWhenStarted = MICROSECONDS_SINCE_BOOT();
+        wasStarted = 1;
+    }
+}
+
+/*
+ * Soft trigger if inactive too long.
+ * Clear acquisition if idle more than 5 seconds.
+ */
+void
+acquisitionCrank(void)
+{
+    uint32_t csr;
+    uint32_t now;
+    static int firstTime = 1;
+    static uint32_t usWhenFinished;
+
+    if (needParameters) return;
+    if (firstTime) {
+        firstTime = 0;
+        acquisitionStart();
+    }
+    now = MICROSECONDS_SINCE_BOOT();
+    csr = CSR_READ();
+    if (csr & CSR_R_ACTIVE) {
+        if (!(csr & CSR_RW_SOFT_TRIGGER)
+         && ((now - usWhenStarted) > EVENT_TRIGGER_TIMEOUT_US)) {
+            CSR_WRITE(CSR_RW_SOFT_TRIGGER);
+            if (debugFlags & DEBUGFLAG_SOFT_TRIGGER) {
+                printf("==== Soft trigger\n");
+            }
+        }
+    }
+    else {
+        if (wasStarted) {
+            wasStarted = 0;
+            usWhenFinished = now;
+            if (debugFlags & DEBUGFLAG_READ_TIMEOUT) {
+                printf("Acq: %d us\n", usWhenFinished - usWhenStarted);
+            }
+        }
+        if ((now - usWhenFinished) > 5000000) {
+            if (debugFlags & DEBUGFLAG_READ_TIMEOUT) {
+                printf("==== Cancel readout\n");
+            }
+            acquisitionStart();
+        }
+    }
+}
+
+/*
+ * Read values from acquisition buffer
+ */
+int
+acquisitionFetch(uint32_t *buf, int capacity, int channel, int offset, int last)
+{
+    uint32_t csr = CSR_READ();
+    unsigned int count = 0;
+
+    if (capacity < 20) return 0;
+    if (!(csr & CSR_R_ACTIVE)) {
+        if (offset == 0) {
+            uint32_t acqStatus = rfADCstatus();
+            uint32_t *base = buf;
+            *buf++ = GPIO_READ(GPIO_IDX_ACQUISITION_SECONDS);
+            *buf++ = GPIO_READ(GPIO_IDX_ACQUISITION_TICKS);
+            /* Steal some unused bits in the RF ADC status word */
+            if (csr & CSR_R_FOLLOWS_INJECTION) {
+                acqStatus |= BCM_PROTOCOL_ACQ_FOLLOWS_INJECTION;
+            }
+            if (csr & CSR_RW_SOFT_TRIGGER) {
+                acqStatus |= BCM_PROTOCOL_ACQ_SOFTWARE_TRIGGER;
+            }
+            *buf++ = acqStatus;
+            for (channel = 0 ; channel < ACQ_CHANNEL_COUNT ; channel++) {
+                buf += afeFetchCalibration(channel, buf);
+            }
+            count = buf - base;
+
+        }
+        while ((count < capacity) && (offset < acqSize)) {
+            int sample = offset % CFG_AXI_SAMPLES_PER_CLOCK;
+            int dpram = offset / CFG_AXI_SAMPLES_PER_CLOCK;
+            uint32_t v = 0;
+            int channel;
+            for (channel = 0 ; channel < ACQ_CHANNEL_COUNT ; channel++) {
+                int16_t s;
+                uint32_t readAddr = (channel << ADDR_CHANNEL_SHIFT) |
+                                    (dpram << ADDR_DPRAM_ADDRESS_SHIFT) |
+                                     sample;
+                ADDR_WRITE(readAddr);
+                s = scaleValue(DATA_READ());
+                v |= (s & 0xFFFF) << (channel * 16);
+            }
+            *buf++ = v;
+            offset++;
+            count++;
+        }
+        if (offset == acqSize) {
+            acquisitionStart();
+        }
+    }
+    return count;
+}
+
+/*
+ * Set acquisition controls
+ */
+void
+acquisitionSetSize(unsigned int n)
+{
+    if (n < 100) {
+        n = 100;
+    }
+    else if (n > CFG_ACQUISITION_BUFFER_CAPACITY) {
+        n = CFG_ACQUISITION_BUFFER_CAPACITY;
+    }
+    size = n;
+    needParameters &= ~NEED_SIZE;
+
+}
+
+void
+acquisitionSetPassCount(unsigned int n)
+{
+    if (n == 0) {
+        n = 1;
+    }
+    else if (n > CFG_MAX_PASSES_PER_ACQUISITION) {
+        n = CFG_MAX_PASSES_PER_ACQUISITION;
+    }
+    passCount = n;
+    needParameters &= ~NEED_PASSCOUNT;
+}
+
+void acquisitionArm(int channel, int enable) { }
+uint32_t acquisitionStatus(void) { }
+void acquisitionScaleChanged(int channel) { }
+void acquisitionSetTriggerEdge(int channel, int v){ }
+void acquisitionSetTriggerLevel(int channel, int microvolts){ }
+void acquisitionSetTriggerEnables(int channel, int mask){ }
+void acquisitionSetBonding(int channel, int bonded){ }
+void acquisitionSetPretriggerCount(int channel, int n){ }
+void acquisitionSetSegmentedMode(int channel, int isSegmented){ }
+void acquisitionSetEarlySegmentInterval(int channel, int adcClockTicks){ }
+void acquisitionSetLaterSegmentInterval(int channel, int adcClockTicks){ }
+
 #endif

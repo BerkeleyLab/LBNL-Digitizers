@@ -20,4 +20,8 @@ void acquisitionSetSegmentedMode(int channel, int isSegmented);
 void acquisitionSetEarlySegmentInterval(int channel, int adcClockTicks);
 void acquisitionSetLaterSegmentInterval(int channel, int adcClockTicks);
 
+// Only for BCM styule
+void acquisitionSetSize(unsigned int n);
+void acquisitionSetPassCount(unsigned int n);
+
 #endif  /* _ACQUISITION_H_ */

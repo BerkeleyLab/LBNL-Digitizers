@@ -6,10 +6,33 @@
 #include <string.h>
 #include "platform_config.h"
 #include "hsdProtocol.h"
+#include "bcmProtocol.h"
 #include "acquisition.h"
 #include "epicsApplicationCommands.h"
+#include "evr.h"
 #include "gpio.h"
 #include "util.h"
+
+/*
+ * Set the acquisition trigger events
+ */
+static void
+selectTriggerEventAction(int eventNumber, unsigned int idx, int action)
+{
+    static unsigned char oldEventNumber[2];
+
+    if (idx >= (sizeof oldEventNumber / sizeof oldEventNumber[0])) {
+        return;
+    }
+    if (oldEventNumber[idx]) {
+        evrRemoveEventAction(oldEventNumber[idx], action);
+        oldEventNumber[idx] = 0;
+    }
+    if ((eventNumber > 0) && (eventNumber < 255)) {
+        evrAddEventAction(eventNumber, action);
+        oldEventNumber[idx] = eventNumber;
+    }
+}
 
 int
 epicsApplicationCommand(int commandArgCount, struct hsdPacket *cmdp,
@@ -80,9 +103,31 @@ epicsApplicationCommand(int commandArgCount, struct hsdPacket *cmdp,
             acquisitionSetLaterSegmentInterval(idx, cmdp->args[0]);
             break;
 
+        case HSD_PROTOCOL_CMD_LONGOUT_LO_GENERIC:
+            switch (idx) {
+            case BCM_PROTOCOL_CMD_LONGOUT_ACQUISITION_SIZE:
+                acquisitionSetSize(cmdp->args[0]);
+                break;
+
+            case BCM_PROTOCOL_CMD_LONGOUT_PASS_COUNT:
+                acquisitionSetPassCount(cmdp->args[0]);
+                break;
+
+            case BCM_PROTOCOL_CMD_LONGOUT_EVENT_TRIGGER:
+                selectTriggerEventAction(cmdp->args[0], 0, EVR_RAM_TRIGGER_2);
+                break;
+            case BCM_PROTOCOL_CMD_LONGOUT_EVENT_INJECTION:
+                selectTriggerEventAction(cmdp->args[0], 1, EVR_RAM_TRIGGER_3);
+                break;
+
+            default: return -1;
+            }
+            break;
+
         default: return -1;
         }
         break;
+
     default: return -1;
     }
     return replyArgCount;
