@@ -8,7 +8,12 @@
 #define CFG_SHORT_SEGMENT_CAPACITY          (1<<6)
 #define CFG_EARLY_SEGMENTS_COUNT            5
 #define CFG_SEGMENT_PRETRIGGER_COUNT        32
-#define CFG_ADCS_PER_BONDED_GROUP           4
+#define CFG_DSPS_PER_BONDED_GROUP           4
+
+/*
+ * For softwre compatibility:
+ */
+#define CFG_ADCS_PER_BONDED_GROUP CFG_DSPS_PER_BONDED_GROUP
 
 /*
  * ADC AXI MMCM (adcClk source) configuration
@@ -35,6 +40,11 @@
  * Number of ADC streams required by application
  */
 #define CFG_ADC_CHANNEL_COUNT    16 // I/Q
+
+/*
+ * Number of DSP channels per BPM
+ */
+#define CFG_DSP_CHANNEL_COUNT    16 // A, B, C, D, X, Y, Q, S (TbT, FA)
 
 /*
  * Number of physical ADC channels required by application
