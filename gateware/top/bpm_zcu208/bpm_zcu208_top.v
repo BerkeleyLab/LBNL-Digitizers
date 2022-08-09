@@ -300,106 +300,61 @@ adcRangeCheck #(
 /////////////////////////////////////////////////////////////////////////////
 // Acquisition per style of firmware
 
-`ifdef FIRMWARE_STYLE_BRAM
-//
-// Basic block-RAM acquisition for initial tests
-//
-acquisitionBRAM #(
-    .ACQUISITION_BUFFER_CAPACITY(CFG_ACQUISITION_BUFFER_CAPACITY),
-    .AXI_CHANNEL_COUNT(CFG_ADC_CHANNEL_COUNT),
-    .AXI_SAMPLE_WIDTH(ACQ_SAMPLES_WIDTH),
-    .AXI_SAMPLES_PER_CLOCK(CFG_AXI_SAMPLES_PER_CLOCK))
-  acquisitionBRAM (
-    .sysClk(sysClk),
-    .sysCsrStrobe(GPIO_STROBES[GPIO_IDX_ADC_0_CSR]),
-    .GPIO_OUT(GPIO_OUT),
-    .sysStatus(GPIO_IN[GPIO_IDX_ADC_0_CSR]),
-    .adcClk(sysClk),
-    .axiValid(acqTVALID),
-    .axiData(acqTDATA));
-`endif
-
-`ifdef FIRMWARE_STYLE_BCM
-//
-// Bunch current monitor acquisition
-//
-acquisitionBCM #(
-    .CHANNEL_COUNT(CFG_ADC_CHANNEL_COUNT),
-    .SAMPLE_CAPACITY(CFG_ACQUISITION_BUFFER_CAPACITY),
-    .MAX_PASSES_PER_ACQUISITION(CFG_MAX_PASSES_PER_ACQUISITION),
-    .AXI_SAMPLES_PER_CLOCK(CFG_AXI_SAMPLES_PER_CLOCK),
-    .AXI_SAMPLE_WIDTH(ACQ_SAMPLES_WIDTH),
-    .ADC_WIDTH(ACQ_SAMPLES_WIDTH))
-  acquisitionBCM (
-    .sysClk(sysClk),
-    .sysCsrStrobe(GPIO_STROBES[GPIO_IDX_ACQUISITION_CSR]),
-    .sysAddrStrobe(GPIO_STROBES[GPIO_IDX_ACQUISITION_READOUT]),
-    .GPIO_OUT(GPIO_OUT),
-    .sysStatusReg(GPIO_IN[GPIO_IDX_ACQUISITION_CSR]),
-    .sysReadoutReg(GPIO_IN[GPIO_IDX_ACQUISITION_READOUT]),
-    .triggerTimestamp({GPIO_IN[GPIO_IDX_ACQUISITION_SECONDS],
-                       GPIO_IN[GPIO_IDX_ACQUISITION_TICKS]}),
-    .evrPostCycleTrigger(evrTriggerBus[2]),
-    .evrClk(evrClk),
-    .evrInjectionTrigger(evrTriggerBus[3]),
-    .evrTimestamp(evrTimestamp),
-    .adcClk(sysClk),
-    .axiValid(acqTVALID),
-    .axiData(acqTDATA[0+:CFG_ADC_CHANNEL_COUNT*ACQ_SAMPLES_WIDTH]));
-
-assign BCM_SROC_GND = 0;
-`endif
-
 `ifdef FIRMWARE_STYLE_HSD
 //
 // High speed digitizer acquisition
 //
 localparam NUMBER_OF_BONDED_GROUPS =
-                    (CFG_ADC_CHANNEL_COUNT + CFG_ADCS_PER_BONDED_GROUP -1 ) /
-                                                      CFG_ADCS_PER_BONDED_GROUP;
-genvar adc;
+                    (CFG_DSP_CHANNEL_COUNT + CFG_DSPS_PER_BONDED_GROUP -1 ) /
+                                                      CFG_DSPS_PER_BONDED_GROUP;
+genvar bpm;
+genvar dsp;
 //generate
-for (i = 0 ; i < NUMBER_OF_BONDED_GROUPS ; i = i + 1) begin
- wire bondedWriteEnable[0:CFG_ADCS_PER_BONDED_GROUP-1];
- wire [$clog2(CFG_ACQUISITION_BUFFER_CAPACITY/CFG_AXI_SAMPLES_PER_CLOCK)-1:0]
-                              bondedWriteAddress[0:CFG_ADCS_PER_BONDED_GROUP-1];
- for (adc = i * CFG_ADCS_PER_BONDED_GROUP ;
-                             (adc < ((i + 1) * CFG_ADCS_PER_BONDED_GROUP)) &&
-                             (adc < CFG_ADC_CHANNEL_COUNT); adc = adc + 1) begin
-    localparam integer rOff = adc * GPIO_IDX_PER_ADC;
-    acquisitionHSD #(
-        .ACQUISITION_BUFFER_CAPACITY(CFG_ACQUISITION_BUFFER_CAPACITY),
-        .LONG_SEGMENT_CAPACITY(CFG_LONG_SEGMENT_CAPACITY),
-        .SHORT_SEGMENT_CAPACITY(CFG_SHORT_SEGMENT_CAPACITY),
-        .EARLY_SEGMENTS_COUNT(CFG_EARLY_SEGMENTS_COUNT),
-        .SEGMENT_PRETRIGGER_COUNT(CFG_SEGMENT_PRETRIGGER_COUNT),
-        .AXI_SAMPLES_PER_CLOCK(CFG_AXI_SAMPLES_PER_CLOCK),
-        .AXI_SAMPLE_WIDTH(ACQ_SAMPLES_WIDTH),
-        .ADC_WIDTH(ACQ_SAMPLES_WIDTH),
-        .TRIGGER_BUS_WIDTH(ACQ_TRIGGER_BUS_WIDTH),
-        .DEBUG((adc == 0) ? ADC_CHANNEL_DEBUG : "false"))
-      adcChannel (
-        .sysClk(sysClk),
-        .sysCsrStrobe(GPIO_STROBES[GPIO_IDX_ADC_0_CSR+rOff]),
-        .sysTriggerConfigStrobe(GPIO_STROBES[GPIO_IDX_ADC_0_TRIGGER_CONFIG+rOff]),
-        .sysAcqConfig1Strobe(GPIO_STROBES[GPIO_IDX_ADC_0_CONFIG_1+rOff]),
-        .sysAcqConfig2Strobe(GPIO_STROBES[GPIO_IDX_ADC_0_CONFIG_2+rOff]),
-        .GPIO_OUT(GPIO_OUT),
-        .sysStatus(GPIO_IN[GPIO_IDX_ADC_0_CSR+rOff]),
-        .sysData(GPIO_IN[GPIO_IDX_ADC_0_DATA+rOff]),
-        .sysTriggerLocation(GPIO_IN[GPIO_IDX_ADC_0_TRIGGER_LOCATION+rOff]),
-        .sysTriggerTimestamp({GPIO_IN[GPIO_IDX_ADC_0_SECONDS+rOff],
-                              GPIO_IN[GPIO_IDX_ADC_0_TICKS+rOff]}),
-        .evrClk(evrClk),
-        .evrTimestamp(evrTimestamp),
-        .adcClk(sysClk),
-        .axiValid(acqTVALID[adc]),
-        .axiData(acqTDATA[adc*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH]),
-        .eventTriggerStrobes(adcEventTriggerStrobes),
-        .bondedWriteEnableIn(bondedWriteEnable[0]),
-        .bondedWriteAddressIn(bondedWriteAddress[0]),
-        .bondedWriteEnableOut(bondedWriteEnable[adc%CFG_ADCS_PER_BONDED_GROUP]),
-        .bondedWriteAddressOut(bondedWriteAddress[adc%CFG_ADCS_PER_BONDED_GROUP]));
+for (bpm = 0; bpm < CFG_BPM_COUNT ; bpm = bpm + 1) begin
+ for (i = 0 ; i < NUMBER_OF_BONDED_GROUPS ; i = i + 1) begin
+  wire bondedWriteEnable[0:CFG_DSPS_PER_BONDED_GROUP-1];
+  wire [$clog2(CFG_ACQUISITION_BUFFER_CAPACITY/CFG_AXI_SAMPLES_PER_CLOCK)-1:0]
+                               bondedWriteAddress[0:CFG_DSPS_PER_BONDED_GROUP-1];
+  for (dsp = (bpm * CFG_DSP_CHANNEL_COUNT) + i * CFG_DSPS_PER_BONDED_GROUP ;
+                              (dsp <
+                                ((bpm * CFG_DSP_CHANNEL_COUNT) +
+                                (i + 1) * CFG_DSPS_PER_BONDED_GROUP)) &&
+                              (dsp < CFG_DSP_CHANNEL_COUNT * CFG_BPM_COUNT); dsp = dsp + 1) begin
+     localparam integer rOff = dsp * GPIO_IDX_PER_ADC;
+     acquisitionHSD #(
+         .ACQUISITION_BUFFER_CAPACITY(CFG_ACQUISITION_BUFFER_CAPACITY),
+         .LONG_SEGMENT_CAPACITY(CFG_LONG_SEGMENT_CAPACITY),
+         .SHORT_SEGMENT_CAPACITY(CFG_SHORT_SEGMENT_CAPACITY),
+         .EARLY_SEGMENTS_COUNT(CFG_EARLY_SEGMENTS_COUNT),
+         .SEGMENT_PRETRIGGER_COUNT(CFG_SEGMENT_PRETRIGGER_COUNT),
+         .AXI_SAMPLES_PER_CLOCK(CFG_AXI_SAMPLES_PER_CLOCK),
+         .AXI_SAMPLE_WIDTH(ACQ_SAMPLES_WIDTH),
+         .ADC_WIDTH(ACQ_SAMPLES_WIDTH),
+         .TRIGGER_BUS_WIDTH(ACQ_TRIGGER_BUS_WIDTH),
+         .DEBUG((dsp == 0) ? ADC_CHANNEL_DEBUG : "false"))
+       dspChannel (
+         .sysClk(sysClk),
+         .sysCsrStrobe(GPIO_STROBES[GPIO_IDX_ADC_0_CSR+rOff]),
+         .sysTriggerConfigStrobe(GPIO_STROBES[GPIO_IDX_ADC_0_TRIGGER_CONFIG+rOff]),
+         .sysAcqConfig1Strobe(GPIO_STROBES[GPIO_IDX_ADC_0_CONFIG_1+rOff]),
+         .sysAcqConfig2Strobe(GPIO_STROBES[GPIO_IDX_ADC_0_CONFIG_2+rOff]),
+         .GPIO_OUT(GPIO_OUT),
+         .sysStatus(GPIO_IN[GPIO_IDX_ADC_0_CSR+rOff]),
+         .sysData(GPIO_IN[GPIO_IDX_ADC_0_DATA+rOff]),
+         .sysTriggerLocation(GPIO_IN[GPIO_IDX_ADC_0_TRIGGER_LOCATION+rOff]),
+         .sysTriggerTimestamp({GPIO_IN[GPIO_IDX_ADC_0_SECONDS+rOff],
+                               GPIO_IN[GPIO_IDX_ADC_0_TICKS+rOff]}),
+         .evrClk(evrClk),
+         .evrTimestamp(evrTimestamp),
+         .adcClk(sysClk),
+         .axiValid(acqTVALID[dsp]),
+         .axiData(acqTDATA[dsp*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH]),
+         .eventTriggerStrobes(adcEventTriggerStrobes),
+         .bondedWriteEnableIn(bondedWriteEnable[0]),
+         .bondedWriteAddressIn(bondedWriteAddress[0]),
+         .bondedWriteEnableOut(bondedWriteEnable[dsp%CFG_DSPS_PER_BONDED_GROUP]),
+         .bondedWriteAddressOut(bondedWriteAddress[dsp%CFG_DSPS_PER_BONDED_GROUP]));
+  end
  end
 end
 `endif
@@ -616,53 +571,123 @@ system
 
 `endif // `ifndef SIMULATE
 
-assign acqTVALID[0] = prelimProcRfCicFaMagValid[0];
-assign acqTDATA[0*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
-    {ACQ_SAMPLES_WIDTH-MAG_WIDTH{prelimProcRfCicFaMag0[0][MAG_WIDTH-1]}},
-    prelimProcRfCicFaMag0[0]
+
+generate
+for (bpm = 0 ; bpm < CFG_BPM_COUNT ; bpm = bpm + 1) begin : acq_data
+//
+// Tbt Mags
+//
+
+assign acqTVALID[bpm*CFG_DSP_CHANNEL_COUNT + 0] = prelimProcRfTbtMagValid[bpm];
+assign acqTDATA[(bpm*CFG_DSP_CHANNEL_COUNT + 0)*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
+    {ACQ_SAMPLES_WIDTH-MAG_WIDTH{prelimProcRfTbtMag0[bpm][MAG_WIDTH-1]}},
+    prelimProcRfTbtMag0[bpm]
 };
 
-assign acqTVALID[1] = prelimProcRfCicFaMagValid[0];
-assign acqTDATA[1*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
-    {ACQ_SAMPLES_WIDTH-MAG_WIDTH{prelimProcRfCicFaMag1[0][MAG_WIDTH-1]}},
-    prelimProcRfCicFaMag1[0]
+assign acqTVALID[bpm*CFG_DSP_CHANNEL_COUNT + 1] = prelimProcRfTbtMagValid[bpm];
+assign acqTDATA[(bpm*CFG_DSP_CHANNEL_COUNT + 1)*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
+    {ACQ_SAMPLES_WIDTH-MAG_WIDTH{prelimProcRfTbtMag1[bpm][MAG_WIDTH-1]}},
+    prelimProcRfTbtMag1[bpm]
 };
 
-assign acqTVALID[2] = prelimProcRfTbtMagValid[0];
-assign acqTDATA[2*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
-    {ACQ_SAMPLES_WIDTH-MAG_WIDTH{prelimProcRfTbtMag0[0][MAG_WIDTH-1]}},
-    prelimProcRfTbtMag0[0]
+assign acqTVALID[bpm*CFG_DSP_CHANNEL_COUNT + 2] = prelimProcRfTbtMagValid[bpm];
+assign acqTDATA[(bpm*CFG_DSP_CHANNEL_COUNT + 2)*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
+    {ACQ_SAMPLES_WIDTH-MAG_WIDTH{prelimProcRfTbtMag2[bpm][MAG_WIDTH-1]}},
+    prelimProcRfTbtMag2[bpm]
 };
 
-assign acqTVALID[3] = prelimProcRfTbtMagValid[0];
-assign acqTDATA[3*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
-    {ACQ_SAMPLES_WIDTH-MAG_WIDTH{prelimProcRfTbtMag1[0][MAG_WIDTH-1]}},
-    prelimProcRfTbtMag1[0]
+assign acqTVALID[bpm*CFG_DSP_CHANNEL_COUNT + 3] = prelimProcRfTbtMagValid[bpm];
+assign acqTDATA[(bpm*CFG_DSP_CHANNEL_COUNT + 3)*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
+    {ACQ_SAMPLES_WIDTH-MAG_WIDTH{prelimProcRfTbtMag3[bpm][MAG_WIDTH-1]}},
+    prelimProcRfTbtMag3[bpm]
 };
 
-assign acqTVALID[4] = prelimProcRfFaMagValid[0];
-assign acqTDATA[4*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
-    {ACQ_SAMPLES_WIDTH-MAG_WIDTH{prelimProcRfFaMag0[0][MAG_WIDTH-1]}},
-    prelimProcRfFaMag0[0]
+//
+// Tbt Positions
+//
+
+assign acqTVALID[bpm*CFG_DSP_CHANNEL_COUNT + 4] = positionCalcTbtValid[bpm];
+assign acqTDATA[(bpm*CFG_DSP_CHANNEL_COUNT + 4)*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
+    {ACQ_SAMPLES_WIDTH-MAG_WIDTH{positionCalcTbtX[bpm][MAG_WIDTH-1]}},
+    positionCalcTbtX[bpm]
 };
 
-assign acqTVALID[5] = prelimProcRfFaMagValid[0];
-assign acqTDATA[5*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
-    {ACQ_SAMPLES_WIDTH-MAG_WIDTH{prelimProcRfFaMag1[0][MAG_WIDTH-1]}},
-    prelimProcRfFaMag1[0]
+assign acqTVALID[bpm*CFG_DSP_CHANNEL_COUNT + 5] = positionCalcTbtValid[bpm];
+assign acqTDATA[(bpm*CFG_DSP_CHANNEL_COUNT + 5)*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
+    {ACQ_SAMPLES_WIDTH-MAG_WIDTH{positionCalcTbtY[bpm][MAG_WIDTH-1]}},
+    positionCalcTbtY[bpm]
 };
 
-assign acqTVALID[6] = prelimProcSaValid[0];
-assign acqTDATA[6*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
-    {ACQ_SAMPLES_WIDTH-MAG_WIDTH{prelimProcRfMag0[0][MAG_WIDTH-1]}},
-    prelimProcRfMag0[0]
+assign acqTVALID[bpm*CFG_DSP_CHANNEL_COUNT + 6] = positionCalcTbtValid[bpm];
+assign acqTDATA[(bpm*CFG_DSP_CHANNEL_COUNT + 6)*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
+    {ACQ_SAMPLES_WIDTH-MAG_WIDTH{positionCalcTbtQ[bpm][MAG_WIDTH-1]}},
+    positionCalcTbtQ[bpm]
 };
 
-assign acqTVALID[7] = prelimProcSaValid[0];
-assign acqTDATA[7*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
-    {ACQ_SAMPLES_WIDTH-MAG_WIDTH{prelimProcRfMag1[0][MAG_WIDTH-1]}},
-    prelimProcRfMag1[0]
+assign acqTVALID[bpm*CFG_DSP_CHANNEL_COUNT + 7] = positionCalcTbtValid[bpm];
+assign acqTDATA[(bpm*CFG_DSP_CHANNEL_COUNT + 7)*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
+    {ACQ_SAMPLES_WIDTH-MAG_WIDTH{positionCalcTbtS[bpm][MAG_WIDTH-1]}},
+    positionCalcTbtS[bpm]
 };
+
+//
+// Fa Mags
+//
+
+assign acqTVALID[bpm*CFG_DSP_CHANNEL_COUNT + 8] = prelimProcRfFaMagValid[bpm];
+assign acqTDATA[(bpm*CFG_DSP_CHANNEL_COUNT + 8)*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
+    {ACQ_SAMPLES_WIDTH-MAG_WIDTH{prelimProcRfFaMag0[bpm][MAG_WIDTH-1]}},
+    prelimProcRfFaMag0[bpm]
+};
+
+assign acqTVALID[bpm*CFG_DSP_CHANNEL_COUNT + 9] = prelimProcRfFaMagValid[bpm];
+assign acqTDATA[(bpm*CFG_DSP_CHANNEL_COUNT + 9)*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
+    {ACQ_SAMPLES_WIDTH-MAG_WIDTH{prelimProcRfFaMag1[bpm][MAG_WIDTH-1]}},
+    prelimProcRfFaMag1[bpm]
+};
+
+assign acqTVALID[bpm*CFG_DSP_CHANNEL_COUNT + 10] = prelimProcRfFaMagValid[bpm];
+assign acqTDATA[(bpm*CFG_DSP_CHANNEL_COUNT + 10)*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
+    {ACQ_SAMPLES_WIDTH-MAG_WIDTH{prelimProcRfFaMag2[bpm][MAG_WIDTH-1]}},
+    prelimProcRfFaMag2[bpm]
+};
+
+assign acqTVALID[bpm*CFG_DSP_CHANNEL_COUNT + 11] = prelimProcRfFaMagValid[bpm];
+assign acqTDATA[(bpm*CFG_DSP_CHANNEL_COUNT + 11)*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
+    {ACQ_SAMPLES_WIDTH-MAG_WIDTH{prelimProcRfFaMag3[bpm][MAG_WIDTH-1]}},
+    prelimProcRfFaMag3[bpm]
+};
+
+//
+// Fa Positions
+//
+
+assign acqTVALID[bpm*CFG_DSP_CHANNEL_COUNT + 12] = positionCalcFaValid[bpm];
+assign acqTDATA[(bpm*CFG_DSP_CHANNEL_COUNT + 12)*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
+    {ACQ_SAMPLES_WIDTH-MAG_WIDTH{positionCalcFaX[bpm][MAG_WIDTH-1]}},
+    positionCalcFaX[bpm]
+};
+
+assign acqTVALID[bpm*CFG_DSP_CHANNEL_COUNT + 13] = positionCalcFaValid[bpm];
+assign acqTDATA[(bpm*CFG_DSP_CHANNEL_COUNT + 13)*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
+    {ACQ_SAMPLES_WIDTH-MAG_WIDTH{positionCalcFaY[bpm][MAG_WIDTH-1]}},
+    positionCalcFaY[bpm]
+};
+
+assign acqTVALID[bpm*CFG_DSP_CHANNEL_COUNT + 14] = positionCalcFaValid[bpm];
+assign acqTDATA[(bpm*CFG_DSP_CHANNEL_COUNT + 14)*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
+    {ACQ_SAMPLES_WIDTH-MAG_WIDTH{positionCalcFaQ[bpm][MAG_WIDTH-1]}},
+    positionCalcFaQ[bpm]
+};
+
+assign acqTVALID[bpm*CFG_DSP_CHANNEL_COUNT + 15] = positionCalcFaValid[bpm];
+assign acqTDATA[(bpm*CFG_DSP_CHANNEL_COUNT + 15)*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
+    {ACQ_SAMPLES_WIDTH-MAG_WIDTH{positionCalcFaS[bpm][MAG_WIDTH-1]}},
+    positionCalcFaS[bpm]
+};
+
+end // for
+endgenerate // generate
 
 //
 // Create slow (SA) and fast (FA) acquistion triggers
@@ -813,10 +838,9 @@ wire [8*MAG_WIDTH-1:0] tbtSums[0:CFG_BPM_COUNT-1];
 wire tbtSumsValid[0:CFG_BPM_COUNT-1];
 wire [4*MAG_WIDTH-1:0] tbtMags[0:CFG_BPM_COUNT-1];
 wire tbtMagsValid[0:CFG_BPM_COUNT-1];
-wire [(BD_ADC_CHANNEL_COUNT*ACQ_SAMPLES_WIDTH)-1:0] acqTDATA;
-wire [BD_ADC_CHANNEL_COUNT-1:0] acqTVALID;
+wire [(CFG_BPM_COUNT*CFG_DSP_CHANNEL_COUNT*ACQ_SAMPLES_WIDTH)-1:0] acqTDATA;
+wire [CFG_BPM_COUNT*CFG_DSP_CHANNEL_COUNT-1:0] acqTVALID;
 
-genvar bpm;
 generate
 for (bpm = 0 ; bpm < CFG_BPM_COUNT ; bpm = bpm + 1) begin : prelim_chain
 
@@ -976,6 +1000,9 @@ wire [31:0] positionCalcSaS[0:CFG_BPM_COUNT-1];
 wire positionCalcTbtToggle[0:CFG_BPM_COUNT-1];
 wire positionCalcFaToggle[0:CFG_BPM_COUNT-1];
 wire positionCalcSaToggle[0:CFG_BPM_COUNT-1];
+wire positionCalcTbtValid[0:CFG_BPM_COUNT-1];
+wire positionCalcFaValid[0:CFG_BPM_COUNT-1];
+wire positionCalcSaValid[0:CFG_BPM_COUNT-1];
 
 generate
 for (bpm = 0 ; bpm < CFG_BPM_COUNT ; bpm = bpm + 1) begin : pos_chain
@@ -1019,16 +1046,19 @@ positionCalc #(.MAG_WIDTH(MAG_WIDTH))
     .tbtQ(positionCalcTbtQ[bpm]),
     .tbtS(positionCalcTbtS[bpm]),
     .tbtToggle(positionCalcTbtToggle[bpm]),
+    .tbtValid(positionCalcTbtValid[bpm]),
     .faX(positionCalcFaX[bpm]),
     .faY(positionCalcFaY[bpm]),
     .faQ(positionCalcFaQ[bpm]),
     .faS(positionCalcFaS[bpm]),
     .faToggle(positionCalcFaToggle[bpm]),
+    .faValid(positionCalcFaValid[bpm]),
     .saX(positionCalcSaX[bpm]),
     .saY(positionCalcSaY[bpm]),
     .saQ(positionCalcSaQ[bpm]),
     .saS(positionCalcSaS[bpm]),
-    .saToggle(positionCalcSaToggle[bpm]));
+    .saToggle(positionCalcSaToggle[bpm]),
+    .saValid(positionCalcSaValid[bpm]));
 end // for
 endgenerate // generate
 
