@@ -206,7 +206,14 @@ acquisitionFetch(uint32_t *buf, int capacity, int channel, int offset, int last)
             }
             *buf++ = GPIO_READ(REG(GPIO_IDX_ADC_0_SECONDS, triggerChannel));
             *buf++ = GPIO_READ(REG(GPIO_IDX_ADC_0_TICKS, triggerChannel));
+            // skip calibration fetching for now
+#if 0
             n = afeFetchCalibration(channel, buf);
+#else
+            n = 3;
+            memset(buf, 0, n*sizeof(*buf));
+#endif
+
             if (n == 0) return 0;
             buf += n;
             n += 2;
