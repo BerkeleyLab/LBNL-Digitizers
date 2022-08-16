@@ -1003,6 +1003,8 @@ wire positionCalcSaToggle[0:CFG_BPM_COUNT-1];
 wire positionCalcTbtValid[0:CFG_BPM_COUNT-1];
 wire positionCalcFaValid[0:CFG_BPM_COUNT-1];
 wire positionCalcSaValid[0:CFG_BPM_COUNT-1];
+wire [31:0] lossOfBeamThreshold [0:CFG_BPM_COUNT-1];
+wire lossOfBeamTrigger[0:CFG_BPM_COUNT-1];
 
 generate
 for (bpm = 0 ; bpm < CFG_BPM_COUNT ; bpm = bpm + 1) begin : pos_chain
@@ -1059,6 +1061,20 @@ positionCalc #(.MAG_WIDTH(MAG_WIDTH))
     .saS(positionCalcSaS[bpm]),
     .saToggle(positionCalcSaToggle[bpm]),
     .saValid(positionCalcSaValid[bpm]));
+
+//
+// Loss-of-beam detection
+//
+assign GPIO_IN[GPIO_IDX_LOSS_OF_BEAM_THRSH + bpm*GPIO_IDX_PER_BPM] = lossOfBeamThreshold[bpm];
+assign GPIO_IN[GPIO_IDX_LOSS_OF_BEAM_TRIGGER + bpm*GPIO_IDX_PER_BPM] = lossOfBeamTrigger[bpm];
+lossOfBeam lossOfBeam(.clk(sysClk),
+                    .thresholdStrobe(GPIO_STROBES[GPIO_IDX_LOSS_OF_BEAM_THRSH + bpm*GPIO_IDX_PER_BPM]),
+                    .gpioData(GPIO_OUT),
+                    .threshold(lossOfBeamThreshold[bpm]),
+                    .turnByTurnToggle(positionCalcTbtToggle[bpm]),
+                    .buttonSum(positionCalcTbtS[bpm]),
+                    .lossOfBeamTrigger(lossOfBeamTrigger[bpm]));
+
 end // for
 endgenerate // generate
 

@@ -37,7 +37,7 @@
 #define GPIO_IDX_ADC_HEARTBEAT_RELOAD    23 // ADC heartbeat counter
 
 /*
- * Preliminary processing chain
+ * Per BPM registers
  */
 #define GPIO_IDX_LOTABLE_ADDRESS         32 // Local oscillator table write address
 #define GPIO_IDX_LOTABLE_CSR             33 // Local oscillator tables
@@ -70,11 +70,13 @@
 #define GPIO_IDX_POSITION_CALC_SA_Y      60 // Slow acquisition Y position
 #define GPIO_IDX_POSITION_CALC_SA_Q      61 // Slow acquisition skew
 #define GPIO_IDX_POSITION_CALC_SA_S      62 // Slow acquisition sum
+#define GPIO_IDX_LOSS_OF_BEAM_THRSH      63 // Loss-of-beam threshold
+#define GPIO_IDX_LOSS_OF_BEAM_TRIGGER    64 // Loss-of-beam trigger
 
-#define GPIO_IDX_PER_BPM                 (GPIO_IDX_POSITION_CALC_SA_S-GPIO_IDX_LOTABLE_ADDRESS+1)
+#define GPIO_IDX_PER_BPM                 (GPIO_IDX_LOSS_OF_BEAM_TRIGGER-GPIO_IDX_LOTABLE_ADDRESS+1)
 
 /*
- * Application-specific registers
+ * Per ADC registers
  */
 #define GPIO_IDX_ADC_0_CSR               128 // Acquisition control(W)/status(R)
 #define GPIO_IDX_ADC_0_DATA              129 // Acquisition data(R)
