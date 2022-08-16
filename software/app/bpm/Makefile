@@ -38,6 +38,7 @@ __SRC_FILES = \
 	ffs.c \
 	frequencyMonitor.c \
 	interlock.c \
+	lossOfBeam.c \
 	main.c \
 	mgt.c \
 	mmcm.c \
@@ -69,7 +70,9 @@ __HDR_FILES = \
 	ffs.h \
 	frequencyMonitor.h \
 	hsdProtocol.h \
+	bpmProtocol.h \
 	interlock.h \
+	lossOfBeam.h \
 	lv_font.h \
 	mgt.h \
 	mmcm.h \

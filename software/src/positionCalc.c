@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include "gpio.h"
 #include "systemParameters.h"
+#include "lossOfBeam.h"
 
 /*
  * Operand selection
@@ -84,4 +85,6 @@ positionCalcInit(void)
         GPIO_WRITE(REG(GPIO_IDX_POSITION_CALC_YCAL, ch), yFactor);
         GPIO_WRITE(REG(GPIO_IDX_POSITION_CALC_QCAL, ch), qFactor);
     }
+
+    lossOfBeamThreshold(-1, 1000); /* all BPMs, Reasonable default */
 }

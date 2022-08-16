@@ -7,6 +7,7 @@
 #include "platform_config.h"
 #include "hsdProtocol.h"
 #include "bcmProtocol.h"
+#include "bpmProtocol.h"
 #include "acquisition.h"
 #include "epicsApplicationCommands.h"
 #include "evr.h"
@@ -105,6 +106,7 @@ epicsApplicationCommand(int commandArgCount, struct hsdPacket *cmdp,
 
         case HSD_PROTOCOL_CMD_LONGOUT_LO_GENERIC:
             switch (idx) {
+            // BCM commands
             case BCM_PROTOCOL_CMD_LONGOUT_ACQUISITION_SIZE:
                 acquisitionSetSize(cmdp->args[0]);
                 break;
@@ -116,8 +118,14 @@ epicsApplicationCommand(int commandArgCount, struct hsdPacket *cmdp,
             case BCM_PROTOCOL_CMD_LONGOUT_EVENT_TRIGGER:
                 selectTriggerEventAction(cmdp->args[0], 0, EVR_RAM_TRIGGER_2);
                 break;
+
             case BCM_PROTOCOL_CMD_LONGOUT_EVENT_INJECTION:
                 selectTriggerEventAction(cmdp->args[0], 1, EVR_RAM_TRIGGER_3);
+                break;
+
+            // BPM commands
+            case BPM_PROTOCOL_CMD_LONGOUT_LOB_THRSH:
+                lossOfBeamThreshold(-1, cmdp->args[0]);
                 break;
 
             default: return -1;
