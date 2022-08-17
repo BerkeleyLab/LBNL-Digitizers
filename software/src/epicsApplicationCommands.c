@@ -9,6 +9,7 @@
 #include "bcmProtocol.h"
 #include "bpmProtocol.h"
 #include "acquisition.h"
+#include "lossOfBeam.h"
 #include "epicsApplicationCommands.h"
 #include "evr.h"
 #include "gpio.h"
