@@ -55,6 +55,7 @@ publishSlowAcquisition(unsigned int saSeconds, unsigned int saTicks)
         pk->yRMSwide[i] = 0;
         pk->xRMSnarrow[i] = 0;
         pk->yRMSnarrow[i] = 0;
+        pk->lossOfBeamStatus[i] = GPIO_READ(REG(GPIO_IDX_LOSS_OF_BEAM_TRIGGER, chainNumber));
     }
     pk->recorderStatus = 0;
     pk->syncStatus = 0;
