@@ -51,10 +51,10 @@ publishSlowAcquisition(unsigned int saSeconds, unsigned int saTicks)
         pk->yPos[i] = GPIO_READ(REG(GPIO_IDX_POSITION_CALC_SA_Y, chainNumber));
         pk->skew[i] = GPIO_READ(REG(GPIO_IDX_POSITION_CALC_SA_Q, chainNumber));
         pk->buttonSum[i] = GPIO_READ(REG(GPIO_IDX_POSITION_CALC_SA_S, chainNumber));
-        pk->xRMSwide[i] = 0;
-        pk->yRMSwide[i] = 0;
-        pk->xRMSnarrow[i] = 0;
-        pk->yRMSnarrow[i] = 0;
+        pk->xRMSwide[i] = GPIO_READ(REG(GPIO_IDX_RMS_X_WIDE, chainNumber));
+        pk->yRMSwide[i] = GPIO_READ(REG(GPIO_IDX_RMS_Y_WIDE, chainNumber));
+        pk->xRMSnarrow[i] = GPIO_READ(REG(GPIO_IDX_RMS_X_NARROW, chainNumber));
+        pk->yRMSnarrow[i] = GPIO_READ(REG(GPIO_IDX_RMS_Y_NARROW, chainNumber));
         pk->lossOfBeamStatus[i] = GPIO_READ(REG(GPIO_IDX_LOSS_OF_BEAM_TRIGGER, chainNumber));
     }
     pk->recorderStatus = 0;
