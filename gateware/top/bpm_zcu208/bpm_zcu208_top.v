@@ -1005,6 +1005,10 @@ wire positionCalcFaValid[0:CFG_BPM_COUNT-1];
 wire positionCalcSaValid[0:CFG_BPM_COUNT-1];
 wire [31:0] lossOfBeamThreshold [0:CFG_BPM_COUNT-1];
 wire lossOfBeamTrigger[0:CFG_BPM_COUNT-1];
+wire [31:0] wideXrms[0:CFG_BPM_COUNT-1];
+wire [31:0] wideYrms[0:CFG_BPM_COUNT-1];
+wire [31:0] narrowXrms[0:CFG_BPM_COUNT-1];
+wire [31:0] narrowYrms[0:CFG_BPM_COUNT-1];
 
 generate
 for (bpm = 0 ; bpm < CFG_BPM_COUNT ; bpm = bpm + 1) begin : pos_chain
@@ -1074,6 +1078,22 @@ lossOfBeam lossOfBeam(.clk(sysClk),
                     .turnByTurnToggle(positionCalcTbtToggle[bpm]),
                     .buttonSum(positionCalcTbtS[bpm]),
                     .lossOfBeamTrigger(lossOfBeamTrigger[bpm]));
+
+//
+// RMS motion calculation
+//
+assign GPIO_IN[GPIO_IDX_RMS_X_WIDE + bpm*GPIO_IDX_PER_BPM] = wideXrms[bpm];
+assign GPIO_IN[GPIO_IDX_RMS_Y_WIDE + bpm*GPIO_IDX_PER_BPM] = wideYrms[bpm];
+assign GPIO_IN[GPIO_IDX_RMS_X_NARROW + bpm*GPIO_IDX_PER_BPM] = narrowXrms[bpm];
+assign GPIO_IN[GPIO_IDX_RMS_Y_NARROW + bpm*GPIO_IDX_PER_BPM] = narrowYrms[bpm];
+rmsCalc rmsCalc(.clk(sysClk),
+                .faToggle(positionCalcFaToggle[bpm]),
+                .faX(positionCalcFaX[bpm]),
+                .faY(positionCalcFaY[bpm]),
+                .wideXrms(wideXrms[bpm]),
+                .wideYrms(wideYrms[bpm]),
+                .narrowXrms(narrowXrms[bpm]),
+                .narrowYrms(narrowYrms[bpm]));
 
 end // for
 endgenerate // generate

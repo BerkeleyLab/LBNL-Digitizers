@@ -72,8 +72,12 @@
 #define GPIO_IDX_POSITION_CALC_SA_S      62 // Slow acquisition sum
 #define GPIO_IDX_LOSS_OF_BEAM_THRSH      63 // Loss-of-beam threshold
 #define GPIO_IDX_LOSS_OF_BEAM_TRIGGER    64 // Loss-of-beam trigger
+#define GPIO_IDX_RMS_X_WIDE              65 // RMS X wide bandwidth
+#define GPIO_IDX_RMS_Y_WIDE              66 // RMS Y wide bandwidth
+#define GPIO_IDX_RMS_X_NARROW            67 // RMS X narrow bandwidth
+#define GPIO_IDX_RMS_Y_NARROW            68 // RMS Y narrow bandwidth
 
-#define GPIO_IDX_PER_BPM                 (GPIO_IDX_LOSS_OF_BEAM_TRIGGER-GPIO_IDX_LOTABLE_ADDRESS+1)
+#define GPIO_IDX_PER_BPM                 (GPIO_IDX_RMS_Y_NARROW-GPIO_IDX_LOTABLE_ADDRESS+1)
 
 /*
  * Per ADC registers

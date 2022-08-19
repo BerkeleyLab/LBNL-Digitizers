@@ -44,9 +44,11 @@ SYSTEM_TOP_TIM_XDC = $(TARGET)_top_tim.xdc
 include $(MODULES_DIR)/evr_axi_rules.mk
 include $(MODULES_DIR)/axi_lite_generic_reg_rules.mk
 
-IP_CORES += evrGTY prbsMMCM trimMultiplier positionCalcDivider positionCalcMultiplier adcCordic ila_td256_s4096_cap
+IP_CORES += evrGTY rmsBandSelect prbsMMCM trimMultiplier positionCalcDivider positionCalcMultiplier adcCordic ila_td256_s4096_cap
 evrGTY_DIR = $(PLATFORM_ZU48_BPM_DIR)/evrGTY
 evrGTY_TOP = $(evrGTY_DIR)/synth/evrGTY.v
+rmsBandSelect_DIR = $(PLATFORM_ZU48_BPM_DIR)/rmsBandSelect
+rmsBandSelect_TOP = $(rmsBandSelect_DIR)/synth/rmsBandSelect.vhd
 prbsMMCM_DIR = $(PLATFORM_ZU48_BPM_DIR)/prbsMMCM
 prbsMMCM_TOP = $(prbsMMCM_DIR)/prbsMMCM.v
 trimMultiplier_DIR = $(PLATFORM_ZU48_BPM_DIR)/trimMultiplier
@@ -60,8 +62,8 @@ adcCordic_TOP = $(adcCordic_DIR)/synth/adcCordic.vhd
 ila_td256_s4096_cap_DIR = $(PLATFORM_ZU48_BPM_DIR)/ila_td256_s4096_cap
 ila_td256_s4096_cap_TOP = $(ila_td256_s4096_cap_DIR)/synth/ila_td256_s4096_cap.v
 
-IP_CORES_TOP_LVL_SRCS += $(evrGTY_TOP) $(prbsMMCM_TOP) $(trimMultiplier_TOP) $(positionCalcDivider_TOP) $(positionCalcMultiplier_TOP) $(adcCordic_TOP) $(ila_td256_s4096_cap_TOP)
-IP_CORES_DIRS += $(evrGTY_DIR) $(prbsMMCM_DIR) $(trimMultiplier_DIR) $(positionCalcDivider_DIR) $(positionCalcMultiplier_DIR) $(adcCordic_DIR) $(ila_td256_s4096_cap_DIR)
+IP_CORES_TOP_LVL_SRCS += $(evrGTY_TOP) $(rmsBandSelect_TOP) $(prbsMMCM_TOP) $(trimMultiplier_TOP) $(positionCalcDivider_TOP) $(positionCalcMultiplier_TOP) $(adcCordic_TOP) $(ila_td256_s4096_cap_TOP)
+IP_CORES_DIRS += $(evrGTY_DIR) $(rmsBandSelect_DIR) $(prbsMMCM_DIR) $(trimMultiplier_DIR) $(positionCalcDivider_DIR) $(positionCalcMultiplier_DIR) $(adcCordic_DIR) $(ila_td256_s4096_cap_DIR)
 IP_CORES_XDCS += $(evrGTY_TOP:%.v=%.xdc) $(prbsMMCM_TOP:%.v=%.xdc)
 
 IP_CORES_SRCS_DIRS = $(IP_CORES_DIRS)
@@ -113,6 +115,7 @@ VFLAGS_DEP += $(addprefix -I, $(BD_SRCS_DIRS))
 # As we don't exactly know the names of the sources, create a file with
 # the switches that will be consumed by iverilog later
 evrGTY_VFLAGS_COMMAND_FILE = evrGTY_iverilog_cfile.txt
+rmsBandSelect_VFLAGS_COMMAND_FILE = rmsBandSelect_iverilog_cfile.txt
 prbsMMCM_VFLAGS_COMMAND_FILE = prbsMMCM_iverilog_cfile.txt
 trimMultiplier_VFLAGS_COMMAND_FILE = trimMultiplier_iverilog_cfile.txt
 positionCalcDivider_VFLAGS_COMMAND_FILE = positionCalcDivider_iverilog_cfile.txt
@@ -123,6 +126,7 @@ ila_td256_s4096_cap_VFLAGS_COMMAND_FILE = ila_td256_s4096_cap_iverilog_cfile.txt
 VFLAGS_COMMAND_FILE += \
 					  $(evrGTY_VFLAGS_COMMAND_FILE) \
 					  $(prbsMMCM_VFLAGS_COMMAND_FILE)
+# $(rmsBandSelect_VFLAGS_COMMAND_FILE)
 # $(trimMultiplier_VFLAGS_COMMAND_FILE)
 # $(positionCalcDivider_VFLAGS_COMMAND_FILE)
 # $(positionCalcMultiplier_VFLAGS_COMMAND_FILE)
@@ -132,7 +136,10 @@ VFLAGS_COMMAND_FILE += \
 # but we don't need it for iverilog as we only use it when not simulating
 # $(ila_td256_s4096_cap_VFLAGS_COMMAND_FILE)
 
-VFLAGS_DEP += $(addprefix -c, $(VFLAGS_COMMAND_FILE))
+# additional vflags, our files that have more than 1 top-level module
+EXTRA_VFLAGS_DEP += extra_iverilog_cfile.txt
+
+VFLAGS_DEP += $(addprefix -c, $(VFLAGS_COMMAND_FILE) $(EXTRA_VFLAGS_DEP))
 
 VFLAGS_DEP += -DSIMULATE
 
@@ -147,8 +154,12 @@ vpath %.sh $(GW_SCRIPTS_DIR)
 # List top level depedencies here. Eveything named .bit will be used as
 # a top-level target in top_rules.mk. .v and .sv files will be used as
 # prerequisites as well as a system_top.xdc file
-$(TARGET)_top.bit: system_top.xdc $(VIVADO_SYNTH_EXTRA_TCL) $(TOP_LVL_DIR)/$(TARGET)_top.v $(BD_bds) trimMultiplier.xci positionCalcDivider.xci positionCalcMultiplier.xci adcCordic.xci ila_td256_s4096_cap.xci
-$(TOP_LVL_DIR)/$(TARGET)_top.v: $(TOP_LVL_DIR)/firmwareBuildDate.v $(TOP_LVL_DIR)/gpioIDX.v $(IP_CORES_CUSTOM) $(IP_CORES_TOP_LVL_SRCS) $(BD_TOP_LVL_SRCS)
+$(TARGET)_top.bit: system_top.xdc $(VIVADO_SYNTH_EXTRA_TCL) $(TOP_LVL_DIR)/$(TARGET)_top.v $(BD_bds) rmsBandSelect.xci trimMultiplier.xci positionCalcDivider.xci positionCalcMultiplier.xci adcCordic.xci ila_td256_s4096_cap.xci
+$(TOP_LVL_DIR)/$(TARGET)_top.v: $(TOP_LVL_DIR)/firmwareBuildDate.v $(TOP_LVL_DIR)/gpioIDX.v $(EXTRA_VFLAGS_DEP) $(IP_CORES_CUSTOM) $(IP_CORES_TOP_LVL_SRCS) $(BD_TOP_LVL_SRCS)
+
+$(EXTRA_VFLAGS_DEP): % : %.in
+	sed -e 's|$$BEDROCK_DIR|$(BEDROCK_DIR:/=)|g' \
+		$< > $@
 
 # Generate bundled .xdc from other .xdc. Don't change the order of the
 # prerequisites as we need constraints in the order specified
@@ -220,6 +231,7 @@ CLEAN += *.xsa
 CLEAN += psu_init*
 CLEAN += ipcores_repos.tcl
 CLEAN += prio_xci_files.tcl
+CLEAN += $(EXTRA_VFLAGS_DEP)
 CLEAN_DIRS +=  _xilinx .Xil .ip_user_files .hbs $(IP_CORES_CUSTOM_TARGET_DIRS)
 CLEAN_DIRS += _gen
 

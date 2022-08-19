@@ -49,6 +49,9 @@ work/
 # Keep only source file, not generated products
 /gateware/platform/xilinx/*/*/evrGTY/
 !/gateware/platform/xilinx/*/*/evrGTY/evrGTY.xci
+/gateware/platform/xilinx/*/*/rmsBandSelect/
+!/gateware/platform/xilinx/*/*/rmsBandSelect/rmsBandSelect.xci
+!/gateware/platform/xilinx/*/*/rmsBandSelect/rmsBandSelect.coe
 /gateware/platform/xilinx/*/*/prbsMMCM/
 !/gateware/platform/xilinx/*/*/prbsMMCM/prbsMMCM.xci
 /gateware/platform/xilinx/*/*/system/
