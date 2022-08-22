@@ -225,8 +225,7 @@ optimizeCicShift(int mtTableLength)
         if (remainder) printf(" (remainder %d (!!!))", remainder);
         printf(" (shift %d).\n", cicShiftActual);
         printf("Set CIC shift to %d.\n", shift);
-        setSumShift(shift, SDACCUMULATOR_FA_CIC_SHIFT_MASK,
-                           SDACCUMULATOR_FA_CIC_SHIFT_SHIFT);
+        sdAccumulateSetFaSumShift(shift);
     }
 }
 
