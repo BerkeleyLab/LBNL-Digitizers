@@ -10,6 +10,7 @@
 #include "bpmProtocol.h"
 #include "acquisition.h"
 #include "lossOfBeam.h"
+#include "localOscillator.h"
 #include "epicsApplicationCommands.h"
 #include "evr.h"
 #include "gpio.h"
@@ -127,6 +128,14 @@ epicsApplicationCommand(int commandArgCount, struct hsdPacket *cmdp,
             // BPM commands
             case BPM_PROTOCOL_CMD_LONGOUT_LOB_THRSH:
                 lossOfBeamThreshold(-1, cmdp->args[0]);
+                break;
+
+            case BPM_PROTOCOL_CMD_LONGOUT_TBT_SUM_SHIFT:
+                 sdAccumulateSetTbtSumShift(cmdp->args[0]);
+                break;
+
+            case BPM_PROTOCOL_CMD_LONGOUT_MT_SUM_SHIFT:
+                sdAccumulateSetMtSumShift(cmdp->args[0]);
                 break;
 
             default: return -1;
