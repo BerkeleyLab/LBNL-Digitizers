@@ -278,9 +278,6 @@ wire [DATA_WIDTH-1:0] calibrated;
 // Drop top four bits since divider fraction width is only 28 bits, not 32.
 assign calibrated = product[PRODUCT_WIDTH-4-1:PRODUCT_WIDTH-DATA_WIDTH-4];
 
-reg tbtToggle_m = 0;
-reg faToggle_m = 0;
-reg saToggle_m = 0;
 always @(posedge clk) begin
     //
     // Prepare multiplier inputs
@@ -309,6 +306,11 @@ always @(posedge clk) begin
         default: ;
         endcase
     end
+
+
+    tbtValid <= 1'b0;
+    faValid <= 1'b0;
+    saValid <= 1'b0;
     if (calibratedValid) begin
         case (calibratedChannel)
         4'h0: tbtX <= calibrated;
@@ -316,42 +318,21 @@ always @(posedge clk) begin
         4'h2: begin
               tbtQ <= calibrated;
               tbtToggle = !tbtToggle;
-              tbtToggle_m <= tbtToggle;
-
-              if (tbtToggle != tbtToggle_m) begin
-                  tbtValid <= 1'b1;
-              end
-              else begin
-                  tbtValid <= 1'b0;
-              end
+              tbtValid <= 1'b1;
               end
         4'h4: faX <= calibrated;
         4'h5: faY <= calibrated;
         4'h6: begin
               faQ <= calibrated;
               faToggle = !faToggle;
-              faToggle_m <= faToggle;
-
-              if (faToggle != faToggle_m) begin
-                  faValid <= 1'b1;
-              end
-              else begin
-                  faValid <= 1'b0;
-              end
+              faValid <= 1'b1;
               end
         4'h8: saX <= calibrated;
         4'h9: saY <= calibrated;
         4'hA: begin
               saQ <= calibrated;
               saToggle = !saToggle;
-              saToggle_m <= saToggle;
-
-              if (saToggle != saToggle_m) begin
-                  saValid <= 1'b1;
-              end
-              else begin
-                  saValid <= 1'b0;
-              end
+              saValid <= 1'b1;
               end
         default: ;
         endcase
