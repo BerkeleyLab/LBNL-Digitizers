@@ -463,4 +463,8 @@ void localOscillatorInit(void)
     localOscSetPtTable(rfTablePT, sizeof(rfTablePT)-1);
     localOscRfCommit();
     localOscPtCommit();
+
+    // Sensible defaults
+    sdAccumulateSetTbtSumShift(7);
+    sdAccumulateSetMtSumShift(7);
 }

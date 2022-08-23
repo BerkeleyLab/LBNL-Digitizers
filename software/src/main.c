@@ -158,8 +158,6 @@ main(void)
     positionCalcInit();
     autotrimEnable(AUTOTRIM_CSR_MODE_OFF);
     for (int i = 0 ; i < CFG_ADC_PHYSICAL_COUNT ; i++) { afeSetGain(i, 16); }
-    sdAccumulateSetTbtSumShift(7);
-    sdAccumulateSetMtSumShift(7);
 
     /*
      * Main processing loop

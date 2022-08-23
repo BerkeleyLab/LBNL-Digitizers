@@ -29,6 +29,21 @@ localOscGetPtTable(unsigned char *buf, int size)
 }
 
 void
+sdAccumulateSetTbtSumShift(int shift)
+{
+}
+
+void
+sdAccumulateSetMtSumShift(int shift)
+{
+}
+
+void
+sdAccumulateSetFaSumShift(int shift)
+{
+}
+
+void
 localOscRfReadback(const unsigned char *buf)
 {
 }
