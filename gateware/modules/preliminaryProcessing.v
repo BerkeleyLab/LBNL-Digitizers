@@ -35,6 +35,7 @@ module preliminaryProcessing #(
     input        [ADC_WIDTH-1:0] adc0, adc1, adc2, adc3,
     // Only used when IQ_DATA == "TRUE"
     input        [ADC_WIDTH-1:0] adcQ0, adcQ1, adcQ2, adcQ3,
+    output wire  [ADC_WIDTH-1:0] adc0Out, adc1Out, adc2Out, adc3Out,
     input                        adcExceedsThreshold, adcUseThisSample,
     output wire                  adcLoSynced,
     input                        evrClk,
@@ -242,6 +243,7 @@ assign phLOsinDbg = adcPhSin;
 wire [4*ADC_WIDTH-1:0] adcs = { adc3, adc2, adc1, adc0 };
 wire [4*ADC_WIDTH-1:0] adcsQ = { adcQ3, adcQ2, adcQ1, adcQ0 };
 wire [8*PRODUCT_WIDTH-1:0] rfProducts, plProducts, phProducts;
+reg signed [4*ADC_WIDTH-1:0] adcsOut;
 
 genvar i; generate
 for (i = 0 ; i < NADC ; i = i + 1) begin : adcDemod
@@ -312,6 +314,13 @@ complexMixer #(.AWIDTH(ADC_WIDTH),
     .bi(phLOsin),
     .pr(adcPhPrdI),
     .pi(adcPhPrdQ));
+
+wire signed [ADC_WIDTH-1:0] adcS = adc;
+wire signed [ADC_WIDTH-1:0] adcQS = adcQ;
+always @(posedge adcClk) begin
+    adcsOut[i*ADC_WIDTH+:ADC_WIDTH] <= adcS + adcQS;
+end
+
 end
 else if (IQ_DATA == "FALSE") begin
 
@@ -357,7 +366,15 @@ mixer #(.dwi(ADC_WIDTH),
     .adcf(ptADC),
     .mult(phLOsin),
     .mixout(adcPhPrdQ));
+
+// match latency of IQ_DATA
+always @(posedge adcClk) begin
+    adcsOut[i*ADC_WIDTH+:ADC_WIDTH] <= adc;
 end
+
+end
+
+assign {adc0Out, adc1Out, adc2Out, adc3Out} = adcsOut;
 
 assign rfProducts[i*2*PRODUCT_WIDTH+:2*PRODUCT_WIDTH] = {adcRfPrdQ, adcRfPrdI};
 assign plProducts[i*2*PRODUCT_WIDTH+:2*PRODUCT_WIDTH] = {adcPlPrdQ, adcPlPrdI};
