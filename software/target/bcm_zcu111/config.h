@@ -31,6 +31,11 @@
 #define CFG_ADC_CHANNEL_COUNT    2
 
 /*
+ * For softwre compatibility:
+ */
+#define CFG_ACQ_CHANNEL_COUNT CFG_ADC_CHANNEL_COUNT
+
+/*
  * Number of physical ADC channels required by application
  */
 #define CFG_ADC_PHYSICAL_COUNT    2

@@ -47,13 +47,13 @@ static struct acqConfig {
                 segMode;
     uint32_t    earlySegmentInterval;
     uint32_t    laterSegmentInterval;
-} acqConfig[CFG_ADC_CHANNEL_COUNT];
+} acqConfig[CFG_ACQ_CHANNEL_COUNT];
 
 void
 acquisitionInit(void)
 {
     int channel;
-    for (channel = 0 ; channel < CFG_ADC_CHANNEL_COUNT ; channel++) {
+    for (channel = 0 ; channel < CFG_ACQ_CHANNEL_COUNT ; channel++) {
         acquisitionSetPretriggerCount(channel, 1);
         acquisitionSetTriggerLevel(channel, 10000000);
     }
@@ -72,7 +72,7 @@ acquisitionArm(int channel, int enable)
     uint32_t csr, config1, config2;
     struct acqConfig *ap;
 
-    if ((channel < 0) || (channel >= CFG_ADC_CHANNEL_COUNT)) return;
+    if ((channel < 0) || (channel >= CFG_ACQ_CHANNEL_COUNT)) return;
     ap = &acqConfig[channel];
     if (enable) {
         csr = CSR_W_ARM;
@@ -108,7 +108,7 @@ acquisitionStatus(void)
     uint32_t csr, base_csr = 0;
     uint32_t v = 0;
 
-    for (channel = 0 ; channel < CFG_ADC_CHANNEL_COUNT ; channel++) {
+    for (channel = 0 ; channel < CFG_ACQ_CHANNEL_COUNT ; channel++) {
         if (((channel % CFG_ADCS_PER_BONDED_GROUP) == 0)
          || ((acqConfig[channel].triggerReg & TRIGGER_CONFIG_BONDED) == 0)) {
             csr = GPIO_READ(REG(GPIO_IDX_ADC_0_CSR, channel));
@@ -175,7 +175,7 @@ acquisitionFetch(uint32_t *buf, int capacity, int channel, int offset, int last)
     uint32_t csr;
     int n = 0;
 
-    if ((channel < 0) || (channel >= CFG_ADC_CHANNEL_COUNT) || (capacity < 5)) {
+    if ((channel < 0) || (channel >= CFG_ACQ_CHANNEL_COUNT) || (capacity < 5)) {
         return 0;
     }
     if (acqConfig[channel].triggerReg & TRIGGER_CONFIG_BONDED) {
@@ -234,7 +234,7 @@ setTrigger(int channel, uint32_t mask, uint32_t v)
 {
     uint32_t triggerReg;
 
-    if ((channel < 0) || (channel >= CFG_ADC_CHANNEL_COUNT)) return;
+    if ((channel < 0) || (channel >= CFG_ACQ_CHANNEL_COUNT)) return;
     triggerReg = acqConfig[channel].triggerReg;
     triggerReg &= ~mask;
     triggerReg |= v & mask;
@@ -246,7 +246,7 @@ setTrigger(int channel, uint32_t mask, uint32_t v)
 }
 
 /* Trigger levels require special handling */
-static int triggerLevels[CFG_ADC_CHANNEL_COUNT];
+static int triggerLevels[CFG_ACQ_CHANNEL_COUNT];
 void
 acquisitionSetTriggerLevel(int channel, int microvolts)
 {
@@ -290,7 +290,7 @@ void
 acquisitionSetPretriggerCount(int channel, int n)
 {
     int limit = CFG_ACQUISITION_BUFFER_CAPACITY - CFG_AXI_SAMPLES_PER_CLOCK;
-    if ((channel < 0) || (channel >= CFG_ADC_CHANNEL_COUNT)) return;
+    if ((channel < 0) || (channel >= CFG_ACQ_CHANNEL_COUNT)) return;
     if (n <= 0) n = 1;
     if (n > limit) {
         n = limit;
@@ -306,7 +306,7 @@ acquisitionSetPretriggerCount(int channel, int n)
 void
 acquisitionSetSegmentedMode(int channel, int segMode)
 {
-    if ((channel < 0) || (channel >= CFG_ADC_CHANNEL_COUNT)) return;
+    if ((channel < 0) || (channel >= CFG_ACQ_CHANNEL_COUNT)) return;
     switch (segMode) {
     case SEGMODE_CONTIGUOUS:     break;
     case SEGMODE_LONG_SEGMENTS:  break;
@@ -321,14 +321,14 @@ acquisitionSetSegmentedMode(int channel, int segMode)
 void
 acquisitionSetEarlySegmentInterval(int channel, int adcClockTicks)
 {
-    if ((channel < 0) || (channel >= CFG_ADC_CHANNEL_COUNT)) return;
+    if ((channel < 0) || (channel >= CFG_ACQ_CHANNEL_COUNT)) return;
     acqConfig[channel].earlySegmentInterval = adcClockTicks;
 }
 
 void
 acquisitionSetLaterSegmentInterval(int channel, int adcClockTicks)
 {
-    if ((channel < 0) || (channel >= CFG_ADC_CHANNEL_COUNT)) return;
+    if ((channel < 0) || (channel >= CFG_ACQ_CHANNEL_COUNT)) return;
     acqConfig[channel].laterSegmentInterval = adcClockTicks;
 }
 
@@ -350,7 +350,7 @@ void
 acquisitionInit(void)
 {
     int channel;
-    for (channel = 0 ; channel < CFG_ADC_CHANNEL_COUNT ; channel++) {
+    for (channel = 0 ; channel < CFG_ACQ_CHANNEL_COUNT ; channel++) {
         acquisitionSetPretriggerCount(channel, 1);
         acquisitionSetTriggerLevel(channel, 10000000);
     }
@@ -381,7 +381,7 @@ acquisitionStatus(void)
     int channel;
     uint32_t v = 0;
     if (haveNewData) {
-        for (channel = 0 ; channel < CFG_ADC_CHANNEL_COUNT ; channel++) {
+        for (channel = 0 ; channel < CFG_ACQ_CHANNEL_COUNT ; channel++) {
             v |= 0x10000 << channel;
         }
     }
@@ -395,7 +395,7 @@ acquisitionFetch(uint32_t *buf, int capacity, int channel, int offset, int last)
 
     if ((GPIO_READ(GPIO_IDX_ADC_0_CSR) &  CSR_R_RUNNING)
      || (channel < 0)
-     || (channel >= CFG_ADC_CHANNEL_COUNT)
+     || (channel >= CFG_ACQ_CHANNEL_COUNT)
      || (capacity < 5)) {
         return 0;
     }
@@ -413,7 +413,7 @@ acquisitionFetch(uint32_t *buf, int capacity, int channel, int offset, int last)
         }
         addr = (base + (offset >> 3)) % (CFG_ACQUISITION_BUFFER_CAPACITY >> 3);
         muxSel = offset & 0x7;
-        GPIO_WRITE(GPIO_IDX_ADC_0_CSR, (((addr * CFG_ADC_CHANNEL_COUNT) + channel) *
+        GPIO_WRITE(GPIO_IDX_ADC_0_CSR, (((addr * CFG_ACQ_CHANNEL_COUNT) + channel) *
                                                         CFG_AXI_SAMPLES_PER_CLOCK) + muxSel);
         s = GPIO_READ(GPIO_IDX_ADC_0_CSR) & 0xFFF0;
         if (offset & 0x1) {

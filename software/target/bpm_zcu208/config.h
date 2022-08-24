@@ -44,7 +44,12 @@
 /*
  * Number of DSP channels per BPM
  */
-#define CFG_DSP_CHANNEL_COUNT    16 // A, B, C, D, X, Y, Q, S (TbT, FA)
+#define CFG_DSP_CHANNEL_COUNT    20 // ADC0, ADC1, ADC2, ADC3, A, B, C, D, X, Y, Q, S (TbT, FA)
+
+/*
+ * For softwre compatibility:
+ */
+#define CFG_ACQ_CHANNEL_COUNT CFG_DSP_CHANNEL_COUNT
 
 /*
  * Number of physical ADC channels required by application
