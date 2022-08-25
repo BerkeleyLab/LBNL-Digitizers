@@ -878,8 +878,6 @@ wire [CFG_BPM_COUNT*CFG_DSP_CHANNEL_COUNT-1:0] acqTVALID;
 generate
 for (bpm = 0 ; bpm < CFG_BPM_COUNT ; bpm = bpm + 1) begin : prelim_chain
 
-assign prelimProcADCValid[bpm] = 1'b1;
-
 assign GPIO_IN[GPIO_IDX_PRELIM_RF_MAG_0 + bpm*GPIO_IDX_PER_BPM] = {
     magPAD, prelimProcRfMag0[bpm] };
 assign GPIO_IN[GPIO_IDX_PRELIM_RF_MAG_1 + bpm*GPIO_IDX_PER_BPM] = {
@@ -930,6 +928,7 @@ preliminaryProcessing #(.SYSCLK_RATE(SYSCLK_RATE),
     .adc1Out(prelimProcADC1[bpm]),
     .adc2Out(prelimProcADC2[bpm]),
     .adc3Out(prelimProcADC3[bpm]),
+    .adcOutValid(prelimProcADCValid[bpm]),
     .adcExceedsThreshold(1'b0),
     .adcUseThisSample(1'b1),
     .evrClk(adcClk),
