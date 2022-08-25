@@ -124,7 +124,7 @@ acquisitionStatus(uint32_t status[], int capacity)
         if (csr & CSR_R_FULL) v |= 0x10000 << (channel & 0xF);
 
         // assign every 16 and on the last iteration
-        if ((channel & 0xF == 0xF) || channel == CFG_ACQ_CHANNEL_COUNT-1) {
+        if ((channel & 0xF) == 0xF || channel == CFG_ACQ_CHANNEL_COUNT-1) {
             if (channel/16 < capacity) {
                 status[channel/16] = v;
                 numSets = channel/16+1;
