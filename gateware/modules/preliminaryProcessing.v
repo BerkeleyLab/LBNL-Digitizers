@@ -36,6 +36,7 @@ module preliminaryProcessing #(
     // Only used when IQ_DATA == "TRUE"
     input        [ADC_WIDTH-1:0] adcQ0, adcQ1, adcQ2, adcQ3,
     output wire  [ADC_WIDTH-1:0] adc0Out, adc1Out, adc2Out, adc3Out,
+    output wire                  adcOutValid,
     input                        adcExceedsThreshold, adcUseThisSample,
     output wire                  adcLoSynced,
     input                        evrClk,
@@ -374,8 +375,6 @@ end
 
 end
 
-assign {adc0Out, adc1Out, adc2Out, adc3Out} = adcsOut;
-
 assign rfProducts[i*2*PRODUCT_WIDTH+:2*PRODUCT_WIDTH] = {adcRfPrdQ, adcRfPrdI};
 assign plProducts[i*2*PRODUCT_WIDTH+:2*PRODUCT_WIDTH] = {adcPlPrdQ, adcPlPrdI};
 assign phProducts[i*2*PRODUCT_WIDTH+:2*PRODUCT_WIDTH] = {adcPhPrdQ, adcPhPrdI};
@@ -497,6 +496,39 @@ sdAccumulate #(.PRODUCT_WIDTH(PRODUCT_WIDTH),
 //////////////////////////////////////////////////////////////////////////////
 //                             SYSTEM CLOCK DOMAIN                          //
 //                                                                          //
+
+
+//
+// Read ADC data in system clock domain
+//
+wire [4*ADC_WIDTH-1:0] sysAdcsOut;
+wire adcToSysFIFOEmpty;
+wire adcToSysFIFORd;
+reg adcToSysFIFOValid;
+`ifndef SIMULATE
+adcToSysFIFO adcToSysFIFO (
+  .rst(1'b0),
+  .wr_clk(adcClk),
+  .rd_clk(clk),
+  .din(adcsOut),
+  .wr_en(1'b1),
+  .rd_en(adcToSysFIFORd),
+  .dout(sysAdcsOut),
+  .empty(adcToSysFIFOEmpty));
+`endif // SIMULATE
+
+assign adcToSysFIFORd = !adcToSysFIFOEmpty;
+
+always @(posedge clk) begin
+    adcToSysFIFOValid <= adcToSysFIFORd;
+
+    if (adcToSysFIFOEmpty) begin
+      adcToSysFIFOValid <= 1'b0;
+    end
+end
+
+assign {adc0Out, adc1Out, adc2Out, adc3Out} = sysAdcsOut;
+assign adcOutValid = adcToSysFIFOValid;
 
 // Watch for overflows
 // Widen for easy detection by IOC
