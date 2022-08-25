@@ -64,6 +64,8 @@ work/
 !/gateware/platform/xilinx/*/*/MappingRam/MappingRam.xci
 /gateware/platform/xilinx/*/*/timeStampFIFO/
 !/gateware/platform/xilinx/*/*/timeStampFIFO/timeStampFIFO.xci
+/gateware/platform/xilinx/*/*/adcToSysFIFO/
+!/gateware/platform/xilinx/*/*/adcToSysFIFO/adcToSysFIFO.xci
 /gateware/platform/xilinx/*/*/trimMultiplier/
 !/gateware/platform/xilinx/*/*/trimMultiplier/trimMultiplier.xci
 /gateware/platform/xilinx/*/*/adcCordic/
