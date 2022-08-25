@@ -51,7 +51,7 @@ epicsApplicationCommand(int commandArgCount, struct hsdPacket *cmdp,
         replyArgCount = 1;
         switch (idx) {
         case HSD_PROTOCOL_CMD_LONGIN_IDX_ACQ_STATUS:
-            replyp->args[0] = acquisitionStatus();
+            replyArgCount = acquisitionStatus(replyp->args, HSD_PROTOCOL_ARG_CAPACITY);
             break;
 
         default: return -1;

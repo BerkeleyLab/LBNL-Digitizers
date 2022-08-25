@@ -101,10 +101,11 @@ acquisitionArm(int channel, int enable)
 }
 
 
-uint32_t
-acquisitionStatus(void)
+int
+acquisitionStatus(uint32_t status[], int capacity)
 {
     int channel;
+    int numSets = 0;
     uint32_t csr, base_csr = 0;
     uint32_t v = 0;
 
@@ -119,13 +120,24 @@ acquisitionStatus(void)
         else {
             csr = base_csr;
         }
-        if (csr & CSR_R_ACQ_ACTIVE) v |= 1 << channel;
-        if (csr & CSR_R_FULL) v |= 0x10000 << channel;
+        if (csr & CSR_R_ACQ_ACTIVE) v |= 1 << (channel & 0xF);
+        if (csr & CSR_R_FULL) v |= 0x10000 << (channel & 0xF);
+
+        // assign every 16 and on the last iteration
+        if ((channel & 0xF == 0xF) || channel == CFG_ACQ_CHANNEL_COUNT-1) {
+            if (channel/16 < capacity) {
+                status[channel/16] = v;
+                numSets = channel/16+1;
+            }
+            if ((debugFlags & DEBUGFLAG_ACQUISITION) && (v != 0)) {
+                printf("Channel set %d: FULL %02X  ACTIVE %02x\n",
+                        channel/16, ((int)v >> 16),(int)v & 0xFFFF);
+            }
+            v = 0;
+        }
     }
-    if ((debugFlags & DEBUGFLAG_ACQUISITION) && (v != 0)) {
-        printf("FULL %02X  ACTIVE %02x\n", ((int)v >> 16),(int)v & 0xFFFF);
-    }
-    return v;
+
+    return numSets;
 }
 
 static int
@@ -375,17 +387,31 @@ acquisitionArm(int channel, int enable)
     }
 }
 
-uint32_t
-acquisitionStatus(void)
+int
+acquisitionStatus(uint32_t status[], int capacity)
 {
     int channel;
+    int numSets = 0;
     uint32_t v = 0;
     if (haveNewData) {
         for (channel = 0 ; channel < CFG_ACQ_CHANNEL_COUNT ; channel++) {
-            v |= 0x10000 << channel;
+            v |= 0x10000 << (channel & 0xF);
+
+            // assign every 16 and on the last iteration
+            if ((channel & 0xF == 0xF) || channel == CFG_ACQ_CHANNEL_COUNT-1) {
+                if (channel/16 < capacity) {
+                    status[channel/16] = v;
+                    numSets = channel/16+1;
+                }
+                if ((debugFlags & DEBUGFLAG_ACQUISITION) && (v != 0)) {
+                    printf("Channel set %d: FULL %02X  ACTIVE %02x\n",
+                            channel/16, ((int)v >> 16),(int)v & 0xFFFF);
+                }
+                v = 0;
+            }
         }
     }
-    return v;
+    return numSets;
 }
 int
 acquisitionFetch(uint32_t *buf, int capacity, int channel, int offset, int last)
@@ -678,7 +704,7 @@ acquisitionSetPassCount(unsigned int n)
 }
 
 void acquisitionArm(int channel, int enable) { }
-uint32_t acquisitionStatus(void) { }
+int acquisitionStatus(uint32_t status[], int capacity) { }
 void acquisitionScaleChanged(int channel) { }
 void acquisitionSetTriggerEdge(int channel, int v){ }
 void acquisitionSetTriggerLevel(int channel, int microvolts){ }

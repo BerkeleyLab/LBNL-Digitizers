@@ -7,7 +7,7 @@
 void acquisitionInit(void);
 void acquisitionCrank(void);
 void acquisitionArm(int channel, int enable);
-uint32_t acquisitionStatus(void);
+int acquisitionStatus(uint32_t status[], int capacity);
 int acquisitionFetch(uint32_t*buf,int capacity,int channel,int offset,int last);
 void acquisitionScaleChanged(int channel);
 
