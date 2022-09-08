@@ -210,7 +210,7 @@ $(BD_TOP_LVL_SRCS): % : $$(basename $$(notdir %)).bd
 
 # clean generate IP cores files, but the source ones (.xci or .bd)
 clean::
-	$(foreach ipcore, $(IP_CORES), find $($(ipcore)_DIR)/ -mindepth 1 -not \( -name \*$(ipcore).xci -o -name \*$(ipcore).bd \) -delete $(CMD_SEP))
+	$(foreach ipcore, $(IP_CORES), find $($(ipcore)_DIR)/ -mindepth 1 -not \( -name \*$(ipcore).xci -o -name \*$(ipcore).bd -o -name \*$(ipcore).coe \) -delete $(CMD_SEP))
 	$(foreach bd, $(BD), find $($(bd)_DIR)/ -mindepth 1 -not \( -name \*$(bd).xci -o -name \*$(bd).bd \) -delete $(CMD_SEP))
 
 # Cleaning rules
