@@ -177,19 +177,23 @@ ODDRE1 ODDRE1_EVR_CLK_F (
    .SR(1'b0)
 );
 
-OBUF #(
-   .SLEW("FAST")
-) OBUF_EVR_FB_CLK (
-   .O(EVR_FB_CLK),
-   .I(evrClkF)
-);
-
 OBUFDS #(
     .SLEW("FAST")
 ) OBUFDS_SFP_REC_CLK (
     .O(SFP_REC_CLK_P),
     .OB(SFP_REC_CLK_N),
     .I(evrClkF)
+);
+
+// We can't use both OBUF and OBUFS, as the ODDR Q pin
+// can access just 2 OBUFs, not 3. This leads to impossible
+// routing. So, just use the "wrong" way of forwarding a clock
+// as we are only using this for monitoring anyway.
+OBUF #(
+   .SLEW("FAST")
+) OBUF_EVR_FB_CLK (
+   .O(EVR_FB_CLK),
+   .I(evrClk)
 );
 `endif
 
