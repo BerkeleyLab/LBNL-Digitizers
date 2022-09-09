@@ -166,14 +166,32 @@ wire evrSROCsynced;
 assign GPIO_LEDS[0] = evrHeartbeat;
 assign GPIO_LEDS[1] = evrPulsePerSecond;
 
+`ifndef SIMULATE
 // Reference clock for RF ADC jitter cleaner
-OBUFDS OBUFDS_SFP_REC_CLK (
-    .O(SFP_REC_CLK_P),
-    .OB(SFP_REC_CLK_N),
-    .I(evrClk)
+wire evrClkF;
+ODDRE1 ODDRE1_EVR_CLK_F (
+   .Q(evrClkF),
+   .C(evrClk),
+   .D1(1'b1),
+   .D2(1'b0),
+   .SR(1'b0)
 );
 
-assign EVR_FB_CLK = 1'b0;
+OBUF #(
+   .SLEW("FAST")
+) OBUF_EVR_FB_CLK (
+   .O(EVR_FB_CLK),
+   .I(evrClkF)
+);
+
+OBUFDS #(
+    .SLEW("FAST")
+) OBUFDS_SFP_REC_CLK (
+    .O(SFP_REC_CLK_P),
+    .OB(SFP_REC_CLK_N),
+    .I(evrClkF)
+);
+`endif
 
 // Check EVR markers
 wire [31:0] evrSyncStatus;
