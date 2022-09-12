@@ -29,12 +29,12 @@
 /*
  * Number of ADC AXI clocks per SYSREF clock
  */
-#define ADC_CLK_PER_SYSREF  30
+#define ADC_CLK_PER_SYSREF  81
 
 /*
  * Number of FPGA_REFCLK_OUT_C clocks per SYSREF clock
  */
-#define REFCLK_OUT_PER_SYSREF   100
+#define REFCLK_OUT_PER_SYSREF   272
 
 /*
  * Number of ADC streams required by application
