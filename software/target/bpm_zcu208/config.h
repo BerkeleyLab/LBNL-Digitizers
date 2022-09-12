@@ -19,9 +19,9 @@
  * ADC AXI MMCM (adcClk source) configuration
  * Values are scaled by a factor of 1000.
  */
-#define ADC_CLK_MMCM_MULTIPLIER   3750
-#define ADC_CLK_MMCM_DIVIDER      12500
-#define ADC_CLK_MMCM_CLK1_DIVIDER 3000
+#define ADC_CLK_MMCM_MULTIPLIER   50625
+#define ADC_CLK_MMCM_DIVIDER      10000
+#define ADC_CLK_MMCM_CLK1_DIVIDER 4000
 
 /* For compatibility */
 #define ADC_CLK_MMCM_CLK0_DIVIDER ADC_CLK_MMCM_DIVIDER
