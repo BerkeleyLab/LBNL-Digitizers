@@ -54,9 +54,9 @@ systemParametersReadback(void)
         systemParameters.rfDivisor = 328;
         systemParameters.pllMultiplier = 81;
         systemParameters.isSinglePass = 0;
-        systemParameters.adcHeartbeatMarker = 480 * 82 * 2000;
-        systemParameters.evrPerFaMarker = 480 * 82;
-        systemParameters.evrPerSaMarker = 480 * 82 * 1000;
+        systemParameters.adcHeartbeatMarker = 152 * 82 * 2000;
+        systemParameters.evrPerFaMarker = 152 * 82;
+        systemParameters.evrPerSaMarker = 152 * 82 * 1000;
         // position calc order = A = 3, B = 1, C = 2, D = 0
         systemParameters.adcOrder = 3120;
         systemParameters.xCalibration = 16.0;
