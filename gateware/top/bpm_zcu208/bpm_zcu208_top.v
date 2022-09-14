@@ -9,7 +9,7 @@ module bpm_zcu208_top #(
     parameter PRODUCT_WIDTH             = AXI_SAMPLE_WIDTH + LO_WIDTH - 1,
     parameter ACQ_WIDTH                 = 32,
     parameter SITE_SAMPLES_PER_TURN     = 81,
-    parameter SITE_CIC_FA_DECIMATE      = 240,
+    parameter SITE_CIC_FA_DECIMATE      = 76,
     parameter SITE_CIC_SA_DECIMATE      = 1000,
     parameter SITE_CIC_STAGES           = 2) (
     input  USER_MGT_SI570_CLK_P, USER_MGT_SI570_CLK_N,
