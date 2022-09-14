@@ -237,7 +237,9 @@ IBUFDS SYSREF_FPGA_IBUFDS(
     .O(SYSREF_FPGA_C_unbuf)
 );
 
-sysrefSync #(.DEBUG("false"))
+sysrefSync #(
+    .DEBUG("false"),
+    .COUNTER_WIDTH(10)) // up to 1023 SYSREF poeriods
   sysrefSync (
     .sysClk(sysClk),
     .sysCsrStrobe(GPIO_STROBES[GPIO_IDX_SYSREF_CSR]),
