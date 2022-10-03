@@ -19,9 +19,9 @@
  * ADC AXI MMCM (adcClk source) configuration
  * Values are scaled by a factor of 1000.
  */
-#define ADC_CLK_MMCM_MULTIPLIER   3750
-#define ADC_CLK_MMCM_DIVIDER      12500
-#define ADC_CLK_MMCM_CLK1_DIVIDER 3000
+#define ADC_CLK_MMCM_MULTIPLIER   50625
+#define ADC_CLK_MMCM_DIVIDER      10000
+#define ADC_CLK_MMCM_CLK1_DIVIDER 4000
 
 /* For compatibility */
 #define ADC_CLK_MMCM_CLK0_DIVIDER ADC_CLK_MMCM_DIVIDER
@@ -29,12 +29,12 @@
 /*
  * Number of ADC AXI clocks per SYSREF clock
  */
-#define ADC_CLK_PER_SYSREF  30
+#define ADC_CLK_PER_SYSREF  81
 
 /*
  * Number of FPGA_REFCLK_OUT_C clocks per SYSREF clock
  */
-#define REFCLK_OUT_PER_SYSREF   100
+#define REFCLK_OUT_PER_SYSREF   272
 
 /*
  * Number of ADC streams required by application
@@ -64,9 +64,9 @@
 /*
  * ADC sampling clock frequency
  */
-#define CFG_ADC_SAMPLING_CLK_FREQ   4800.00
+#define CFG_ADC_SAMPLING_CLK_FREQ   4935.468
 
 /*
  * ADC reference clock
  */
-#define CFG_ADC_REF_CLK_FREQ   4800.00
+#define CFG_ADC_REF_CLK_FREQ   4935.468

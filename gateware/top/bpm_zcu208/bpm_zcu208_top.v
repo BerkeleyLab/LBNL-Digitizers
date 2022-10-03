@@ -8,9 +8,9 @@ module bpm_zcu208_top #(
     parameter MAG_WIDTH                 = 26,
     parameter PRODUCT_WIDTH             = AXI_SAMPLE_WIDTH + LO_WIDTH - 1,
     parameter ACQ_WIDTH                 = 32,
-    parameter SITE_SAMPLES_PER_TURN     = 80,
-    parameter SITE_CIC_FA_DECIMATE      = 320,
-    parameter SITE_CIC_SA_DECIMATE      = 200,
+    parameter SITE_SAMPLES_PER_TURN     = 81,
+    parameter SITE_CIC_FA_DECIMATE      = 76,
+    parameter SITE_CIC_SA_DECIMATE      = 1000,
     parameter SITE_CIC_STAGES           = 2) (
     input  USER_MGT_SI570_CLK_P, USER_MGT_SI570_CLK_N,
     input  SFP2_RX_P, SFP2_RX_N,
@@ -166,14 +166,36 @@ wire evrSROCsynced;
 assign GPIO_LEDS[0] = evrHeartbeat;
 assign GPIO_LEDS[1] = evrPulsePerSecond;
 
+`ifndef SIMULATE
 // Reference clock for RF ADC jitter cleaner
-OBUFDS OBUFDS_SFP_REC_CLK (
-    .O(SFP_REC_CLK_P),
-    .OB(SFP_REC_CLK_N),
-    .I(evrClk)
+wire evrClkF;
+ODDRE1 ODDRE1_EVR_CLK_F (
+   .Q(evrClkF),
+   .C(evrClk),
+   .D1(1'b1),
+   .D2(1'b0),
+   .SR(1'b0)
 );
 
-assign EVR_FB_CLK = 1'b0;
+OBUFDS #(
+    .SLEW("FAST")
+) OBUFDS_SFP_REC_CLK (
+    .O(SFP_REC_CLK_P),
+    .OB(SFP_REC_CLK_N),
+    .I(evrClkF)
+);
+
+// We can't use both OBUF and OBUFS, as the ODDR Q pin
+// can access just 2 OBUFs, not 3. This leads to impossible
+// routing. So, just use the "wrong" way of forwarding a clock
+// as we are only using this for monitoring anyway.
+OBUF #(
+   .SLEW("FAST")
+) OBUF_EVR_FB_CLK (
+   .O(EVR_FB_CLK),
+   .I(evrClk)
+);
+`endif
 
 // Check EVR markers
 wire [31:0] evrSyncStatus;
@@ -215,7 +237,9 @@ IBUFDS SYSREF_FPGA_IBUFDS(
     .O(SYSREF_FPGA_C_unbuf)
 );
 
-sysrefSync #(.DEBUG("false"))
+sysrefSync #(
+    .DEBUG("false"),
+    .COUNTER_WIDTH(10)) // up to 1023 SYSREF poeriods
   sysrefSync (
     .sysClk(sysClk),
     .sysCsrStrobe(GPIO_STROBES[GPIO_IDX_SYSREF_CSR]),
@@ -931,13 +955,13 @@ preliminaryProcessing #(.SYSCLK_RATE(SYSCLK_RATE),
     .adcOutValid(prelimProcADCValid[bpm]),
     .adcExceedsThreshold(1'b0),
     .adcUseThisSample(1'b1),
-    .evrClk(adcClk),
-    .evrFaMarker(adcFaMarker),
-    .evrSaMarker(adcSaMarker),
-    .evrTimestamp(adcTimestamp),
+    .evrClk(evrClk),
+    .evrFaMarker(evrFaMarker),
+    .evrSaMarker(evrSaMarker),
+    .evrTimestamp(evrTimestamp),
     .evrPtTrigger(1'b0),
     .evrSinglePassTrigger(1'b0),
-    .evrHbMarker(adcHeartbeat),
+    .evrHbMarker(evrHeartbeat),
     .sysSingleTrig(sysSingleTrig[bpm]),
     .sysTimestamp(sysTimestamp),
     .PT_P(),

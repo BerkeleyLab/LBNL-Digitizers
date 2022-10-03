@@ -226,6 +226,7 @@ CLEAN += $(VFLAGS_COMMAND_FILE)
 # input buffer overflow, can't enlarge buffer because scanner uses REJECT,
 # but we don't need it for iverilog as we only use it when not simulating
 CLEAN += $(ila_td256_s4096_cap_VFLAGS_COMMAND_FILE)
+CLEAN += $(rmsBandSelect_VFLAGS_COMMAND_FILE)
 CLEAN += $(trimMultiplier_VFLAGS_COMMAND_FILE)
 CLEAN += $(positionCalcDivider_VFLAGS_COMMAND_FILE)
 CLEAN += $(positionCalcMultiplier_VFLAGS_COMMAND_FILE)

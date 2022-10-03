@@ -37,7 +37,7 @@ eventSync #(.BUS_WIDTH(BUS_WIDTH),
               .marker(evrFaMarker));
 
 eventSync #(.BUS_WIDTH(BUS_WIDTH),
-            .MAX_RELOAD(30000000))
+            .MAX_RELOAD(300000000))
   eventSaSync(.sysClk(sysClk),
               .sysGPIO_OUT(sysGPIO_OUT),
               .sysCSRstrobe(sysSAstrobe),
