@@ -40,6 +40,8 @@ rfClkInitLMK04xx(void)
  */
 static const char * const vTuneNames[4] =
                              { "Vtune Low", "Invalid", "Locked", "Vtune High" };
+static int lmx2594v0InitValues[LMX2594_MUX_SEL_SIZE];
+
 static void
 init2594(int muxSelect, const uint32_t *values, int n)
 {
@@ -61,6 +63,10 @@ init2594(int muxSelect, const uint32_t *values, int n)
         if ((v & 0xFF0000) == 0) {
             v &= ~0x4; // Force MUXOUT_LD_SEL to readback
             v |=  0x8; // Enable initial calibration
+
+            // Don't initilize VCO calibration and force readback
+            // for the default value
+            lmx2594v0InitValues[muxSelect] = v & ~(0x8 | 0x4);
         }
         lmx2594write(muxSelect, v);
     }
@@ -97,6 +103,11 @@ start2594(int muxSelect)
         warn("LMX2594 (SPI MUX CHAN %d) -- VCO status: %s",
                                              muxSelect, vTuneNames[vTuneCode]);
     }
+
+    /*
+     * Configure STATUS pin to lock detect
+     */
+    lmx2594write(muxSelect, v0 | 0x4);
 }
 
 void
@@ -122,6 +133,12 @@ lmx2594Readback(int muxSelect, uint32_t *values, int capacity)
 {
     Xil_AssertNonvoid(muxSelect < LMX2594_MUX_SEL_SIZE);
 
+    /*
+     * Configure STATUS pin to readback
+     */
+    int v0 = lmx2594v0InitValues[muxSelect];
+    lmx2594write(muxSelect, v0 & ~0x4);
+
     int i;
     int n = lmx2594Sizes[muxSelect];
     for (i = 0 ; (i < n) && (i < capacity) ; i++) {
@@ -129,6 +146,11 @@ lmx2594Readback(int muxSelect, uint32_t *values, int capacity)
         int v = lmx2594read(muxSelect, r);
         *values++ = (r << 16) | (v & 0xFFFF);
     }
+
+    /*
+     * Configure STATUS pin to lock detect
+     */
+    lmx2594write(muxSelect, v0 | 0x4);
     return n;
 }
 
@@ -158,6 +180,13 @@ rfClkShow(void)
 
     for (i = 0 ; i < LMX2594_MUX_SEL_SIZE ; i++) {
         m = lmx2594MuxSel[i];
+
+        /*
+         * Configure STATUS pin to readback
+         */
+        int v0 = lmx2594v0InitValues[m];
+        lmx2594write(m, v0 & ~0x4);
+
         r = lmx2594read(m, 110);
         printf("LMX2594 %c:\n", i + 'A');
         printf("       rb_VCO_SEL: %d\n", (r >> 5) & 0x7);
@@ -199,17 +228,34 @@ rfClkShow(void)
         r = lmx2594read(m, 44);
         printf("          OUTA_PD: %x\n", (r >> 6) & 0x1);
         printf("          OUTB_PD: %x\n", (r >> 7) & 0x1);
+
+        /*
+         * Configure STATUS pin to lock detect
+         */
+        lmx2594write(m, v0 | 0x4);
     }
 }
 
 int
 lmx2594Status(void)
 {
-    int i;
+    int i, m;
     int v = 0;
 
     for (i = 0 ; i < LMX2594_MUX_SEL_SIZE ; i++) {
-        v |= ((lmx2594read(lmx2594MuxSel[i], 110) >> 9) & 0x3) << (i * 4);
+        m = lmx2594MuxSel[i];
+        /*
+         * Configure STATUS pin to readback
+         */
+        int v0 = lmx2594v0InitValues[m];
+        lmx2594write(m, v0 & ~0x4);
+
+        v |= ((lmx2594read(m, 110) >> 9) & 0x3) << (i * 4);
+
+        /*
+         * Configure STATUS pin to lock detect
+         */
+        lmx2594write(m, v0 | 0x4);
     }
     return v;
 }
