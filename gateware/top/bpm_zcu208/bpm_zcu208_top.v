@@ -10,6 +10,7 @@ module bpm_zcu208_top #(
     parameter PRODUCT_WIDTH             = AXI_SAMPLE_WIDTH + LO_WIDTH - 1,
     parameter ACQ_WIDTH                 = 32,
     parameter SITE_SAMPLES_PER_TURN     = 81,
+    parameter SITE_TURNS_PER_PT         = 19, // 11/19 PT
     parameter SITE_CIC_FA_DECIMATE      = 76,
     parameter SITE_CIC_SA_DECIMATE      = 1000,
     parameter SITE_CIC_STAGES           = 2) (
@@ -941,6 +942,7 @@ preliminaryProcessing #(.SYSCLK_RATE(SYSCLK_RATE),
                         .IQ_DATA(IQ_DATA),
                         .SAMPLES_PER_TURN(SITE_SAMPLES_PER_TURN),
                         .LO_WIDTH(LO_WIDTH),
+                        .TURNS_PER_PT(SITE_TURNS_PER_PT),
                         .CIC_STAGES(SITE_CIC_STAGES),
                         .CIC_FA_DECIMATE(SITE_CIC_FA_DECIMATE),
                         .CIC_SA_DECIMATE(SITE_CIC_SA_DECIMATE),
