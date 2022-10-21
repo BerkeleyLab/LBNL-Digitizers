@@ -1,6 +1,7 @@
 module bpm_zcu208_top #(
     parameter ADC_WIDTH                 = 14,
     parameter AXI_SAMPLE_WIDTH          = ((ADC_WIDTH + 7) / 8) * 8,
+    parameter IQ_DATA                   = "TRUE",
     parameter SYSCLK_RATE               = 99999001,  // From block design
     parameter BD_ADC_CHANNEL_COUNT      = 16,
     parameter ADC_CHANNEL_DEBUG         = "false",
@@ -900,6 +901,14 @@ wire [(CFG_BPM_COUNT*CFG_DSP_CHANNEL_COUNT*ACQ_SAMPLES_WIDTH)-1:0] acqTDATA;
 wire [CFG_BPM_COUNT*CFG_DSP_CHANNEL_COUNT-1:0] acqTVALID;
 
 generate
+if (IQ_DATA != "TRUE") begin
+    IQ_DATA_false_NOT_SUPPORTED();
+end
+endgenerate
+
+localparam ADC_SIGNALS_PER_DSP = CFG_ADC_CHANNEL_COUNT / CFG_BPM_COUNT;
+
+generate
 for (bpm = 0 ; bpm < CFG_BPM_COUNT ; bpm = bpm + 1) begin : prelim_chain
 
 assign GPIO_IN[GPIO_IDX_PRELIM_RF_MAG_0 + bpm*GPIO_IDX_PER_BPM] = {
@@ -929,7 +938,7 @@ assign GPIO_IN[GPIO_IDX_PRELIM_PT_HI_MAG_3 + bpm*GPIO_IDX_PER_BPM] = {
 preliminaryProcessing #(.SYSCLK_RATE(SYSCLK_RATE),
                         .ADC_WIDTH(AXI_SAMPLE_WIDTH),
                         .MAG_WIDTH(MAG_WIDTH),
-                        .IQ_DATA("TRUE"),
+                        .IQ_DATA(IQ_DATA),
                         .SAMPLES_PER_TURN(SITE_SAMPLES_PER_TURN),
                         .LO_WIDTH(LO_WIDTH),
                         .CIC_STAGES(SITE_CIC_STAGES),
@@ -940,14 +949,14 @@ preliminaryProcessing #(.SYSCLK_RATE(SYSCLK_RATE),
   prelimProc(
     .clk(sysClk),
     .adcClk(adcClk),
-    .adc0(adcsTDATA[(bpm*CFG_BPM_COUNT + 0)*SAMPLES_WIDTH+:SAMPLES_WIDTH]), // I0
-    .adc1(adcsTDATA[(bpm*CFG_BPM_COUNT + 2)*SAMPLES_WIDTH+:SAMPLES_WIDTH]), // I1
-    .adc2(adcsTDATA[(bpm*CFG_BPM_COUNT + 4)*SAMPLES_WIDTH+:SAMPLES_WIDTH]), // I2
-    .adc3(adcsTDATA[(bpm*CFG_BPM_COUNT + 6)*SAMPLES_WIDTH+:SAMPLES_WIDTH]), // I3
-    .adcQ0(adcsTDATA[(bpm*CFG_BPM_COUNT + 1)*SAMPLES_WIDTH+:SAMPLES_WIDTH]), // Q0
-    .adcQ1(adcsTDATA[(bpm*CFG_BPM_COUNT + 3)*SAMPLES_WIDTH+:SAMPLES_WIDTH]), // Q1
-    .adcQ2(adcsTDATA[(bpm*CFG_BPM_COUNT + 5)*SAMPLES_WIDTH+:SAMPLES_WIDTH]), // Q2
-    .adcQ3(adcsTDATA[(bpm*CFG_BPM_COUNT + 7)*SAMPLES_WIDTH+:SAMPLES_WIDTH]), // Q3
+    .adc0(adcsTDATA[(bpm*ADC_SIGNALS_PER_DSP + 0)*SAMPLES_WIDTH+:SAMPLES_WIDTH]), // I0
+    .adc1(adcsTDATA[(bpm*ADC_SIGNALS_PER_DSP + 2)*SAMPLES_WIDTH+:SAMPLES_WIDTH]), // I1
+    .adc2(adcsTDATA[(bpm*ADC_SIGNALS_PER_DSP + 4)*SAMPLES_WIDTH+:SAMPLES_WIDTH]), // I2
+    .adc3(adcsTDATA[(bpm*ADC_SIGNALS_PER_DSP + 6)*SAMPLES_WIDTH+:SAMPLES_WIDTH]), // I3
+    .adcQ0(adcsTDATA[(bpm*ADC_SIGNALS_PER_DSP + 1)*SAMPLES_WIDTH+:SAMPLES_WIDTH]), // Q0
+    .adcQ1(adcsTDATA[(bpm*ADC_SIGNALS_PER_DSP + 3)*SAMPLES_WIDTH+:SAMPLES_WIDTH]), // Q1
+    .adcQ2(adcsTDATA[(bpm*ADC_SIGNALS_PER_DSP + 5)*SAMPLES_WIDTH+:SAMPLES_WIDTH]), // Q2
+    .adcQ3(adcsTDATA[(bpm*ADC_SIGNALS_PER_DSP + 7)*SAMPLES_WIDTH+:SAMPLES_WIDTH]), // Q3
     .adc0Out(prelimProcADC0[bpm]),
     .adc1Out(prelimProcADC1[bpm]),
     .adc2Out(prelimProcADC2[bpm]),
