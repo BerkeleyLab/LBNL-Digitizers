@@ -9,7 +9,7 @@ module preliminaryProcessing #(
     parameter NADC                    = 4,
     parameter ADC_WIDTH               = 16,
     parameter DATA_WIDTH              = 32,
-    parameter TURNS_PER_PT            = 152000,
+    parameter TURNS_PER_PT            = 19,
     parameter CIC_STAGES              = 3,
     parameter CIC_FA_DECIMATE         = 76,
     parameter CIC_SA_DECIMATE         = 1000,
@@ -452,7 +452,7 @@ sdAccumulate #(.PRODUCT_WIDTH(PRODUCT_WIDTH),
 sdAccumulate #(.PRODUCT_WIDTH(PRODUCT_WIDTH),
                .SUM_WIDTH(MAG_WIDTH),
                .SAMPLES_PER_TURN(SAMPLES_PER_TURN),
-               .TURNS_PER_SUM(2))
+               .TURNS_PER_SUM(TURNS_PER_PT))
   sdRFaccumulator(.clk(adcClk),
     .useRMS(adcUseRMS),
     .products(rfProducts),
@@ -466,7 +466,7 @@ sdAccumulate #(.PRODUCT_WIDTH(PRODUCT_WIDTH),
 sdAccumulate #(.PRODUCT_WIDTH(PRODUCT_WIDTH),
                .SUM_WIDTH(MAG_WIDTH),
                .SAMPLES_PER_TURN(SAMPLES_PER_TURN),
-               .TURNS_PER_SUM(2))
+               .TURNS_PER_SUM(TURNS_PER_PT))
   sdPLaccumulator(.clk(adcClk),
     .useRMS(adcUseRMS),
     .products(plProducts),
@@ -479,7 +479,7 @@ sdAccumulate #(.PRODUCT_WIDTH(PRODUCT_WIDTH),
 sdAccumulate #(.PRODUCT_WIDTH(PRODUCT_WIDTH),
                .SUM_WIDTH(MAG_WIDTH),
                .SAMPLES_PER_TURN(SAMPLES_PER_TURN),
-               .TURNS_PER_SUM(2))
+               .TURNS_PER_SUM(TURNS_PER_PT))
   sdPHaccumulator(.clk(adcClk),
     .useRMS(adcUseRMS),
     .products(phProducts),
