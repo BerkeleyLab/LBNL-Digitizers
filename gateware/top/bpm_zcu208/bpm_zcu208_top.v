@@ -307,21 +307,34 @@ calibration #(
 
 /////////////////////////////////////////////////////////////////////////////
 // Monitor range of signals at ADC inputs
+wire [(CFG_ADC_PHYSICAL_COUNT*AXI_SAMPLE_WIDTH)-1:0] adcsRealTDATA;
+wire                    [CFG_ADC_PHYSICAL_COUNT-1:0] adcsRealTVALID;
 adcRangeCheck #(
-    .AXI_CHANNEL_COUNT(CFG_ADC_CHANNEL_COUNT),
-    .AXI_SAMPLE_WIDTH(ACQ_SAMPLES_WIDTH),
+    .AXI_CHANNEL_COUNT(CFG_ADC_PHYSICAL_COUNT),
+    .AXI_SAMPLE_WIDTH(AXI_SAMPLE_WIDTH),
     .AXI_SAMPLES_PER_CLOCK(CFG_AXI_SAMPLES_PER_CLOCK),
-    .ADC_WIDTH(ACQ_SAMPLES_WIDTH))
+    .ADC_WIDTH(ADC_WIDTH))
   adcRangeCheck (
     .sysClk(sysClk),
     .sysCsrStrobe(GPIO_STROBES[GPIO_IDX_ADC_RANGE_CSR]),
     .GPIO_OUT(GPIO_OUT),
     .sysReadout(GPIO_IN[GPIO_IDX_ADC_RANGE_CSR]),
     .adcClk(adcClk),
-    // This is wrong. acqTDATA contains data with different data
-    // rates and valids
-    .axiValid(acqTVALID[0]),
-    .axiData(acqTDATA[0+:CFG_ADC_CHANNEL_COUNT*ACQ_SAMPLES_WIDTH]));
+    .axiValid(adcsRealTVALID[0]),
+    .axiData(adcsRealTDATA));
+
+genvar bpm;
+generate
+for (bpm = 0 ; bpm < CFG_BPM_COUNT ; bpm = bpm + 1) begin : adc_data
+    assign adcsRealTDATA[bpm*4*AXI_SAMPLE_WIDTH+:4*AXI_SAMPLE_WIDTH] = {
+        prelimProcADC3[bpm],
+        prelimProcADC2[bpm],
+        prelimProcADC1[bpm],
+        prelimProcADC0[bpm]
+    };
+    assign adcsRealTVALID[bpm] = prelimProcADCValid[bpm];
+end
+endgenerate
 
 /////////////////////////////////////////////////////////////////////////////
 // Acquisition per style of firmware
@@ -333,7 +346,6 @@ adcRangeCheck #(
 localparam NUMBER_OF_BONDED_GROUPS =
                     (CFG_DSP_CHANNEL_COUNT + CFG_DSPS_PER_BONDED_GROUP -1 ) /
                                                       CFG_DSPS_PER_BONDED_GROUP;
-genvar bpm;
 genvar dsp;
 //generate
 for (bpm = 0; bpm < CFG_BPM_COUNT ; bpm = bpm + 1) begin
