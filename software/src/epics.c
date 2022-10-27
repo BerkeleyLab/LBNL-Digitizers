@@ -183,7 +183,7 @@ epicsCommonCommand(int commandArgCount, struct hsdPacket *cmdp,
         replyArgCount = sysmonFetch(replyp->args);
         replyArgCount += mgtFetch(replyp->args+replyArgCount);
         replyArgCount += afeFetchADCextents(replyp->args+replyArgCount);
-        replyp->args[replyArgCount++] = (CFG_ADC_CHANNEL_COUNT << 16) |
+        replyp->args[replyArgCount++] = (CFG_ADC_PHYSICAL_COUNT << 16) |
                                                                   powerUpStatus;
         break;
 
