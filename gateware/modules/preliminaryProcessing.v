@@ -244,7 +244,7 @@ assign phLOsinDbg = adcPhSin;
 wire [4*ADC_WIDTH-1:0] adcs = { adc3, adc2, adc1, adc0 };
 wire [4*ADC_WIDTH-1:0] adcsQ = { adcQ3, adcQ2, adcQ1, adcQ0 };
 wire [8*PRODUCT_WIDTH-1:0] rfProducts, plProducts, phProducts;
-reg signed [4*ADC_WIDTH-1:0] adcsOut;
+wire signed [4*ADC_WIDTH-1:0] adcsOut;
 
 genvar i; generate
 for (i = 0 ; i < NADC ; i = i + 1) begin : adcDemod
@@ -316,11 +316,20 @@ complexMixer #(.AWIDTH(ADC_WIDTH),
     .pr(adcPhPrdI),
     .pi(adcPhPrdQ));
 
+// very inneficient. 1 CORDIC per channel
 wire signed [ADC_WIDTH-1:0] adcS = adc;
 wire signed [ADC_WIDTH-1:0] adcQS = adcQ;
-always @(posedge adcClk) begin
-    adcsOut[i*ADC_WIDTH+:ADC_WIDTH] <= adcS + adcQS;
-end
+cordicg_b20 #(
+    .width(ADC_WIDTH),
+    .nstg(ADC_WIDTH+2),
+    .def_op(1)) // default is Rectangular -> Polar
+  cordicg_b20 (
+    .clk(adcClk),
+    .opin(2'b01),
+    .xin(adcS),
+    .yin(adcQS),
+    .phasein({(ADC_WIDTH+1){1'b0}}),
+    .xout(adcsOut[i*ADC_WIDTH+:ADC_WIDTH]));
 
 end
 else if (IQ_DATA == "FALSE") begin
@@ -368,10 +377,7 @@ mixer #(.dwi(ADC_WIDTH),
     .mult(phLOsin),
     .mixout(adcPhPrdQ));
 
-// match latency of IQ_DATA
-always @(posedge adcClk) begin
-    adcsOut[i*ADC_WIDTH+:ADC_WIDTH] <= adc;
-end
+assign adcsOut[i*ADC_WIDTH+:ADC_WIDTH] = adc;
 
 end
 
