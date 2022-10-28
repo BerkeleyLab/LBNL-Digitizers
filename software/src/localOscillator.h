@@ -13,6 +13,9 @@ int localOscSetPtTable(unsigned char *buf, int size);
 void localOscPtReadback(const unsigned char *buf);
 void localOscRfCommit(void);
 void localOscPtCommit(void);
+int localOscGetDspAlgorithm(void);
+void localOscSetDspAlgorithm(int useRMS);
+int localOscGetSdSyncStatus(void);
 
 void localOscillatorInit(void);
 

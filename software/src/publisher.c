@@ -60,9 +60,9 @@ publishSlowAcquisition(unsigned int saSeconds, unsigned int saTicks)
     pk->recorderStatus = 0;
     pk->syncStatus = 0;
     pk->clipStatus = 0;
-    pk->sdSyncStatus = 0;
+    pk->sdSyncStatus = localOscGetSdSyncStatus();
     pk->cellCommStatus = 0;
-    pk->autotrimStatus = 0;
+    pk->autotrimStatus = autotrimStatus();
     for (i = 0 ; i < HSD_PROTOCOL_ADC_COUNT ; i++) {
         adcChannel = i % MAX_CHANNELS_PER_CHAIN;
         chainNumber = i / MAX_CHANNELS_PER_CHAIN;
