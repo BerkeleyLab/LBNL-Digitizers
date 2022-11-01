@@ -101,6 +101,7 @@ evr_axi
 *softwareBuildDate.h
 *firmwareBuildDate.v
 *gpioIDX.v
+*cordicg_b*.v
 
 ######################
 # Vivado files
