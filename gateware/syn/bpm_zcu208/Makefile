@@ -19,6 +19,7 @@ all: $(TARGET)_top.bit
 
 # Search for .v files here
 vpath %.v $(DSP_DIR)
+vpath %.v $(CORDIC_DIR)
 vpath %.v $(MODULES_DIR)
 
 TOP_LVL_DIR = ../../top/$(TARGET)
@@ -30,6 +31,7 @@ vpath %.xdc $(TOP_LVL_DIR)
 VIVADO_SYNTH_EXTRA_TCL = prop.tcl ipcores_repos.tcl prio_xci_files.tcl
 
 include $(BUILD_DIR)/top_rules.mk
+include $(CORDIC_DIR)/rules.mk
 
 # ignore xilinx primitives
 UNISIM_CRAP += -e 'GTYE4_CHANNEL|MMCME4_ADV'
@@ -89,6 +91,7 @@ BD_bds = $(addsuffix .bd, $(BD))
 
 # Bedrock directories for searching
 VFLAGS_DEP += -y$(DSP_DIR)
+VFLAGS_DEP += -y$(CORDIC_DIR)
 VFLAGS_DEP += -y$(FPGA_FAMILY_DIR)
 VFLAGS_DEP += -y$(FPGA_FAMILY_DIR)/xilinx
 VFLAGS_DEP += -y$(FPGA_FAMILY_DIR)/iserdes
@@ -159,7 +162,7 @@ vpath %.sh $(GW_SCRIPTS_DIR)
 # a top-level target in top_rules.mk. .v and .sv files will be used as
 # prerequisites as well as a system_top.xdc file
 $(TARGET)_top.bit: system_top.xdc $(VIVADO_SYNTH_EXTRA_TCL) $(TOP_LVL_DIR)/$(TARGET)_top.v $(BD_bds) rmsBandSelect.xci trimMultiplier.xci positionCalcDivider.xci positionCalcMultiplier.xci adcCordic.xci adcToSysFIFO.xci ila_td256_s4096_cap.xci
-$(TOP_LVL_DIR)/$(TARGET)_top.v: $(TOP_LVL_DIR)/firmwareBuildDate.v $(TOP_LVL_DIR)/gpioIDX.v $(EXTRA_VFLAGS_DEP) $(IP_CORES_CUSTOM) $(IP_CORES_TOP_LVL_SRCS) $(BD_TOP_LVL_SRCS)
+$(TOP_LVL_DIR)/$(TARGET)_top.v: $(TOP_LVL_DIR)/firmwareBuildDate.v $(TOP_LVL_DIR)/gpioIDX.v $(EXTRA_VFLAGS_DEP) $(IP_CORES_CUSTOM) $(IP_CORES_TOP_LVL_SRCS) $(BD_TOP_LVL_SRCS) cordicg_b22.v
 
 $(EXTRA_VFLAGS_DEP): % : %.in
 	sed -e 's|$$BEDROCK_DIR|$(BEDROCK_DIR:/=)|g' \
@@ -220,6 +223,7 @@ CLEAN += *.bit
 CLEAN += system_top.xdc
 CLEAN += $(TOP_LVL_DIR)/firmwareBuildDate.v
 CLEAN += $(TOP_LVL_DIR)/gpioIDX.v
+CLEAN += cordicg_b22.v
 CLEAN += $(IP_CORES_CUSTOM)
 CLEAN += $(VFLAGS_COMMAND_FILE)
 # Not adding it to VFLAGS_COMMAND_FILE because iverilog gives an error:

@@ -36,7 +36,11 @@ module preliminaryProcessing #(
     // Only used when IQ_DATA == "TRUE"
     input        [ADC_WIDTH-1:0] adcQ0, adcQ1, adcQ2, adcQ3,
     output wire  [ADC_WIDTH-1:0] adc0Out, adc1Out, adc2Out, adc3Out,
+    // Only used when IQ_DATA == "TRUE"
+    output wire  [ADC_WIDTH-1:0] adc0QOut, adc1QOut, adc2QOut, adc3QOut,
     output wire                  adcOutValid,
+    output wire  [ADC_WIDTH-1:0] adc0OutMag, adc1OutMag, adc2OutMag, adc3OutMag,
+    output wire  [ADC_WIDTH-1:0] adc0OutPh, adc1OutPh, adc2OutPh, adc3OutPh,
     input                        adcExceedsThreshold, adcUseThisSample,
     output wire                  adcLoSynced,
     input                        evrClk,
@@ -244,7 +248,6 @@ assign phLOsinDbg = adcPhSin;
 wire [4*ADC_WIDTH-1:0] adcs = { adc3, adc2, adc1, adc0 };
 wire [4*ADC_WIDTH-1:0] adcsQ = { adcQ3, adcQ2, adcQ1, adcQ0 };
 wire [8*PRODUCT_WIDTH-1:0] rfProducts, plProducts, phProducts;
-reg signed [4*ADC_WIDTH-1:0] adcsOut;
 
 genvar i; generate
 for (i = 0 ; i < NADC ; i = i + 1) begin : adcDemod
@@ -316,12 +319,6 @@ complexMixer #(.AWIDTH(ADC_WIDTH),
     .pr(adcPhPrdI),
     .pi(adcPhPrdQ));
 
-wire signed [ADC_WIDTH-1:0] adcS = adc;
-wire signed [ADC_WIDTH-1:0] adcQS = adcQ;
-always @(posedge adcClk) begin
-    adcsOut[i*ADC_WIDTH+:ADC_WIDTH] <= adcS + adcQS;
-end
-
 end
 else if (IQ_DATA == "FALSE") begin
 
@@ -367,11 +364,6 @@ mixer #(.dwi(ADC_WIDTH),
     .adcf(ptADC),
     .mult(phLOsin),
     .mixout(adcPhPrdQ));
-
-// match latency of IQ_DATA
-always @(posedge adcClk) begin
-    adcsOut[i*ADC_WIDTH+:ADC_WIDTH] <= adc;
-end
 
 end
 
@@ -501,20 +493,30 @@ sdAccumulate #(.PRODUCT_WIDTH(PRODUCT_WIDTH),
 //
 // Read ADC data in system clock domain
 //
-wire [4*ADC_WIDTH-1:0] sysAdcsOut;
+wire [4*ADC_WIDTH-1:0] sysAdcsOut, sysAdcsQOut;
 wire adcToSysFIFOEmpty;
 wire adcToSysFIFORd;
 reg adcToSysFIFOValid;
 `ifndef SIMULATE
-adcToSysFIFO adcToSysFIFO (
+adcToSysFIFO adcToSysFIFOI (
   .rst(1'b0),
   .wr_clk(adcClk),
   .rd_clk(clk),
-  .din(adcsOut),
+  .din(adcs),
   .wr_en(1'b1),
   .rd_en(adcToSysFIFORd),
   .dout(sysAdcsOut),
   .empty(adcToSysFIFOEmpty));
+
+adcToSysFIFO adcToSysFIFOQ (
+  .rst(1'b0),
+  .wr_clk(adcClk),
+  .rd_clk(clk),
+  .din(adcsQ),
+  .wr_en(1'b1),
+  .rd_en(adcToSysFIFORd),
+  .dout(sysAdcsQOut),
+  .empty());
 `endif // SIMULATE
 
 assign adcToSysFIFORd = !adcToSysFIFOEmpty;
@@ -527,8 +529,42 @@ always @(posedge clk) begin
     end
 end
 
-assign {adc0Out, adc1Out, adc2Out, adc3Out} = sysAdcsOut;
+assign {adc3Out, adc2Out, adc1Out, adc0Out} = sysAdcsOut;
+assign {adc3QOut, adc2QOut, adc1QOut, adc0QOut} = sysAdcsQOut;
 assign adcOutValid = adcToSysFIFOValid;
+
+wire [4*ADC_WIDTH-1:0] adcOutMag;
+wire [4*ADC_WIDTH-1:0] adcOutPh;
+// Magnitude of ADC for monitor purposes
+generate
+for (i = 0 ; i < NADC ; i = i + 1) begin : adcMag
+
+wire signed [ADC_WIDTH-1:0] adcS = sysAdcsOut[i*ADC_WIDTH+:ADC_WIDTH];
+wire signed [ADC_WIDTH-1:0] adcQS = sysAdcsQOut[i*ADC_WIDTH+:ADC_WIDTH];
+wire [ADC_WIDTH-1:0] adcMag;
+wire [ADC_WIDTH-1:0] adcPh;
+cordicg_b22 #(
+    .width(ADC_WIDTH),
+    .nstg(ADC_WIDTH+2),
+    .def_op(1)) // default is Rectangular -> Polar
+  cordicg_b22 (
+    .clk(clk),
+    .opin(2'b01),
+    .xin(adcS),
+    .yin(adcQS),
+    .phasein({(ADC_WIDTH+1){1'b0}}),
+    .xout(adcMag),
+    .yout(adcPh)
+);
+
+assign adcOutMag[i*ADC_WIDTH+:ADC_WIDTH] = adcMag;
+assign adcOutPh[i*ADC_WIDTH+:ADC_WIDTH] = adcPh;
+
+end
+endgenerate
+
+assign {adc3OutMag, adc2OutMag, adc1OutMag, adc0OutMag} = adcOutMag;
+assign {adc3OutPh, adc2OutPh, adc1OutPh, adc0OutPh} = adcOutPh;
 
 // Watch for overflows
 // Widen for easy detection by IOC
