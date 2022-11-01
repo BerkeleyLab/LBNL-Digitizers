@@ -307,8 +307,8 @@ calibration #(
 
 /////////////////////////////////////////////////////////////////////////////
 // Monitor range of signals at ADC inputs
-wire [(CFG_ADC_PHYSICAL_COUNT*AXI_SAMPLE_WIDTH)-1:0] adcsRealTDATA;
-wire                    [CFG_ADC_PHYSICAL_COUNT-1:0] adcsRealTVALID;
+wire [(CFG_ADC_PHYSICAL_COUNT*AXI_SAMPLE_WIDTH)-1:0] adcsMagTDATA;
+wire                    [CFG_ADC_PHYSICAL_COUNT-1:0] adcsMagTVALID;
 adcRangeCheck #(
     .AXI_CHANNEL_COUNT(CFG_ADC_PHYSICAL_COUNT),
     .AXI_SAMPLE_WIDTH(AXI_SAMPLE_WIDTH),
@@ -320,19 +320,19 @@ adcRangeCheck #(
     .GPIO_OUT(GPIO_OUT),
     .sysReadout(GPIO_IN[GPIO_IDX_ADC_RANGE_CSR]),
     .adcClk(adcClk),
-    .axiValid(adcsRealTVALID[0]),
-    .axiData(adcsRealTDATA));
+    .axiValid(adcsMagTVALID[0]),
+    .axiData(adcsMagTDATA));
 
 genvar bpm;
 generate
 for (bpm = 0 ; bpm < CFG_BPM_COUNT ; bpm = bpm + 1) begin : adc_data
-    assign adcsRealTDATA[bpm*4*AXI_SAMPLE_WIDTH+:4*AXI_SAMPLE_WIDTH] = {
-        prelimProcADC3[bpm],
-        prelimProcADC2[bpm],
-        prelimProcADC1[bpm],
-        prelimProcADC0[bpm]
+    assign adcsMagTDATA[bpm*4*AXI_SAMPLE_WIDTH+:4*AXI_SAMPLE_WIDTH] = {
+        prelimProcADC3Mag[bpm],
+        prelimProcADC2Mag[bpm],
+        prelimProcADC1Mag[bpm],
+        prelimProcADC0Mag[bpm]
     };
-    assign adcsRealTVALID[bpm] = prelimProcADCValid[bpm];
+    assign adcsMagTVALID[bpm] = 1'b1;
 end
 endgenerate
 
