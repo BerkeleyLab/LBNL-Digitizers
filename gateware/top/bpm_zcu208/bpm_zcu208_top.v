@@ -614,7 +614,7 @@ generate
 for (bpm = 0 ; bpm < CFG_BPM_COUNT ; bpm = bpm + 1) begin : acq_data
 
 //
-// ADC raw data
+// ADC I raw data
 //
 
 assign acqTVALID[bpm*CFG_DSP_CHANNEL_COUNT + 0] = prelimProcADCValid[bpm];
@@ -642,29 +642,57 @@ assign acqTDATA[(bpm*CFG_DSP_CHANNEL_COUNT + 3)*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_W
 };
 
 //
+// ADC Q raw data
+//
+
+assign acqTVALID[bpm*CFG_DSP_CHANNEL_COUNT + 4] = prelimProcADCValid[bpm];
+assign acqTDATA[(bpm*CFG_DSP_CHANNEL_COUNT + 4)*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
+    {ACQ_SAMPLES_WIDTH-AXI_SAMPLE_WIDTH{prelimProcADCQ0[bpm][AXI_SAMPLE_WIDTH-1]}},
+    prelimProcADCQ0[bpm]
+};
+
+assign acqTVALID[bpm*CFG_DSP_CHANNEL_COUNT + 5] = prelimProcADCValid[bpm];
+assign acqTDATA[(bpm*CFG_DSP_CHANNEL_COUNT + 5)*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
+    {ACQ_SAMPLES_WIDTH-AXI_SAMPLE_WIDTH{prelimProcADCQ1[bpm][AXI_SAMPLE_WIDTH-1]}},
+    prelimProcADCQ1[bpm]
+};
+
+assign acqTVALID[bpm*CFG_DSP_CHANNEL_COUNT + 6] = prelimProcADCValid[bpm];
+assign acqTDATA[(bpm*CFG_DSP_CHANNEL_COUNT + 6)*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
+    {ACQ_SAMPLES_WIDTH-AXI_SAMPLE_WIDTH{prelimProcADCQ2[bpm][AXI_SAMPLE_WIDTH-1]}},
+    prelimProcADCQ2[bpm]
+};
+
+assign acqTVALID[bpm*CFG_DSP_CHANNEL_COUNT + 7] = prelimProcADCValid[bpm];
+assign acqTDATA[(bpm*CFG_DSP_CHANNEL_COUNT + 7)*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
+    {ACQ_SAMPLES_WIDTH-AXI_SAMPLE_WIDTH{prelimProcADCQ3[bpm][AXI_SAMPLE_WIDTH-1]}},
+    prelimProcADCQ3[bpm]
+};
+
+//
 // Tbt Mags
 //
 
-assign acqTVALID[bpm*CFG_DSP_CHANNEL_COUNT + 4] = prelimProcRfTbtMagValid[bpm];
-assign acqTDATA[(bpm*CFG_DSP_CHANNEL_COUNT + 4)*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
+assign acqTVALID[bpm*CFG_DSP_CHANNEL_COUNT + 8] = prelimProcRfTbtMagValid[bpm];
+assign acqTDATA[(bpm*CFG_DSP_CHANNEL_COUNT + 8)*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
     {ACQ_SAMPLES_WIDTH-MAG_WIDTH{prelimProcRfTbtMag0[bpm][MAG_WIDTH-1]}},
     prelimProcRfTbtMag0[bpm]
 };
 
-assign acqTVALID[bpm*CFG_DSP_CHANNEL_COUNT + 5] = prelimProcRfTbtMagValid[bpm];
-assign acqTDATA[(bpm*CFG_DSP_CHANNEL_COUNT + 5)*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
+assign acqTVALID[bpm*CFG_DSP_CHANNEL_COUNT + 9] = prelimProcRfTbtMagValid[bpm];
+assign acqTDATA[(bpm*CFG_DSP_CHANNEL_COUNT + 9)*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
     {ACQ_SAMPLES_WIDTH-MAG_WIDTH{prelimProcRfTbtMag1[bpm][MAG_WIDTH-1]}},
     prelimProcRfTbtMag1[bpm]
 };
 
-assign acqTVALID[bpm*CFG_DSP_CHANNEL_COUNT + 6] = prelimProcRfTbtMagValid[bpm];
-assign acqTDATA[(bpm*CFG_DSP_CHANNEL_COUNT + 6)*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
+assign acqTVALID[bpm*CFG_DSP_CHANNEL_COUNT + 10] = prelimProcRfTbtMagValid[bpm];
+assign acqTDATA[(bpm*CFG_DSP_CHANNEL_COUNT + 10)*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
     {ACQ_SAMPLES_WIDTH-MAG_WIDTH{prelimProcRfTbtMag2[bpm][MAG_WIDTH-1]}},
     prelimProcRfTbtMag2[bpm]
 };
 
-assign acqTVALID[bpm*CFG_DSP_CHANNEL_COUNT + 7] = prelimProcRfTbtMagValid[bpm];
-assign acqTDATA[(bpm*CFG_DSP_CHANNEL_COUNT + 7)*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
+assign acqTVALID[bpm*CFG_DSP_CHANNEL_COUNT + 11] = prelimProcRfTbtMagValid[bpm];
+assign acqTDATA[(bpm*CFG_DSP_CHANNEL_COUNT + 11)*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
     {ACQ_SAMPLES_WIDTH-MAG_WIDTH{prelimProcRfTbtMag3[bpm][MAG_WIDTH-1]}},
     prelimProcRfTbtMag3[bpm]
 };
@@ -673,26 +701,26 @@ assign acqTDATA[(bpm*CFG_DSP_CHANNEL_COUNT + 7)*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_W
 // Tbt Positions
 //
 
-assign acqTVALID[bpm*CFG_DSP_CHANNEL_COUNT + 8] = positionCalcTbtValid[bpm];
-assign acqTDATA[(bpm*CFG_DSP_CHANNEL_COUNT + 8)*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
+assign acqTVALID[bpm*CFG_DSP_CHANNEL_COUNT + 12] = positionCalcTbtValid[bpm];
+assign acqTDATA[(bpm*CFG_DSP_CHANNEL_COUNT + 12)*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
     {ACQ_SAMPLES_WIDTH-MAG_WIDTH{positionCalcTbtX[bpm][MAG_WIDTH-1]}},
     positionCalcTbtX[bpm]
 };
 
-assign acqTVALID[bpm*CFG_DSP_CHANNEL_COUNT + 9] = positionCalcTbtValid[bpm];
-assign acqTDATA[(bpm*CFG_DSP_CHANNEL_COUNT + 9)*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
+assign acqTVALID[bpm*CFG_DSP_CHANNEL_COUNT + 13] = positionCalcTbtValid[bpm];
+assign acqTDATA[(bpm*CFG_DSP_CHANNEL_COUNT + 13)*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
     {ACQ_SAMPLES_WIDTH-MAG_WIDTH{positionCalcTbtY[bpm][MAG_WIDTH-1]}},
     positionCalcTbtY[bpm]
 };
 
-assign acqTVALID[bpm*CFG_DSP_CHANNEL_COUNT + 10] = positionCalcTbtValid[bpm];
-assign acqTDATA[(bpm*CFG_DSP_CHANNEL_COUNT + 10)*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
+assign acqTVALID[bpm*CFG_DSP_CHANNEL_COUNT + 14] = positionCalcTbtValid[bpm];
+assign acqTDATA[(bpm*CFG_DSP_CHANNEL_COUNT + 14)*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
     {ACQ_SAMPLES_WIDTH-MAG_WIDTH{positionCalcTbtQ[bpm][MAG_WIDTH-1]}},
     positionCalcTbtQ[bpm]
 };
 
-assign acqTVALID[bpm*CFG_DSP_CHANNEL_COUNT + 11] = positionCalcTbtValid[bpm];
-assign acqTDATA[(bpm*CFG_DSP_CHANNEL_COUNT + 11)*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
+assign acqTVALID[bpm*CFG_DSP_CHANNEL_COUNT + 15] = positionCalcTbtValid[bpm];
+assign acqTDATA[(bpm*CFG_DSP_CHANNEL_COUNT + 15)*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
     {ACQ_SAMPLES_WIDTH-MAG_WIDTH{positionCalcTbtS[bpm][MAG_WIDTH-1]}},
     positionCalcTbtS[bpm]
 };
@@ -701,26 +729,26 @@ assign acqTDATA[(bpm*CFG_DSP_CHANNEL_COUNT + 11)*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_
 // Fa Mags
 //
 
-assign acqTVALID[bpm*CFG_DSP_CHANNEL_COUNT + 12] = prelimProcRfFaMagValid[bpm];
-assign acqTDATA[(bpm*CFG_DSP_CHANNEL_COUNT + 12)*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
+assign acqTVALID[bpm*CFG_DSP_CHANNEL_COUNT + 16] = prelimProcRfFaMagValid[bpm];
+assign acqTDATA[(bpm*CFG_DSP_CHANNEL_COUNT + 16)*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
     {ACQ_SAMPLES_WIDTH-MAG_WIDTH{prelimProcRfFaMag0[bpm][MAG_WIDTH-1]}},
     prelimProcRfFaMag0[bpm]
 };
 
-assign acqTVALID[bpm*CFG_DSP_CHANNEL_COUNT + 13] = prelimProcRfFaMagValid[bpm];
-assign acqTDATA[(bpm*CFG_DSP_CHANNEL_COUNT + 13)*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
+assign acqTVALID[bpm*CFG_DSP_CHANNEL_COUNT + 17] = prelimProcRfFaMagValid[bpm];
+assign acqTDATA[(bpm*CFG_DSP_CHANNEL_COUNT + 17)*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
     {ACQ_SAMPLES_WIDTH-MAG_WIDTH{prelimProcRfFaMag1[bpm][MAG_WIDTH-1]}},
     prelimProcRfFaMag1[bpm]
 };
 
-assign acqTVALID[bpm*CFG_DSP_CHANNEL_COUNT + 14] = prelimProcRfFaMagValid[bpm];
-assign acqTDATA[(bpm*CFG_DSP_CHANNEL_COUNT + 14)*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
+assign acqTVALID[bpm*CFG_DSP_CHANNEL_COUNT + 18] = prelimProcRfFaMagValid[bpm];
+assign acqTDATA[(bpm*CFG_DSP_CHANNEL_COUNT + 18)*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
     {ACQ_SAMPLES_WIDTH-MAG_WIDTH{prelimProcRfFaMag2[bpm][MAG_WIDTH-1]}},
     prelimProcRfFaMag2[bpm]
 };
 
-assign acqTVALID[bpm*CFG_DSP_CHANNEL_COUNT + 15] = prelimProcRfFaMagValid[bpm];
-assign acqTDATA[(bpm*CFG_DSP_CHANNEL_COUNT + 15)*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
+assign acqTVALID[bpm*CFG_DSP_CHANNEL_COUNT + 19] = prelimProcRfFaMagValid[bpm];
+assign acqTDATA[(bpm*CFG_DSP_CHANNEL_COUNT + 19)*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
     {ACQ_SAMPLES_WIDTH-MAG_WIDTH{prelimProcRfFaMag3[bpm][MAG_WIDTH-1]}},
     prelimProcRfFaMag3[bpm]
 };
@@ -729,26 +757,26 @@ assign acqTDATA[(bpm*CFG_DSP_CHANNEL_COUNT + 15)*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_
 // Fa Positions
 //
 
-assign acqTVALID[bpm*CFG_DSP_CHANNEL_COUNT + 16] = positionCalcFaValid[bpm];
-assign acqTDATA[(bpm*CFG_DSP_CHANNEL_COUNT + 16)*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
+assign acqTVALID[bpm*CFG_DSP_CHANNEL_COUNT + 20] = positionCalcFaValid[bpm];
+assign acqTDATA[(bpm*CFG_DSP_CHANNEL_COUNT + 20)*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
     {ACQ_SAMPLES_WIDTH-MAG_WIDTH{positionCalcFaX[bpm][MAG_WIDTH-1]}},
     positionCalcFaX[bpm]
 };
 
-assign acqTVALID[bpm*CFG_DSP_CHANNEL_COUNT + 17] = positionCalcFaValid[bpm];
-assign acqTDATA[(bpm*CFG_DSP_CHANNEL_COUNT + 17)*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
+assign acqTVALID[bpm*CFG_DSP_CHANNEL_COUNT + 21] = positionCalcFaValid[bpm];
+assign acqTDATA[(bpm*CFG_DSP_CHANNEL_COUNT + 21)*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
     {ACQ_SAMPLES_WIDTH-MAG_WIDTH{positionCalcFaY[bpm][MAG_WIDTH-1]}},
     positionCalcFaY[bpm]
 };
 
-assign acqTVALID[bpm*CFG_DSP_CHANNEL_COUNT + 18] = positionCalcFaValid[bpm];
-assign acqTDATA[(bpm*CFG_DSP_CHANNEL_COUNT + 18)*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
+assign acqTVALID[bpm*CFG_DSP_CHANNEL_COUNT + 22] = positionCalcFaValid[bpm];
+assign acqTDATA[(bpm*CFG_DSP_CHANNEL_COUNT + 22)*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
     {ACQ_SAMPLES_WIDTH-MAG_WIDTH{positionCalcFaQ[bpm][MAG_WIDTH-1]}},
     positionCalcFaQ[bpm]
 };
 
-assign acqTVALID[bpm*CFG_DSP_CHANNEL_COUNT + 19] = positionCalcFaValid[bpm];
-assign acqTDATA[(bpm*CFG_DSP_CHANNEL_COUNT + 19)*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
+assign acqTVALID[bpm*CFG_DSP_CHANNEL_COUNT + 23] = positionCalcFaValid[bpm];
+assign acqTDATA[(bpm*CFG_DSP_CHANNEL_COUNT + 23)*ACQ_SAMPLES_WIDTH+:ACQ_SAMPLES_WIDTH] = {
     {ACQ_SAMPLES_WIDTH-MAG_WIDTH{positionCalcFaS[bpm][MAG_WIDTH-1]}},
     positionCalcFaS[bpm]
 };
@@ -863,6 +891,14 @@ wire [AXI_SAMPLE_WIDTH-1:0] prelimProcADC0[0:CFG_BPM_COUNT-1];
 wire [AXI_SAMPLE_WIDTH-1:0] prelimProcADC1[0:CFG_BPM_COUNT-1];
 wire [AXI_SAMPLE_WIDTH-1:0] prelimProcADC2[0:CFG_BPM_COUNT-1];
 wire [AXI_SAMPLE_WIDTH-1:0] prelimProcADC3[0:CFG_BPM_COUNT-1];
+wire [AXI_SAMPLE_WIDTH-1:0] prelimProcADCQ0[0:CFG_BPM_COUNT-1];
+wire [AXI_SAMPLE_WIDTH-1:0] prelimProcADCQ1[0:CFG_BPM_COUNT-1];
+wire [AXI_SAMPLE_WIDTH-1:0] prelimProcADCQ2[0:CFG_BPM_COUNT-1];
+wire [AXI_SAMPLE_WIDTH-1:0] prelimProcADCQ3[0:CFG_BPM_COUNT-1];
+wire [AXI_SAMPLE_WIDTH-1:0] prelimProcADC0Mag[0:CFG_BPM_COUNT-1];
+wire [AXI_SAMPLE_WIDTH-1:0] prelimProcADC1Mag[0:CFG_BPM_COUNT-1];
+wire [AXI_SAMPLE_WIDTH-1:0] prelimProcADC2Mag[0:CFG_BPM_COUNT-1];
+wire [AXI_SAMPLE_WIDTH-1:0] prelimProcADC3Mag[0:CFG_BPM_COUNT-1];
 wire                 prelimProcADCValid[0:CFG_BPM_COUNT-1];
 wire                 prelimProcTbtToggle[0:CFG_BPM_COUNT-1];
 wire                 prelimProcRfTbtMagValid[0:CFG_BPM_COUNT-1];
@@ -975,7 +1011,15 @@ preliminaryProcessing #(.SYSCLK_RATE(SYSCLK_RATE),
     .adc1Out(prelimProcADC1[bpm]),
     .adc2Out(prelimProcADC2[bpm]),
     .adc3Out(prelimProcADC3[bpm]),
+    .adc0QOut(prelimProcADCQ0[bpm]),
+    .adc1QOut(prelimProcADCQ1[bpm]),
+    .adc2QOut(prelimProcADCQ2[bpm]),
+    .adc3QOut(prelimProcADCQ3[bpm]),
     .adcOutValid(prelimProcADCValid[bpm]),
+    .adc0OutMag(prelimProcADC0Mag[bpm]),
+    .adc1OutMag(prelimProcADC1Mag[bpm]),
+    .adc2OutMag(prelimProcADC2Mag[bpm]),
+    .adc3OutMag(prelimProcADC3Mag[bpm]),
     .adcExceedsThreshold(1'b0),
     .adcUseThisSample(1'b1),
     .evrClk(evrClk),
