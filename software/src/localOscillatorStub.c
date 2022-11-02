@@ -63,6 +63,11 @@ localOscPtCommit(void)
 {
 }
 
+void
+localOscSetDspAlgorithm(int useRMS)
+{
+}
+
 int
 localOscGetDspAlgorithm(void)
 {
