@@ -139,23 +139,45 @@ rfADClinkCouplingIsAC(void)
     return isAC;
 }
 
-/*
- * AFE must be supplying 0.0V to all channels
- */
-void
-rfADCrestart(void)
+static void rfADCCfgDefaults(void)
 {
-    int i;
-    logMessageBuffer[0] = '\0';
-    i = XRFdc_Reset(&rfDC, XRFDC_ADC_TILE, XRFDC_SELECT_ALL_TILES);
-    if (i != XST_SUCCESS) warn("Critical -- %s\nXRFdc_Reset=%d",
-                                                           logMessageBuffer, i);
+    int i, tile, adc;
+
+    for (tile = 0 ; tile < NTILES ; tile++) {
+        i = XRFdc_DynamicPLLConfig(&rfDC, XRFDC_ADC_TILE, tile,
+                                          XRFDC_EXTERNAL_CLK,
+                                          CFG_ADC_REF_CLK_FREQ,
+                                          CFG_ADC_SAMPLING_CLK_FREQ);
+        if (i != XST_SUCCESS) fatal("XRFdc_DynamicPLLConfig=%d", i);
+
+        // Override GUI mixer settings
+#ifdef CFG_ADC_NCO_FREQ
+        for (adc = 0 ; adc < ADC_PER_TILE ; adc++) {
+            XRFdc_Mixer_Settings mixer;
+            i = XRFdc_GetMixerSettings(&rfDC, XRFDC_ADC_TILE, tile, adc, &mixer);
+            if (i != XST_SUCCESS) fatal("XRFdc_GetMixerSettings()=%d", i);
+
+            mixer.Freq = CFG_ADC_NCO_FREQ;
+            mixer.EventSource = XRFDC_EVNT_SRC_TILE;
+            i = XRFdc_SetMixerSettings(&rfDC, XRFDC_ADC_TILE, tile, adc, &mixer);
+            if (i != XST_SUCCESS) fatal("XRFdc_SetMixerSettings()=%d", i);
+
+            // Reset NCO phase of both DDCs in Tile0 (assuming both are active)
+            i = XRFdc_ResetNCOPhase(&rfDC, XRFDC_ADC_TILE, tile, adc);
+            if (i != XST_SUCCESS) fatal("XRFdc_ResetNCOPhase()=%d", i);
+        }
+
+        // update Mixer settings. Applies to all blocks in a tile
+        i = XRFdc_UpdateEvent(&rfDC, XRFDC_ADC_TILE, tile, 0, XRFDC_EVENT_MIXER);
+        if (i != XST_SUCCESS) fatal("XRFdc_UpdateEvent()=%d", i);
+#endif
+    }
 }
 
 void
 rfADCinit(void)
 {
-    int i, tile;
+    int i;
     XRFdc_Config *configp;
     static struct metal_init_params init_param = METAL_INIT_DEFAULTS;
 
@@ -169,14 +191,24 @@ rfADCinit(void)
     if (!configp) fatal("XRFdc_LookupConfig");
     i = XRFdc_CfgInitialize(&rfDC, configp);
     if (i != XST_SUCCESS) fatal("XRFdc_CfgInitialize=%d", i);
-    for (tile = 0 ; tile < NTILES ; tile++) {
-        i = XRFdc_DynamicPLLConfig(&rfDC, XRFDC_ADC_TILE, tile,
-                                          XRFDC_EXTERNAL_CLK,
-                                          CFG_ADC_REF_CLK_FREQ,
-                                          CFG_ADC_SAMPLING_CLK_FREQ);
-        if (i != XST_SUCCESS) fatal("XRFdc_DynamicPLLConfig=%d", i);
-    }
+
+    rfADCCfgDefaults();
     initDone = 1;
+}
+
+
+/*
+ * AFE must be supplying 0.0V to all channels
+ */
+void
+rfADCrestart(void)
+{
+    int i;
+    logMessageBuffer[0] = '\0';
+    i = XRFdc_Reset(&rfDC, XRFDC_ADC_TILE, XRFDC_SELECT_ALL_TILES);
+    if (i != XST_SUCCESS) warn("Critical -- %s\nXRFdc_Reset=%d",
+                                                           logMessageBuffer, i);
+    rfADCCfgDefaults();
 }
 
 void

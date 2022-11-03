@@ -64,9 +64,26 @@
 /*
  * ADC sampling clock frequency
  */
-#define CFG_ADC_SAMPLING_CLK_FREQ   4935.468
+/*
+ *  Fake frequency to fool API into calculating the correct
+ *  NCO frequency. 81*40 = 3240
+ */
+//#define CFG_ADC_SAMPLING_CLK_FREQ   4935.468
+#define CFG_ADC_SAMPLING_CLK_FREQ   3240.000
 
 /*
  * ADC reference clock
  */
-#define CFG_ADC_REF_CLK_FREQ   4935.468
+/*
+ *  Fake frequency to fool API into calculating the correct
+ *  NCO frequency. 81*40 = 3240
+ */
+//#define CFG_ADC_REF_CLK_FREQ   4935.468
+#define CFG_ADC_REF_CLK_FREQ   3240.000
+
+/*
+ *  Fake frequency to fool API into calculating the correct
+ *  NCO frequency. We want to shift the carrier to the 4th bin,
+ *  which would be 4*81 = 324 with our fake frequency
+ */
+#define CFG_ADC_NCO_FREQ -324.000
