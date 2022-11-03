@@ -13,7 +13,7 @@ set -eu
 HDR_FILES=$@
 
 process() {
-    sed -n -e "/ *# *define *\($1[^ ]*\) *\(.*\)/s//localparam \1 = \2/p" $2 |
+    sed -n -e "/^ *# *define *\($1[^ ]*\) *\(.*\)/s//localparam \1 = \2/p" $2 |
     sed -e 's/ *\/[\/\*].*//' -e 's/$/;/'
 }
 
@@ -24,5 +24,5 @@ for f in $HDR_FILES
 do
     process "GPIO_IDX" "$f"
     process "CFG_" "$f"
-    sed -n -e '/ *# *define *VERILOG_\([A-Za-z_]*\).*/s//`define \1/'p "$f"
+    sed -n -e '/^ *# *define *VERILOG_\([A-Za-z_]*\).*/s//`define \1/'p "$f"
 done
