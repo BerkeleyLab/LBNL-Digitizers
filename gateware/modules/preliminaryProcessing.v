@@ -38,7 +38,6 @@ module preliminaryProcessing #(
     output wire  [ADC_WIDTH-1:0] adc0Out, adc1Out, adc2Out, adc3Out,
     // Only used when IQ_DATA == "TRUE"
     output wire  [ADC_WIDTH-1:0] adc0QOut, adc1QOut, adc2QOut, adc3QOut,
-    output wire                  adcOutValid,
     output wire  [ADC_WIDTH-1:0] adc0OutMag, adc1OutMag, adc2OutMag, adc3OutMag,
     output wire  [ADC_WIDTH-1:0] adc0OutPh, adc1OutPh, adc2OutPh, adc3OutPh,
     input                        adcExceedsThreshold, adcUseThisSample,
@@ -374,9 +373,45 @@ assign phProducts[i*2*PRODUCT_WIDTH+:2*PRODUCT_WIDTH] = {adcPhPrdQ, adcPhPrdI};
 end // endfor
 endgenerate
 
+assign {adc3Out, adc2Out, adc1Out, adc0Out} = adcs;
+assign {adc3QOut, adc2QOut, adc1QOut, adc0QOut} = adcsQ;
+
 assign rfProductsDbg = rfProducts;
 assign plProductsDbg = plProducts;
 assign phProductsDbg = phProducts;
+
+// Magnitude of ADC for monitor purposes
+wire [4*ADC_WIDTH-1:0] adcOutMag;
+wire [4*ADC_WIDTH-1:0] adcOutPh;
+generate
+for (i = 0 ; i < NADC ; i = i + 1) begin : adcMag
+
+wire signed [ADC_WIDTH-1:0] adcC = adcs[i*ADC_WIDTH+:ADC_WIDTH];
+wire signed [ADC_WIDTH-1:0] adcQC = adcsQ[i*ADC_WIDTH+:ADC_WIDTH];
+wire [ADC_WIDTH-1:0] adcMag;
+wire [ADC_WIDTH-1:0] adcPh;
+cordicg_b22 #(
+    .width(ADC_WIDTH),
+    .nstg(ADC_WIDTH+2),
+    .def_op(1)) // default is Rectangular -> Polar
+  cordicg_b22 (
+    .clk(adcClk),
+    .opin(2'b01),
+    .xin(adcC),
+    .yin(adcQC),
+    .phasein({(ADC_WIDTH+1){1'b0}}),
+    .xout(adcMag),
+    .yout(adcPh)
+);
+
+assign adcOutMag[i*ADC_WIDTH+:ADC_WIDTH] = adcMag;
+assign adcOutPh[i*ADC_WIDTH+:ADC_WIDTH] = adcPh;
+
+end
+endgenerate
+
+assign {adc3OutMag, adc2OutMag, adc1OutMag, adc0OutMag} = adcOutMag;
+assign {adc3OutPh, adc2OutPh, adc1OutPh, adc0OutPh} = adcOutPh;
 
 // Watch for accumulator overflows
 // Stretch to allow detection in system clock domain.
@@ -488,83 +523,6 @@ sdAccumulate #(.PRODUCT_WIDTH(PRODUCT_WIDTH),
 //////////////////////////////////////////////////////////////////////////////
 //                             SYSTEM CLOCK DOMAIN                          //
 //                                                                          //
-
-
-//
-// Read ADC data in system clock domain
-//
-wire [4*ADC_WIDTH-1:0] sysAdcsOut, sysAdcsQOut;
-wire adcToSysFIFOEmpty;
-wire adcToSysFIFORd;
-reg adcToSysFIFOValid;
-`ifndef SIMULATE
-adcToSysFIFO adcToSysFIFOI (
-  .rst(1'b0),
-  .wr_clk(adcClk),
-  .rd_clk(clk),
-  .din(adcs),
-  .wr_en(1'b1),
-  .rd_en(adcToSysFIFORd),
-  .dout(sysAdcsOut),
-  .empty(adcToSysFIFOEmpty));
-
-adcToSysFIFO adcToSysFIFOQ (
-  .rst(1'b0),
-  .wr_clk(adcClk),
-  .rd_clk(clk),
-  .din(adcsQ),
-  .wr_en(1'b1),
-  .rd_en(adcToSysFIFORd),
-  .dout(sysAdcsQOut),
-  .empty());
-`endif // SIMULATE
-
-assign adcToSysFIFORd = !adcToSysFIFOEmpty;
-
-always @(posedge clk) begin
-    adcToSysFIFOValid <= adcToSysFIFORd;
-
-    if (adcToSysFIFOEmpty) begin
-      adcToSysFIFOValid <= 1'b0;
-    end
-end
-
-assign {adc3Out, adc2Out, adc1Out, adc0Out} = sysAdcsOut;
-assign {adc3QOut, adc2QOut, adc1QOut, adc0QOut} = sysAdcsQOut;
-assign adcOutValid = adcToSysFIFOValid;
-
-wire [4*ADC_WIDTH-1:0] adcOutMag;
-wire [4*ADC_WIDTH-1:0] adcOutPh;
-// Magnitude of ADC for monitor purposes
-generate
-for (i = 0 ; i < NADC ; i = i + 1) begin : adcMag
-
-wire signed [ADC_WIDTH-1:0] adcS = sysAdcsOut[i*ADC_WIDTH+:ADC_WIDTH];
-wire signed [ADC_WIDTH-1:0] adcQS = sysAdcsQOut[i*ADC_WIDTH+:ADC_WIDTH];
-wire [ADC_WIDTH-1:0] adcMag;
-wire [ADC_WIDTH-1:0] adcPh;
-cordicg_b22 #(
-    .width(ADC_WIDTH),
-    .nstg(ADC_WIDTH+2),
-    .def_op(1)) // default is Rectangular -> Polar
-  cordicg_b22 (
-    .clk(clk),
-    .opin(2'b01),
-    .xin(adcS),
-    .yin(adcQS),
-    .phasein({(ADC_WIDTH+1){1'b0}}),
-    .xout(adcMag),
-    .yout(adcPh)
-);
-
-assign adcOutMag[i*ADC_WIDTH+:ADC_WIDTH] = adcMag;
-assign adcOutPh[i*ADC_WIDTH+:ADC_WIDTH] = adcPh;
-
-end
-endgenerate
-
-assign {adc3OutMag, adc2OutMag, adc1OutMag, adc0OutMag} = adcOutMag;
-assign {adc3OutPh, adc2OutPh, adc1OutPh, adc0OutPh} = adcOutPh;
 
 // Watch for overflows
 // Widen for easy detection by IOC
