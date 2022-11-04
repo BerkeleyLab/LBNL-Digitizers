@@ -162,12 +162,12 @@ static void rfADCCfgDefaults(void)
             i = XRFdc_SetMixerSettings(&rfDC, XRFDC_ADC_TILE, tile, adc, &mixer);
             if (i != XST_SUCCESS) fatal("XRFdc_SetMixerSettings()=%d", i);
 
-            // Reset NCO phase of both DDCs in Tile0 (assuming both are active)
+            // Reset NCO phase
             i = XRFdc_ResetNCOPhase(&rfDC, XRFDC_ADC_TILE, tile, adc);
             if (i != XST_SUCCESS) fatal("XRFdc_ResetNCOPhase()=%d", i);
         }
 
-        // update Mixer settings. Applies to all blocks in a tile
+        // Update Mixer settings. Applies to all blocks in a tile
         i = XRFdc_UpdateEvent(&rfDC, XRFDC_ADC_TILE, tile, 0, XRFDC_EVENT_MIXER);
         if (i != XST_SUCCESS) fatal("XRFdc_UpdateEvent()=%d", i);
 #endif
