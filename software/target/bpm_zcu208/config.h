@@ -83,7 +83,6 @@
 
 /*
  *  Fake frequency to fool API into calculating the correct
- *  NCO frequency. We want to shift the carrier to the 4th bin,
- *  which would be 4*81 = 324 with our fake frequency
+ *  NCO frequency. We want to shift the carrier to the 4th bin
  */
-#define CFG_ADC_NCO_FREQ -324.000
+#define CFG_ADC_NCO_FREQ -332.000
