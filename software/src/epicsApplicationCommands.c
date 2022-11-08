@@ -144,15 +144,15 @@ epicsApplicationCommand(int commandArgCount, struct hsdPacket *cmdp,
                 break;
 
             case BPM_PROTOCOL_CMD_LONGOUT_GENERIC_AUTOTRIM_CTL:
-                 autotrimEnable(cmdp->args[0]);
+                 autotrimEnable(0, cmdp->args[0]);
                 break;
 
             case BPM_PROTOCOL_CMD_LONGOUT_GENERIC_AUTOTRIM_THRS:
-                autotrimSetThreshold(cmdp->args[0]);
+                autotrimSetThreshold(0, cmdp->args[0]);
                 break;
 
             case BPM_PROTOCOL_CMD_LONGOUT_GENERIC_AUTOTRIM_FILT_SHFT:
-                autotrimSetFilterShift(cmdp->args[0]);
+                autotrimSetFilterShift(0, cmdp->args[0]);
                 break;
 
             default: return -1;

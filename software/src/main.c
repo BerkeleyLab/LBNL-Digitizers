@@ -156,7 +156,7 @@ main(void)
     localOscillatorInit();
     acqSyncInit();
     positionCalcInit();
-    autotrimEnable(AUTOTRIM_CSR_MODE_OFF);
+    autotrimEnable(0, AUTOTRIM_CSR_MODE_OFF);
     for (int i = 0 ; i < CFG_ADC_PHYSICAL_COUNT ; i++) { afeSetGain(i, 16); }
 
     /*

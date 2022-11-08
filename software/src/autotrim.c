@@ -27,104 +27,102 @@
 
 #define REG(base,chan)  ((base) + (GPIO_IDX_PER_BPM * (chan)))
 
-static void
-autotrimSetStaticGains(int channel, int gain)
+void
+autotrimSetStaticGains(unsigned int bpm, unsigned int channel, int gain)
 {
-    int ch;
-    for (ch = 0 ; ch < CFG_BPM_COUNT ; ch++) {
-        GPIO_WRITE(REG(GPIO_IDX_ADC_GAIN_FACTOR_0 + channel, ch),
-                gain);
-    }
+    if (bpm >= CFG_BPM_COUNT) return;
+    GPIO_WRITE(REG(GPIO_IDX_ADC_GAIN_FACTOR_0 + channel, bpm),
+            gain);
 }
 
 void
-autotrimUsePulsePilot(int flag)
+autotrimUsePulsePilot(unsigned int bpm, int flag)
 {
-    int ch;
     uint32_t csr;
 
-    for (ch = 0 ; ch < CFG_BPM_COUNT ; ch++) {
-        csr = GPIO_READ(REG(GPIO_IDX_AUTOTRIM_CSR, ch));
+    if (bpm >= CFG_BPM_COUNT) return;
+    csr = GPIO_READ(REG(GPIO_IDX_AUTOTRIM_CSR, bpm));
 
-        if (flag)
-            csr |=  AUTOTRIM_CSR_TIME_MUX_PILOT_PULSES;
-        else
-            csr &= ~AUTOTRIM_CSR_TIME_MUX_PILOT_PULSES;
-        GPIO_WRITE(REG(GPIO_IDX_AUTOTRIM_CSR, ch), csr);
-    }
+    if (flag)
+        csr |=  AUTOTRIM_CSR_TIME_MUX_PILOT_PULSES;
+    else
+        csr &= ~AUTOTRIM_CSR_TIME_MUX_PILOT_PULSES;
+    GPIO_WRITE(REG(GPIO_IDX_AUTOTRIM_CSR, bpm), csr);
 }
 
 static void
-setMode(int mode)
+setMode(unsigned int bpm, int mode)
 {
-    int ch;
     uint32_t csr;
-    for (ch = 0 ; ch < CFG_BPM_COUNT ; ch++) {
-        csr = GPIO_READ(REG(GPIO_IDX_AUTOTRIM_CSR, ch));
 
-        csr &= ~AUTOTRIM_CSR_MODE_MASK;
-        csr |= (mode & AUTOTRIM_CSR_MODE_MASK);
-        GPIO_WRITE(REG(GPIO_IDX_AUTOTRIM_CSR, ch), csr);
-    }
+    if (bpm >= CFG_BPM_COUNT) return;
+    csr = GPIO_READ(REG(GPIO_IDX_AUTOTRIM_CSR, bpm));
+
+    csr &= ~AUTOTRIM_CSR_MODE_MASK;
+    csr |= (mode & AUTOTRIM_CSR_MODE_MASK);
+    GPIO_WRITE(REG(GPIO_IDX_AUTOTRIM_CSR, bpm), csr);
 }
 
 void
-autotrimEnable(int mode)
+autotrimEnable(unsigned int bpm, int mode)
 {
-    int i;
-
     switch (mode) {
     case AUTOTRIM_CSR_MODE_OFF:
-        for (i = 0; i < 4; i++) {
-            autotrimSetStaticGains(i, AUTOTRIM_GAIN_FULL_SCALE);
-        }
     case AUTOTRIM_CSR_MODE_LOW:
     case AUTOTRIM_CSR_MODE_HIGH:
     case AUTOTRIM_CSR_MODE_DUAL:
     case AUTOTRIM_MODE_INBAND:
-        setMode(mode);
+        setMode(bpm, mode);
         break;
     }
 }
 
 int
-autotrimStatus(void)
+autotrimStatus(unsigned int bpm)
 {
-    uint32_t status = GPIO_READ(GPIO_IDX_AUTOTRIM_CSR);
+    uint32_t status;
+
+    if (bpm >= CFG_BPM_COUNT) return 0;
+    status = GPIO_READ(REG(GPIO_IDX_AUTOTRIM_CSR, bpm));
+
     return (status & AUTOTRIM_CSR_STATUS_MASK) >> AUTOTRIM_CSR_STATUS_SHIFT;
 }
 
 void
-autotrimSetThreshold(unsigned int threshold)
+autotrimSetThreshold(unsigned int bpm, unsigned int threshold)
 {
-    GPIO_WRITE(GPIO_IDX_AUTOTRIM_THRESHOLD, threshold);
+    if (bpm >= CFG_BPM_COUNT) return;
+    GPIO_WRITE(REG(GPIO_IDX_AUTOTRIM_THRESHOLD, bpm), threshold);
 }
 
 unsigned int
-autotrimGetThreshold(void)
+autotrimGetThreshold(unsigned int bpm)
 {
-    return GPIO_READ(GPIO_IDX_AUTOTRIM_THRESHOLD);
+    if (bpm >= CFG_BPM_COUNT) return 0;
+    return GPIO_READ(REG(GPIO_IDX_AUTOTRIM_THRESHOLD, bpm));
 }
 
 void
-autotrimSetFilterShift(unsigned int filterShift)
+autotrimSetFilterShift(unsigned int bpm, unsigned int filterShift)
 {
-    int ch;
     uint32_t csr;
-    for (ch = 0 ; ch < CFG_BPM_COUNT ; ch++) {
-        csr = GPIO_READ(REG(GPIO_IDX_AUTOTRIM_CSR, ch));
 
-        csr &= ~AUTOTRIM_CSR_FILTER_SHIFT_MASK;
-        csr |= (filterShift << AUTOTRIM_CSR_FILTER_SHIFT_SHIFT) &
-            AUTOTRIM_CSR_FILTER_SHIFT_MASK;
-        GPIO_WRITE(REG(GPIO_IDX_AUTOTRIM_CSR, ch), csr);
-    }
+    if (bpm >= CFG_BPM_COUNT) return;
+    csr = GPIO_READ(REG(GPIO_IDX_AUTOTRIM_CSR, bpm));
+
+    csr &= ~AUTOTRIM_CSR_FILTER_SHIFT_MASK;
+    csr |= (filterShift << AUTOTRIM_CSR_FILTER_SHIFT_SHIFT) &
+        AUTOTRIM_CSR_FILTER_SHIFT_MASK;
+    GPIO_WRITE(REG(GPIO_IDX_AUTOTRIM_CSR, bpm), csr);
 }
 
 unsigned int
-autotrimGetFilterShift(void)
+autotrimGetFilterShift(unsigned int bpm)
 {
-    uint32_t csr = GPIO_READ(GPIO_IDX_AUTOTRIM_CSR);
+    uint32_t csr;
+
+    if (bpm >= CFG_BPM_COUNT) return 0;
+    csr = GPIO_READ(REG(GPIO_IDX_AUTOTRIM_CSR, bpm));
     return (csr & AUTOTRIM_CSR_FILTER_SHIFT_MASK) >>
-                                                AUTOTRIM_CSR_FILTER_SHIFT_SHIFT;
+        AUTOTRIM_CSR_FILTER_SHIFT_SHIFT;
 }
