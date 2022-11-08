@@ -159,6 +159,11 @@ epicsApplicationCommand(int commandArgCount, struct hsdPacket *cmdp,
             }
             break;
 
+        // BPM command
+        case HSD_PROTOCOL_CMD_LONGOUT_LO_TRIM:
+            autotrimSetStaticGains(0, idx, cmdp->args[0]);
+            break;
+
         default: return -1;
         }
         break;
