@@ -1,30 +1,37 @@
 void
-autotrimEnable(int flag)
+autotrimEnable(unsigned int bpm, int flag)
 {}
 
 void
-autotrimUsePulsePilot(int flag)
+autotrimSetStaticGains(unsigned int bpm, unsigned int channel, int gain)
+{}
+
+void
+autotrimUsePulsePilot(unsigned int bpm, int flag)
 {}
 
 int
-autotrimStatus(void)
+autotrimStatus(unsigned int bpm)
 {
     return 0;
 }
 
 void
-autotrimSetThreshold(unsigned int threshold)
+autotrimSetThreshold(unsigned int bpm, unsigned int threshold)
 {}
 
-unsigned int autotrimGetThreshold(void)
+unsigned int
+autotrimGetThreshold(unsigned int bpm)
 {
     return 0;
 }
 
-void autotrimSetFilterShift(unsigned int filterShift)
+void
+autotrimSetFilterShift(unsigned int bpm, unsigned int filterShift)
 {}
 
-unsigned int autotrimGetFilterShift(void)
+unsigned int
+autotrimGetFilterShift(unsigned int bpm)
 {
     return 0;
 }
