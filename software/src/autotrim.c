@@ -22,9 +22,6 @@
 
 #define AUTOTRIM_CSR_FILTER_SHIFT_MAX       7
 
-// Must match gateware
-#define AUTOTRIM_GAIN_FULL_SCALE            (1<<25)
-
 #define REG(base,chan)  ((base) + (GPIO_IDX_PER_BPM * (chan)))
 
 void
