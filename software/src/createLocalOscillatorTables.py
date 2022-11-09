@@ -15,26 +15,28 @@ def quantize(x):
     if (not args.integerOutput): xi /= args.scaleFactor
     return xi
 
-def rfTable(name, Frf, refDivider, refMultiplier, sampleCount):
+def rfTable(name, Frf, refDivider, refMultiplier, sampleCount, Feff = None):
     Frf = float(Frf)
     Fadc = Frf / refDivider * refMultiplier
-    Feff = Frf - math.floor(Frf / Fadc) * Fadc
+    if (not Feff): Feff = Frf - math.floor(Frf / Fadc) * Fadc
     if (Feff > Fadc / 2): Feff = Fadc - Feff
     fftIndex = Feff / (Fadc / sampleCount)
     print("Frf:%.3f  Fadc:%.3f  Feff:%.3f  FFT index:%d" % (Frf, Fadc, Feff, fftIndex))
     with open(name, 'w') as f:
-        w = 2 * math.pi * Frf
+        w = 2 * math.pi * Feff
         Tsamp = 1.0 / Fadc
         for i in range(sampleCount):
             s = quantize(math.sin(w*Tsamp*i))
             c = quantize(math.cos(w*Tsamp*i))
             f.write("%9.6f,%9.6f\n" % (c, s))
 
-def ptTable(name, Foffset, Frf, refDivider, refMultiplier, sampleCount):
+def ptTable(name, Foffset, Frf, refDivider, refMultiplier, sampleCount, Feff = None):
     Frf = float(Frf)
     Fadc = Frf / refDivider * refMultiplier
-    Flo = Frf - Foffset
-    Fhi = Frf + Foffset
+    if (not Feff): Feff = Frf - math.floor(Frf / Fadc) * Fadc
+    if (Feff > Fadc / 2): Feff = Fadc - Feff
+    Flo = Feff - Foffset
+    Fhi = Feff + Foffset
     print("Frf:%.3f  Fadc:%.3f  Flo:%.3f  Fhi:%.3f" % (Frf, Fadc, Flo, Fhi))
     with open(name, 'w') as f:
         wl = 2 * math.pi * Flo
@@ -49,6 +51,7 @@ def ptTable(name, Foffset, Frf, refDivider, refMultiplier, sampleCount):
 
 rfTable('rfTableSR.csv', 500, 328,  77, 77)
 rfTable('rfTableSR_81_328.csv', 499.64, 328,  81, 81)
+rfTable('rfTableSR_81_328_bin_20.csv', 499.64, 328,  81, 81, Feff = 499.64/328*20)
 rfTable('rfTableSR_80_333.csv', 499.50, 333,  80, 80)
 rfTable('rfTableTL.csv', 500, 328,  77, 77)
 rfTable('rfTableBR.csv', 500, 500, 116, 29)
@@ -57,6 +60,7 @@ ptTable('ptTableSR_1_2.csv', (500.0/328.0)*(1.0/2.0), 500, 328, 77, 77*2)
 ptTable('ptTableSR_81_328_1_2.csv', (499.64/328.0)*(1.0/2.0), 499.64, 328, 81, 81*2)
 ptTable('ptTableSR_80_333_1_2.csv', (499.50/333.0)*(1.0/2.0), 499.50, 333, 80, 80*2)
 ptTable('ptTableSR_81_328_11_19.csv', (499.64/328.0)*(11.0/19.0), 499.64, 328, 81, 81*19)
+ptTable('ptTableSR_81_328_11_19_bin_20.csv', (499.64/328.0)*(11.0/19.0), 499.64, 328, 81, 81*19, Feff = 499.64/328*20)
 ptTable('ptTableSR_11_19.csv', (500.0/328.0)*(11.0/19.0), 500, 328, 77, 77*19)
 ptTable('ptTableTL.csv', 0, 500, 328,  77,  77)
 ptTable('ptTableBR_1_2.csv', (500.0/125.0)*(1.0/2.0), 500, 500, 116,  29*2)

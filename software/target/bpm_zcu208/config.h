@@ -83,6 +83,7 @@
 
 /*
  *  Fake frequency to fool API into calculating the correct
- *  NCO frequency. We want to shift the carrier to the 4th bin
+ *  NCO frequency. We want to shift the carrier to the 20th bin.
+ *  Since the RF is at bin 328 or -328, bin 4 would be at -348
  */
-#define CFG_ADC_NCO_FREQ -332.000
+#define CFG_ADC_NCO_FREQ -348.000
