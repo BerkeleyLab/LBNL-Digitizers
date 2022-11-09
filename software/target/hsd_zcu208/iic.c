@@ -364,8 +364,7 @@ iicWrite(unsigned int deviceIndex, const uint8_t *buf, int n)
 
 /*
  * EEPROM I/O
- * Tricky since a single chip appears as 4 I2C devices
- * and writes must not span page boundaries.
+ * writes must not span page boundaries.
  */
 int
 eepromRead(int address, void *buf, int n)
@@ -377,18 +376,15 @@ eepromRead(int address, void *buf, int n)
         printf("eepromRead %d@%d\n", n, address);
     }
     if (!setMux(cp, dp->muxPort)) return 0;
-    while (n) {
-        int devOffset = (address >> 8) & 0x3;
-        uint8_t subAddress = address & 0xFF;
-        int nGet = 256 - subAddress;
-        if (nGet > n) nGet = n;
-        if (!iicSend(cp, dp->deviceAddress + devOffset, &subAddress, 1)
-         || !iicRecv(cp, dp->deviceAddress + devOffset, buf, nGet)) {
-            return 0;
-        }
-        address += nGet;
-        buf += nGet;
-        n -= nGet;
+    uint8_t xBuf[2];   // 2-byte addressing
+    uint16_t subAddress = address & 0xFFFF;
+    int nGet = 16384 - subAddress; // we can read the whole 16KB EEPROM
+    xBuf[0] = (subAddress >> 8) & 0xFF; // MSB sent first
+    xBuf[1] = subAddress & 0xFF;
+    if (nGet > n) nGet = n;
+    if (!iicSend(cp, dp->deviceAddress, xBuf, 2)
+     || !iicRecv(cp, dp->deviceAddress, buf, nGet)) {
+        return 0;
     }
     return 1;
 }
@@ -398,29 +394,29 @@ eepromWrite(int address, const void *buf, int n)
 {
     struct deviceInfo *dp = &deviceTable[IIC_INDEX_EEPROM];
     struct controller *cp = &controllers[dp->controllerIndex];
-    int devOffset = (address >> 8) & 0x3;
-    uint8_t subAddress = address & 0xFF;
+    uint16_t subAddress = address & 0xFFFF;
     const uint8_t *src = buf;
     int nLeft = n;
 
     if (!setMux(cp, dp->muxPort)) return 0;
     while (nLeft) {
-        uint8_t xBuf[17];   /* One greater than page size */
-        int i = 1;
+        uint8_t xBuf[66];   /* Two greater than page size, beucase 2-byte addressing */
+        int i = 2;
         int passCount = 0;
-        xBuf[0] = subAddress;
+        xBuf[0] = (subAddress >> 8) & 0xFF; // MSB sent first
+        xBuf[1] = subAddress & 0xFF;
         while (nLeft) {
             xBuf[i++] = *src++;
             subAddress++;
             nLeft--;
-            if ((subAddress & 0xF) == 0) break;
+            // write each 64-byte page
+            if ((subAddress & 0x3F) == 0) break;
         }
         /* Ensure completion of write operation */
-        while (!iicSend(cp, dp->deviceAddress + devOffset, xBuf, i)) {
+        while (!iicSend(cp, dp->deviceAddress, xBuf, i)) {
             if (++passCount > 20) return 0;
         }
         microsecondSpin(5000);
-        if (subAddress == 0) devOffset = (devOffset + 1) & 0x3;
     }
     return 1;
 }
