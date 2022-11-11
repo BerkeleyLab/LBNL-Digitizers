@@ -986,6 +986,9 @@ localparam ADC_SIGNALS_PER_DSP = CFG_ADC_CHANNEL_COUNT / CFG_BPM_COUNT;
 generate
 for (bpm = 0 ; bpm < CFG_BPM_COUNT ; bpm = bpm + 1) begin : prelim_chain
 
+assign GPIO_IN[GPIO_IDX_PRELIM_STATUS + bpm*GPIO_IDX_PER_BPM] = {
+    {32-1{1'b0}},
+    prelimProcOverflow[bpm] };
 assign GPIO_IN[GPIO_IDX_PRELIM_RF_MAG_0 + bpm*GPIO_IDX_PER_BPM] = {
     magPAD, prelimProcRfMag0[bpm] };
 assign GPIO_IN[GPIO_IDX_PRELIM_RF_MAG_1 + bpm*GPIO_IDX_PER_BPM] = {

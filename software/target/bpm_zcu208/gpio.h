@@ -48,34 +48,35 @@
 #define GPIO_IDX_ADC_GAIN_FACTOR_1       38 // Gain factor for ADC 1
 #define GPIO_IDX_ADC_GAIN_FACTOR_2       39 // Gain factor for ADC 2
 #define GPIO_IDX_ADC_GAIN_FACTOR_3       40 // Gain factor for ADC 3
-#define GPIO_IDX_PRELIM_RF_MAG_0         41 // ADC 0 RF (SA) magnitude
-#define GPIO_IDX_PRELIM_RF_MAG_1         42 // ADC 1 RF (SA) magnitude
-#define GPIO_IDX_PRELIM_RF_MAG_2         43 // ADC 2 RF (SA) magnitude
-#define GPIO_IDX_PRELIM_RF_MAG_3         44 // ADC 3 RF (SA) magnitude
-#define GPIO_IDX_PRELIM_PT_LO_MAG_0      45 // ADC 0 low freq pilot tone magnitude
-#define GPIO_IDX_PRELIM_PT_LO_MAG_1      46 // ADC 1 low freq pilot tone magnitude
-#define GPIO_IDX_PRELIM_PT_LO_MAG_2      47 // ADC 2 low freq pilot tone magnitude
-#define GPIO_IDX_PRELIM_PT_LO_MAG_3      48 // ADC 3 low freq pilot tone magnitude
-#define GPIO_IDX_PRELIM_PT_HI_MAG_0      49 // ADC 0 high freq pilot tone magnitude
-#define GPIO_IDX_PRELIM_PT_HI_MAG_1      50 // ADC 1 high freq pilot tone magnitude
-#define GPIO_IDX_PRELIM_PT_HI_MAG_2      51 // ADC 2 high freq pilot tone magnitude
-#define GPIO_IDX_PRELIM_PT_HI_MAG_3      52 // ADC 3 high freq pilot tone magnitude
-#define GPIO_IDX_SA_TIMESTAMP_SEC        53 // Slow acquisition time stamp
-#define GPIO_IDX_SA_TIMESTAMP_TICKS      54 // Slow acquisition time stamp
-#define GPIO_IDX_POSITION_CALC_CSR       55 // Position calculation control/status
-#define GPIO_IDX_POSITION_CALC_XCAL      56 // X calibration factor
-#define GPIO_IDX_POSITION_CALC_YCAL      57 // Y calibration factor
-#define GPIO_IDX_POSITION_CALC_QCAL      58 // Q calibration factor
-#define GPIO_IDX_POSITION_CALC_SA_X      59 // Slow acquisition X position
-#define GPIO_IDX_POSITION_CALC_SA_Y      60 // Slow acquisition Y position
-#define GPIO_IDX_POSITION_CALC_SA_Q      61 // Slow acquisition skew
-#define GPIO_IDX_POSITION_CALC_SA_S      62 // Slow acquisition sum
-#define GPIO_IDX_LOSS_OF_BEAM_THRSH      63 // Loss-of-beam threshold
-#define GPIO_IDX_LOSS_OF_BEAM_TRIGGER    64 // Loss-of-beam trigger
-#define GPIO_IDX_RMS_X_WIDE              65 // RMS X wide bandwidth
-#define GPIO_IDX_RMS_Y_WIDE              66 // RMS Y wide bandwidth
-#define GPIO_IDX_RMS_X_NARROW            67 // RMS X narrow bandwidth
-#define GPIO_IDX_RMS_Y_NARROW            68 // RMS Y narrow bandwidth
+#define GPIO_IDX_PRELIM_STATUS           41 // Preliminary processing status
+#define GPIO_IDX_PRELIM_RF_MAG_0         42 // ADC 0 RF (SA) magnitude
+#define GPIO_IDX_PRELIM_RF_MAG_1         43 // ADC 1 RF (SA) magnitude
+#define GPIO_IDX_PRELIM_RF_MAG_2         44 // ADC 2 RF (SA) magnitude
+#define GPIO_IDX_PRELIM_RF_MAG_3         45 // ADC 3 RF (SA) magnitude
+#define GPIO_IDX_PRELIM_PT_LO_MAG_0      46 // ADC 0 low freq pilot tone magnitude
+#define GPIO_IDX_PRELIM_PT_LO_MAG_1      47 // ADC 1 low freq pilot tone magnitude
+#define GPIO_IDX_PRELIM_PT_LO_MAG_2      48 // ADC 2 low freq pilot tone magnitude
+#define GPIO_IDX_PRELIM_PT_LO_MAG_3      49 // ADC 3 low freq pilot tone magnitude
+#define GPIO_IDX_PRELIM_PT_HI_MAG_0      50 // ADC 0 high freq pilot tone magnitude
+#define GPIO_IDX_PRELIM_PT_HI_MAG_1      51 // ADC 1 high freq pilot tone magnitude
+#define GPIO_IDX_PRELIM_PT_HI_MAG_2      52 // ADC 2 high freq pilot tone magnitude
+#define GPIO_IDX_PRELIM_PT_HI_MAG_3      53 // ADC 3 high freq pilot tone magnitude
+#define GPIO_IDX_SA_TIMESTAMP_SEC        54 // Slow acquisition time stamp
+#define GPIO_IDX_SA_TIMESTAMP_TICKS      55 // Slow acquisition time stamp
+#define GPIO_IDX_POSITION_CALC_CSR       56 // Position calculation control/status
+#define GPIO_IDX_POSITION_CALC_XCAL      57 // X calibration factor
+#define GPIO_IDX_POSITION_CALC_YCAL      58 // Y calibration factor
+#define GPIO_IDX_POSITION_CALC_QCAL      59 // Q calibration factor
+#define GPIO_IDX_POSITION_CALC_SA_X      60 // Slow acquisition X position
+#define GPIO_IDX_POSITION_CALC_SA_Y      61 // Slow acquisition Y position
+#define GPIO_IDX_POSITION_CALC_SA_Q      62 // Slow acquisition skew
+#define GPIO_IDX_POSITION_CALC_SA_S      63 // Slow acquisition sum
+#define GPIO_IDX_LOSS_OF_BEAM_THRSH      64 // Loss-of-beam threshold
+#define GPIO_IDX_LOSS_OF_BEAM_TRIGGER    65 // Loss-of-beam trigger
+#define GPIO_IDX_RMS_X_WIDE              66 // RMS X wide bandwidth
+#define GPIO_IDX_RMS_Y_WIDE              67 // RMS Y wide bandwidth
+#define GPIO_IDX_RMS_X_NARROW            68 // RMS X narrow bandwidth
+#define GPIO_IDX_RMS_Y_NARROW            69 // RMS Y narrow bandwidth
 
 #define GPIO_IDX_PER_BPM                 (GPIO_IDX_RMS_Y_NARROW-GPIO_IDX_LOTABLE_ADDRESS+1)
 
