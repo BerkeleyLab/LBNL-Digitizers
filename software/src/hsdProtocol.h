@@ -59,6 +59,7 @@ struct hsdSlowAcquisition {
     epicsInt32  xRMSnarrow[HSD_PROTOCOL_DSP_COUNT];
     epicsInt32  yRMSnarrow[HSD_PROTOCOL_DSP_COUNT];
     epicsUInt32 lossOfBeamStatus[HSD_PROTOCOL_DSP_COUNT];
+    epicsUInt32 prelimProcStatus[HSD_PROTOCOL_DSP_COUNT];
 };
 
 #define HSD_PROTOCOL_SIZE_TO_ARG_COUNT(s) (HSD_PROTOCOL_ARG_CAPACITY - \
