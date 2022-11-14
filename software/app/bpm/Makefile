@@ -29,6 +29,7 @@ __SRC_FILES = \
 	acqSync.c \
 	afe.c \
 	autotrim.c \
+	cellComm.c \
 	console.c \
 	display.c \
 	epics.c \
@@ -61,6 +62,7 @@ __HDR_FILES = \
 	acqSync.h \
 	afe.h \
 	autotrim.h \
+	cellComm.h \
 	console.h \
 	display.h \
 	epics.h \

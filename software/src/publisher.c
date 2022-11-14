@@ -7,6 +7,7 @@
 #include "autotrim.h"
 #include "platform_config.h"
 #include "hsdProtocol.h"
+#include "cellComm.h"
 #include "publisher.h"
 #include "afe.h"
 #include "evr.h"
@@ -171,6 +172,7 @@ publisher_callback(void *arg, struct udp_pcb *pcb, struct pbuf *p,
         memcpy(&newIndex, p->payload, sizeof newIndex);
         if (newIndex != fofbIndex) {
             fofbIndex = newIndex;
+            cellCommSetFOFB(fofbIndex);
         }
         subscriberAddr = *fromAddr;
         subscriberPort = fromPort;
