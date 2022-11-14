@@ -183,6 +183,7 @@ sysmonFetch(uint32_t *args)
     args[aIndex++] = v;
     args[aIndex++] = GPIO_READ(GPIO_IDX_SYSREF_CSR);
     args[aIndex++] = rfADCstatus();
+    args[aIndex++] = duplicateIOCcheck(0, 0);
     return aIndex;
 }
 
