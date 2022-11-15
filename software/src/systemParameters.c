@@ -51,19 +51,6 @@ systemParametersReadback(void)
         systemParameters.netConfig = netDefault;
         systemParameters.userMGTrefClkOffsetPPM = 0;
         systemParameters.startupDebugFlags = 0;
-        systemParameters.rfDivisor = 328;
-        systemParameters.pllMultiplier = 81;
-        systemParameters.isSinglePass = 0;
-        systemParameters.adcHeartbeatMarker = 152 * 82 * 2000;
-        systemParameters.evrPerFaMarker = 152 * 82;
-        systemParameters.evrPerSaMarker = 152 * 82 * 1000;
-        // position calc order = A = 3, B = 1, C = 2, D = 0
-        systemParameters.adcOrder = 3120;
-        systemParameters.xCalibration = 16.0;
-        systemParameters.yCalibration = 16.0;
-        systemParameters.qCalibration = 16.0;
-        systemParameters.buttonRotation = 45;
-        memset(systemParameters.afeTrim, 0, sizeof systemParameters.afeTrim);
     }
     debugFlags = systemParameters.startupDebugFlags;
     if (userMGTrefClkAdjust(systemParameters.userMGTrefClkOffsetPPM)) {

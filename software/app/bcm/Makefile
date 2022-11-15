@@ -27,10 +27,7 @@ all: $(TARGET) $(TARGET).elf $(TARGET).elf.size $(BIN)
 
 __SRC_FILES = \
 	acquisition.c \
-	acqSyncStub.c \
 	afe.c \
-	autotrimStub.c \
-	cellCommStub.c \
 	console.c \
 	display.c \
 	epics.c \
@@ -40,30 +37,23 @@ __SRC_FILES = \
 	ffs.c \
 	frequencyMonitor.c \
 	interlock.c \
-	lossOfBeamStub.c \
 	main.c \
 	mgt.c \
 	mmcm.c \
 	platform_zynqmp.c \
-	positionCalcStub.c \
-	publisherStub.c \
 	rfadc.c \
 	rfclk.c \
 	sysmon.c \
 	sysref.c \
 	systemParameters.c \
 	tftp.c \
-	localOscillatorStub.c \
 	user_mgt_refclk.c \
 	util.c
 SRC_FILES = $(addprefix $(SW_SRC_DIR)/, $(__SRC_FILES))
 
 __HDR_FILES = \
 	acquisition.h \
-	acqSync.h \
 	afe.h \
-	autotrim.h \
-	cellComm.h \
 	console.h \
 	display.h \
 	epics.h \
@@ -75,20 +65,16 @@ __HDR_FILES = \
 	hsdProtocol.h \
 	bcmProtocol.h \
 	interlock.h \
-	lossOfBeam.h \
 	lv_font.h \
 	mgt.h \
 	mmcm.h \
 	platform.h \
 	platform_config.h \
-	positionCalc.h \
-	publisher.h \
 	rfadc.h \
 	rfclk.h \
 	sysmon.h \
 	sysref.h \
 	systemParameters.h \
-	localOscillator.h \
 	tftp.h \
 	user_mgt_refclk.h \
 	util.h

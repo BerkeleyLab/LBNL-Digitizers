@@ -704,7 +704,7 @@ acquisitionSetPassCount(unsigned int n)
 }
 
 void acquisitionArm(int channel, int enable) { }
-int acquisitionStatus(uint32_t status[], int capacity) { }
+int acquisitionStatus(uint32_t status[], int capacity) { return 0; }
 void acquisitionScaleChanged(int channel) { }
 void acquisitionSetTriggerEdge(int channel, int v){ }
 void acquisitionSetTriggerLevel(int channel, int microvolts){ }

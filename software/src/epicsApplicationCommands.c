@@ -7,15 +7,11 @@
 #include "platform_config.h"
 #include "hsdProtocol.h"
 #include "bcmProtocol.h"
-#include "bpmProtocol.h"
 #include "acquisition.h"
-#include "lossOfBeam.h"
-#include "localOscillator.h"
 #include "epicsApplicationCommands.h"
 #include "evr.h"
 #include "gpio.h"
 #include "util.h"
-#include "autotrim.h"
 
 /*
  * Set the acquisition trigger events
@@ -126,42 +122,8 @@ epicsApplicationCommand(int commandArgCount, struct hsdPacket *cmdp,
                 selectTriggerEventAction(cmdp->args[0], 1, EVR_RAM_TRIGGER_3);
                 break;
 
-            // BPM commands
-            case BPM_PROTOCOL_CMD_LONGOUT_GENERIC_LOB_THRSH:
-                lossOfBeamThreshold(-1, cmdp->args[0]);
-                break;
-
-            case BPM_PROTOCOL_CMD_LONGOUT_GENERIC_TBT_SUM_SHIFT:
-                 sdAccumulateSetTbtSumShift(cmdp->args[0]);
-                break;
-
-            case BPM_PROTOCOL_CMD_LONGOUT_GENERIC_MT_SUM_SHIFT:
-                sdAccumulateSetMtSumShift(cmdp->args[0]);
-                break;
-
-            case BPM_PROTOCOL_CMD_LONGOUT_GENERIC_BUTTON_DSP:
-                localOscSetDspAlgorithm(cmdp->args[0]);
-                break;
-
-            case BPM_PROTOCOL_CMD_LONGOUT_GENERIC_AUTOTRIM_CTL:
-                 autotrimEnable(0, cmdp->args[0]);
-                break;
-
-            case BPM_PROTOCOL_CMD_LONGOUT_GENERIC_AUTOTRIM_THRS:
-                autotrimSetThreshold(0, cmdp->args[0]);
-                break;
-
-            case BPM_PROTOCOL_CMD_LONGOUT_GENERIC_AUTOTRIM_FILT_SHFT:
-                autotrimSetFilterShift(0, cmdp->args[0]);
-                break;
-
             default: return -1;
             }
-            break;
-
-        // BPM command
-        case HSD_PROTOCOL_CMD_LONGOUT_LO_TRIM:
-            autotrimSetStaticGains(0, idx, cmdp->args[0]);
             break;
 
         default: return -1;
