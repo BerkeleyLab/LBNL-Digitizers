@@ -30,6 +30,7 @@ __SRC_FILES = \
 	acqSyncStub.c \
 	afe.c \
 	autotrimStub.c \
+	cellCommStub.c \
 	console.c \
 	display.c \
 	epics.c \
@@ -62,6 +63,7 @@ __HDR_FILES = \
 	acqSync.h \
 	afe.h \
 	autotrim.h \
+	cellComm.h \
 	console.h \
 	display.h \
 	epics.h \

@@ -7,6 +7,7 @@
 #include "autotrim.h"
 #include "platform_config.h"
 #include "hsdProtocol.h"
+#include "cellComm.h"
 #include "publisher.h"
 #include "afe.h"
 #include "evr.h"
@@ -56,10 +57,11 @@ publishSlowAcquisition(unsigned int saSeconds, unsigned int saTicks)
         pk->xRMSnarrow[i] = GPIO_READ(REG(GPIO_IDX_RMS_X_NARROW, chainNumber));
         pk->yRMSnarrow[i] = GPIO_READ(REG(GPIO_IDX_RMS_Y_NARROW, chainNumber));
         pk->lossOfBeamStatus[i] = GPIO_READ(REG(GPIO_IDX_LOSS_OF_BEAM_TRIGGER, chainNumber));
+        pk->prelimProcStatus[i] = GPIO_READ(REG(GPIO_IDX_PRELIM_STATUS, chainNumber));
     }
     pk->recorderStatus = 0;
     pk->syncStatus = 0;
-    pk->clipStatus = 0;
+    pk->clipStatus = rfADCstatus();
     pk->sdSyncStatus = localOscGetSdSyncStatus();
     pk->cellCommStatus = 0;
     pk->autotrimStatus = autotrimStatus(0);
@@ -170,6 +172,7 @@ publisher_callback(void *arg, struct udp_pcb *pcb, struct pbuf *p,
         memcpy(&newIndex, p->payload, sizeof newIndex);
         if (newIndex != fofbIndex) {
             fofbIndex = newIndex;
+            cellCommSetFOFB(fofbIndex);
         }
         subscriberAddr = *fromAddr;
         subscriberPort = fromPort;

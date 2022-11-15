@@ -8,8 +8,10 @@
 #include <stdint.h>
 #include <xsysmonpsu.h>
 #include "acquisition.h"
+#include "cellComm.h"
 #include "display.h"
 #include "evr.h"
+#include "epics.h"
 #include "frequencyMonitor.h"
 #include "gpio.h"
 #include "iic.h"
@@ -183,6 +185,8 @@ sysmonFetch(uint32_t *args)
     args[aIndex++] = v;
     args[aIndex++] = GPIO_READ(GPIO_IDX_SYSREF_CSR);
     args[aIndex++] = rfADCstatus();
+    args[aIndex++] = duplicateIOCcheck(0, 0);
+    args[aIndex++] = cellCommGetFOFB();
     return aIndex;
 }
 
