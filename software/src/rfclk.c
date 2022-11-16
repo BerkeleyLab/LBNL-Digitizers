@@ -45,8 +45,6 @@ static int lmx2594v0InitValues[LMX2594_MUX_SEL_SIZE];
 static void
 init2594(int muxSelect, const uint32_t *values, int n)
 {
-    Xil_AssertVoid(muxSelect < LMX2594_MUX_SEL_SIZE);
-
     int i;
 
     /*
@@ -80,8 +78,6 @@ init2594(int muxSelect, const uint32_t *values, int n)
 static void
 start2594(int muxSelect)
 {
-    Xil_AssertVoid(muxSelect < LMX2594_MUX_SEL_SIZE);
-
     int vTuneCode;
     uint32_t v0 = lmx2594read(muxSelect, 0);
 
@@ -113,8 +109,6 @@ start2594(int muxSelect)
 void
 lmx2594Config(int muxSelect, const uint32_t *values, int n)
 {
-    Xil_AssertVoid(muxSelect < LMX2594_MUX_SEL_SIZE);
-
     init2594(muxSelect, values, n);
     start2594(muxSelect);
 }
@@ -163,9 +157,12 @@ lmx2594ReadbackFirst(uint32_t *values, int capacity)
 void
 rfClkInit(void)
 {
+    printf("BEFORE rfClkInitLMK04xx\n");
     rfClkInitLMK04xx();
+    printf("AFTER rfClkInitLMK04xx\n");
     int i;
     for (i = 0 ; i < LMX2594_MUX_SEL_SIZE ; i++) {
+        printf("rfClkInit LMX2594_MUX_SEL_SIZE = %d, i = %d\n", LMX2594_MUX_SEL_SIZE, i);
         lmx2594Config(lmx2594MuxSel[i], lmx2594Values[i],
                 lmx2594Sizes[i]);
     }
