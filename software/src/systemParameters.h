@@ -23,18 +23,6 @@ extern struct systemParameters {
     struct sysNetConfig netConfig;
     int                 userMGTrefClkOffsetPPM;
     int                 startupDebugFlags;
-    int                 rfDivisor;
-    int                 pllMultiplier;
-    int                 isSinglePass;
-    int                 adcHeartbeatMarker;
-    int                 evrPerFaMarker;
-    int                 evrPerSaMarker;
-    int                 adcOrder;
-    float               xCalibration;
-    float               yCalibration;
-    float               qCalibration;
-    int                 buttonRotation;
-    int                 afeTrim[4]; /* Per-channel trims in units of 0.25 dB */
     uint32_t            checksum;
 } systemParameters;
 
