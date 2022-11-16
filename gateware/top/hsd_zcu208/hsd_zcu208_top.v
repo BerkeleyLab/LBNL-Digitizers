@@ -255,6 +255,7 @@ calibration #(
     .prbsClk(prbsClk),
     .trainingSignal(TRAINING_SIGNAL),
     .adcClk(adcClk),
+    .adcsTVALID(adcsTVALID[0]),
     .adcsTDATA(adcsTDATA[0+:CFG_ADC_CHANNEL_COUNT*SAMPLES_WIDTH]));
 
 /////////////////////////////////////////////////////////////////////////////
@@ -270,6 +271,7 @@ adcRangeCheck #(
     .GPIO_OUT(GPIO_OUT),
     .sysReadout(GPIO_IN[GPIO_IDX_ADC_RANGE_CSR]),
     .adcClk(adcClk),
+    .axiValid(adcsTVALID[0]),
     .axiData(adcsTDATA[0+:CFG_ADC_CHANNEL_COUNT*SAMPLES_WIDTH]));
 
 /////////////////////////////////////////////////////////////////////////////
