@@ -135,7 +135,8 @@ reg  signed [PER_CLOCK_SUM_WIDTH-1:0] adcSum;
 assign adcPartialSumValid = adcPairSumValid;
 assign adcPartialSum[0] = adcPairSum[0];
 for (i = 1 ; i < SAMPLES_PER_CLOCK / 2 ; i = i + 1) begin : sum
-    assign adcPartialSum[i] = adcPartialSum[i-1] + adcPairSum[i];
+    assign adcPartialSum[i] = adcPartialSum[i-1] +
+        (adcPairSumValid? adcPairSum[i] : {PER_CLOCK_SUM_WIDTH{1'b0}});
 end
 endgenerate
 
