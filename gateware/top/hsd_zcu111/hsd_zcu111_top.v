@@ -327,6 +327,7 @@ acquisitionBRAM #(
     .GPIO_OUT(GPIO_OUT),
     .sysStatus(GPIO_IN[GPIO_IDX_ADC_0_CSR]),
     .adcClk(adcClk),
+    .axiValid(adcsTVALID[0]),
     .axiData(adcsTDATA));
 `endif
 
@@ -355,6 +356,7 @@ acquisitionBCM #(
     .evrInjectionTrigger(evrTriggerBus[3]),
     .evrTimestamp(evrTimestamp),
     .adcClk(adcClk),
+    .axiValid(adcsTVALID[0]),
     .axiData(adcsTDATA[0+:CFG_ADC_CHANNEL_COUNT*SAMPLES_WIDTH]));
 
 assign BCM_SROC_GND = 0;
@@ -402,6 +404,7 @@ for (i = 0 ; i < NUMBER_OF_BONDED_GROUPS ; i = i + 1) begin
         .evrClk(evrClk),
         .evrTimestamp(evrTimestamp),
         .adcClk(adcClk),
+        .axiValid(adcsTVALID[adc]),
         .axiData(adcsTDATA[adc*SAMPLES_WIDTH+:SAMPLES_WIDTH]),
         .eventTriggerStrobes(adcEventTriggerStrobes),
         .bondedWriteEnableIn(bondedWriteEnable[0]),
