@@ -1,13 +1,12 @@
 Digitizers
 ==========
 
-Gateware/Software for High Speed digitizers, including
-High Speed Digitizer and Beam Position Monitor
+Gateware/Software for High Speed digitizers
 
 ### Building
 
 This repository contains both gateware and software
-for some High Speed digitizers.
+for High Speed digitizers.
 
 #### Gateware Dependencies
 
@@ -48,7 +47,6 @@ For now the following combinations of PLATFORM and APP are supported:
 |:--------------:|:------:|:------:|
 |       hsd      |    x   |    x   |
 |       bcm      |    x   |        |
-|       bpm      |        |    x   |
 
 So, for example, to generate the HSD application for the ZCU111 board:
 
