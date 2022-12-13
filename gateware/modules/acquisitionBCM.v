@@ -24,7 +24,7 @@ module acquisitionBCM #(
     input [63:0] evrTimestamp,
 
     input                                                              adcClk,
-    input [CHANNEL_COUNT-1:0]                                          axiValid,
+    input                                                              axiValid,
     input [(CHANNEL_COUNT*AXI_SAMPLES_PER_CLOCK*AXI_SAMPLE_WIDTH)-1:0] axiData
     );
 
@@ -127,7 +127,7 @@ always @(posedge adcClk) begin
         sampleCounter <= { 1'b0, acqCountReload };
         acqAddressCounter <= 0;
     end
-    else begin
+    else if (dpramWriteDataValid[0]) begin
         sampleCounter <= sampleCounter - 1;
         acqAddressCounter <= acqAddressCounter + 1;
     end
@@ -169,13 +169,13 @@ wire [(CHANNEL_COUNT*AXI_SAMPLES_PER_CLOCK*DPRAM_WIDTH)-1:0] dpramWriteData;
 wire [(CHANNEL_COUNT*AXI_SAMPLES_PER_CLOCK)-1:0] dpramWriteDataValid;
 always @(posedge adcClk) begin
     dpramQ <= dpram[acqAddress];
-    if (acquiring_d3 && dpramWriteDataValid) dpram[acqAddress_d3] <= dpramWriteData;
+    if (acquiring_d3 && dpramWriteDataValid[0]) dpram[acqAddress_d3] <= dpramWriteData;
 end
 
 genvar i;
 generate
 for (i = 0 ; i < (CHANNEL_COUNT * AXI_SAMPLES_PER_CLOCK) ; i = i + 1) begin
- wire                          adcValid = axiValid[i/AXI_SAMPLES_PER_CLOCK];
+ wire                          adcValid = axiValid;
  // ADC values are left adjusted in the AXI_SAMPLE_WIDTH fields.
  wire signed   [ADC_WIDTH-1:0] adcData =
                             axiData[(i*AXI_SAMPLE_WIDTH)+ADC_SHIFT+:ADC_WIDTH];

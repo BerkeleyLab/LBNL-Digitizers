@@ -1,3 +1,0 @@
-void
-acqSyncInit(void)
-{}

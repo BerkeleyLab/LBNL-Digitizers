@@ -25,11 +25,6 @@
 #include "systemParameters.h"
 #include "tftp.h"
 #include "util.h"
-#include "localOscillator.h"
-#include "autotrim.h"
-#include "acqSync.h"
-#include "publisher.h"
-#include "positionCalc.h"
 
 static void
 sfpString(const char *name, int offset)
@@ -151,11 +146,7 @@ main(void)
     /* Set up communications and acquisition */
     epicsInit();
     tftpInit();
-    publisherInit();
     acquisitionInit();
-    localOscillatorInit();
-    acqSyncInit();
-    positionCalcInit();
     for (int i = 0 ; i < CFG_ADC_PHYSICAL_COUNT ; i++) { afeSetGain(i, 16); }
 
     /*
@@ -171,7 +162,6 @@ main(void)
         acquisitionCrank();
         mgtCrankRxAligner();
         xemacif_input(&netif);
-        publisherCheck();
         consoleCheck();
         ffsCheck();
         displayUpdate();

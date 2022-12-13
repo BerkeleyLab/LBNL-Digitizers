@@ -15,54 +15,15 @@
 
 #define HSD_PROTOCOL_UDP_PORT        50005
 #define HSD_PROTOCOL_PUBLISHER_UDP_PORT 50006
-#define HSD_PROTOCOL_MAGIC           0xBD008427
-#define HSD_PROTOCOL_MAGIC_SWAPPED   0x278400BD
-#define HSD_PROTOCOL_MAGIC_SLOW_ACQUISITION  \
-                                     0xCAFE0005
-#define HSD_PROTOCOL_MAGIC_SWAPPED_SLOW_ACQUISITION \
-                                     0x0500FECA
+#define HSD_PROTOCOL_MAGIC           0xBD008426
+#define HSD_PROTOCOL_MAGIC_SWAPPED   0x268400BD
 #define HSD_PROTOCOL_ARG_CAPACITY    350
-#define HSD_PROTOCOL_ADC_COUNT       8
-#define HSD_PROTOCOL_DSP_COUNT       2
 
 struct hsdPacket {
     epicsUInt32    magic;
     epicsUInt32    nonce;
     epicsUInt32    command;
     epicsUInt32    args[HSD_PROTOCOL_ARG_CAPACITY];
-};
-
-/*
- * Slow acquisition (typically 10 Hz) monitoring
- */
-struct hsdSlowAcquisition {
-    epicsUInt32 magic;
-    epicsUInt32 packetNumber;
-    epicsUInt32 seconds;
-    epicsUInt32 ticks;
-    epicsUInt8  syncStatus;
-    epicsUInt8  recorderStatus;
-    epicsUInt8  clipStatus;
-    epicsUInt8  cellCommStatus;
-    epicsUInt8  autotrimStatus;
-    epicsUInt8  sdSyncStatus;
-    epicsUInt8  pad1;
-    epicsUInt8  pad2;
-    epicsUInt16 adcPeak[HSD_PROTOCOL_ADC_COUNT];
-    epicsUInt32 rfMag[HSD_PROTOCOL_ADC_COUNT];
-    epicsUInt32 ptLoMag[HSD_PROTOCOL_ADC_COUNT];
-    epicsUInt32 ptHiMag[HSD_PROTOCOL_ADC_COUNT];
-    epicsUInt32 gainFactor[HSD_PROTOCOL_ADC_COUNT];
-    epicsInt32  xPos[HSD_PROTOCOL_DSP_COUNT];
-    epicsInt32  yPos[HSD_PROTOCOL_DSP_COUNT];
-    epicsInt32  skew[HSD_PROTOCOL_DSP_COUNT];
-    epicsInt32  buttonSum[HSD_PROTOCOL_DSP_COUNT];
-    epicsInt32  xRMSwide[HSD_PROTOCOL_DSP_COUNT];
-    epicsInt32  yRMSwide[HSD_PROTOCOL_DSP_COUNT];
-    epicsInt32  xRMSnarrow[HSD_PROTOCOL_DSP_COUNT];
-    epicsInt32  yRMSnarrow[HSD_PROTOCOL_DSP_COUNT];
-    epicsUInt32 lossOfBeamStatus[HSD_PROTOCOL_DSP_COUNT];
-    epicsUInt32 prelimProcStatus[HSD_PROTOCOL_DSP_COUNT];
 };
 
 #define HSD_PROTOCOL_SIZE_TO_ARG_COUNT(s) (HSD_PROTOCOL_ARG_CAPACITY - \

@@ -16,7 +16,6 @@ PLATFORM_ZU28_DIR  = $(PLATFORM_DIR)/xilinx/zu28
 PLATFORM_ZU28_HSD_DIR  = $(PLATFORM_ZU28_DIR)/hsd
 PLATFORM_ZU48_DIR  = $(PLATFORM_DIR)/xilinx/zu48
 PLATFORM_ZU48_HSD_DIR  = $(PLATFORM_ZU48_DIR)/hsd
-PLATFORM_ZU48_BPM_DIR  = $(PLATFORM_ZU48_DIR)/bpm
 
 GW_SYN_DIR         = $(GATEWARE_DIR)/syn
 
@@ -37,10 +36,5 @@ SW_HSD_SCRIPTS_DIR = $(SW_HSD_DIR)/scripts
 
 SW_BCM_DIR         = $(SW_APP_DIR)/bcm
 SW_BCM_SCRIPTS_DIR = $(SW_BCM_DIR)/scripts
-
-# BPM Sofware
-
-SW_BPM_DIR         = $(SW_APP_DIR)/bpm
-SW_BPM_SCRIPTS_DIR = $(SW_BPM_DIR)/scripts
 
 include $(BEDROCK_DIR)/dir_list.mk
