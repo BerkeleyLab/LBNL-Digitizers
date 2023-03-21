@@ -317,7 +317,8 @@ epics_callback(void *arg, struct udp_pcb *pcb, struct pbuf *p,
     }
     else {
         if (debugFlags & DEBUGFLAG_EPICS) {
-            printf("Bad magic number 0x%08X\n", command.magic);
+            printf("Bad magic number 0x%08X, expecting 0x%08X\n",
+                    command.magic, HSD_PROTOCOL_MAGIC);
         }
     }
 }
