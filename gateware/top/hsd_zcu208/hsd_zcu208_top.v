@@ -363,6 +363,7 @@ for (i = 0 ; i < NUMBER_OF_BONDED_GROUPS ; i = i + 1) begin
         .sysAcqConfig2Strobe(GPIO_STROBES[GPIO_IDX_ADC_0_CONFIG_2+rOff]),
         .GPIO_OUT(GPIO_OUT),
         .sysStatus(GPIO_IN[GPIO_IDX_ADC_0_CSR+rOff]),
+        .sysData(GPIO_IN[GPIO_IDX_ADC_0_DATA+rOff]),
         .sysTriggerLocation(GPIO_IN[GPIO_IDX_ADC_0_TRIGGER_LOCATION+rOff]),
         .sysTriggerTimestamp({GPIO_IN[GPIO_IDX_ADC_0_SECONDS+rOff],
                               GPIO_IN[GPIO_IDX_ADC_0_TICKS+rOff]}),
