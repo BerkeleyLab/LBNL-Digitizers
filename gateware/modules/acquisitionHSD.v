@@ -138,7 +138,7 @@ reg                              triggersBeenIdle = 0;
 genvar i;
 generate
 for (i = 0 ; i < AXI_SAMPLES_PER_CLOCK ; i = i + 1) begin
-    (*mark_debug=DEBUG*) reg adcValid = 0;
+    reg adcValid = 0;
     (*mark_debug=DEBUG*) reg signed [ADC_WIDTH-1:0] adc = 0;
     always @(posedge adcClk) begin
         adcValid <= axiValid;
