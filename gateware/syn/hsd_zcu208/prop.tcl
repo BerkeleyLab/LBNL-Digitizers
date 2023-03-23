@@ -12,3 +12,6 @@ set impl_prop_dict {
     steps.phys_opt_design.args.directive {AlternateFlowWithRetiming}
     steps.write_bitstream.args.verbose   {1}
 }
+
+set_property -dict $syn_prop_dict [get_runs synth_1]
+set_property -dict $impl_prop_dict [get_runs impl_1]
