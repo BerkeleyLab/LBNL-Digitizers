@@ -136,6 +136,10 @@ epicsCommonCommand(int commandArgCount, struct hsdPacket *cmdp,
             replyp->args[0] = afeGetSerialNumber();
             break;
 
+        case HSD_PROTOCOL_CMD_LONGIN_IDX_RFADC_SAMPLING_CLK:
+            replyp->args[0] = CFG_ADC_SAMPLING_CLK_FREQ*1000; // kHz
+            break;
+
         default: return -1;
         }
         break;
@@ -313,7 +317,8 @@ epics_callback(void *arg, struct udp_pcb *pcb, struct pbuf *p,
     }
     else {
         if (debugFlags & DEBUGFLAG_EPICS) {
-            printf("Bad magic number 0x%08X\n", command.magic);
+            printf("Bad magic number 0x%08X, expecting 0x%08X\n",
+                    command.magic, HSD_PROTOCOL_MAGIC);
         }
     }
 }

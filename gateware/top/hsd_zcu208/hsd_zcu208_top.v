@@ -363,6 +363,7 @@ for (i = 0 ; i < NUMBER_OF_BONDED_GROUPS ; i = i + 1) begin
         .sysAcqConfig2Strobe(GPIO_STROBES[GPIO_IDX_ADC_0_CONFIG_2+rOff]),
         .GPIO_OUT(GPIO_OUT),
         .sysStatus(GPIO_IN[GPIO_IDX_ADC_0_CSR+rOff]),
+        .sysData(GPIO_IN[GPIO_IDX_ADC_0_DATA+rOff]),
         .sysTriggerLocation(GPIO_IN[GPIO_IDX_ADC_0_TRIGGER_LOCATION+rOff]),
         .sysTriggerTimestamp({GPIO_IN[GPIO_IDX_ADC_0_SECONDS+rOff],
                               GPIO_IN[GPIO_IDX_ADC_0_TICKS+rOff]}),
@@ -531,14 +532,14 @@ system
     .adc5stream_tdata(adcsTDATA[5*SAMPLES_WIDTH+:SAMPLES_WIDTH]),
     .adc6stream_tdata(adcsTDATA[6*SAMPLES_WIDTH+:SAMPLES_WIDTH]),
     .adc7stream_tdata(adcsTDATA[7*SAMPLES_WIDTH+:SAMPLES_WIDTH]),
-    .adc0stream_tvalid(adcsTVALID[0]),
-    .adc1stream_tvalid(adcsTVALID[1]),
-    .adc2stream_tvalid(adcsTVALID[2]),
-    .adc3stream_tvalid(adcsTVALID[3]),
-    .adc4stream_tvalid(adcsTVALID[4]),
-    .adc5stream_tvalid(adcsTVALID[5]),
-    .adc6stream_tvalid(adcsTVALID[6]),
-    .adc7stream_tvalid(adcsTVALID[7]),
+    .adc0stream_tvalid(),
+    .adc1stream_tvalid(),
+    .adc2stream_tvalid(),
+    .adc3stream_tvalid(),
+    .adc4stream_tvalid(),
+    .adc5stream_tvalid(),
+    .adc6stream_tvalid(),
+    .adc7stream_tvalid(),
     .adc0stream_tready(1'b1),
     .adc1stream_tready(1'b1),
     .adc2stream_tready(1'b1),
@@ -548,6 +549,11 @@ system
     .adc6stream_tready(1'b1),
     .adc7stream_tready(1'b1)
     );
+
+    // don't use TVALID, as it becomes diffcult to meet
+    // timing in that way. We know that for every adcClk
+    // cycle the signal is valid anyway.
+    assign adcsTVALID = {BD_ADC_CHANNEL_COUNT{1'b1}};
 
 `endif // `ifndef SIMULATE
 
