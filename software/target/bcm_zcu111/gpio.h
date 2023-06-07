@@ -35,9 +35,10 @@
  */
 #define GPIO_IDX_ACQUISITION_CSR         32 // Acquisition control/status
 #define GPIO_IDX_ACQUISITION_READOUT     33 // Acquisition data (R)
-#define GPIO_IDX_ACQUISITION_SECONDS     34 // Acquisition trigger time (R)
-#define GPIO_IDX_ACQUISITION_TICKS       35 // Acquisition trigger time (R)
-#define GPIO_IDX_PER_ADC             4
+#define GPIO_IDX_ACQUISITION_PROP        34 // Acquisition properties(R)
+#define GPIO_IDX_ACQUISITION_SECONDS     35 // Acquisition trigger time (R)
+#define GPIO_IDX_ACQUISITION_TICKS       36 // Acquisition trigger time (R)
+#define GPIO_IDX_PER_ADC             5
 
 #define CFG_AXI_SAMPLES_PER_CLOCK         8
 
