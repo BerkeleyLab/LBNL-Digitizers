@@ -377,7 +377,7 @@ end
 assign sysStatus = { sysAcqActive, sysFull, sysSegMode,
                      {32-1-1-2-3{1'b0}},
                      acqState};
-assign sysData = { sysDataMux, {ADC_SHIFT{1'b0}} };
+assign sysData = $signed(sysDataMux) << ADC_SHIFT;
 
 generate
 if (SINGLE_SAMPLE_PER_CLOCK) begin
