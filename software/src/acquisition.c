@@ -141,6 +141,18 @@ acquisitionStatus(uint32_t status[], int capacity)
 }
 
 static int
+isDataSigned(int prop_idx)
+{
+    return !!(GPIO_READ(prop_idx) & 0x100);
+}
+
+static int
+dataWidth(int prop_idx)
+{
+    return GPIO_READ(prop_idx) & 0xFF;
+}
+
+static int
 fetch(int csr_idx, int data_idx, int dataLocation)
 {
     GPIO_WRITE(csr_idx, dataLocation);
@@ -218,11 +230,12 @@ acquisitionFetch(uint32_t *buf, int capacity, int channel, int offset, int last)
             }
             *buf++ = GPIO_READ(REG(GPIO_IDX_ADC_0_SECONDS, triggerChannel));
             *buf++ = GPIO_READ(REG(GPIO_IDX_ADC_0_TICKS, triggerChannel));
+            *buf++ = GPIO_READ(REG(GPIO_IDX_ADC_0_PROP, triggerChannel);
             n = afeFetchCalibration(channel, buf);
 
             if (n == 0) return 0;
             buf += n;
-            n += 2;
+            n += 3;
         }
         loc = dataLocation(segMode, base, offset);
         if (loc < 0) {
@@ -426,10 +439,11 @@ acquisitionFetch(uint32_t *buf, int capacity, int channel, int offset, int last)
         if (offset == 0) {
             *buf++ = whenStarted.secPastEpoch;
             *buf++ = whenStarted.ticks;
+            *buf++ = GPIO_READ(GPIO_IDX_ADC_0_PROP);
             n = afeFetchCalibration(channel, buf);
             if (n == 0) return 0;
             buf += n;
-            n += 2;
+            n += 3;
         }
         addr = (base + (offset >> 3)) % (CFG_ACQUISITION_BUFFER_CAPACITY >> 3);
         muxSel = offset & 0x7;
