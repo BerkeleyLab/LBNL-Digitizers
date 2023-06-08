@@ -1,14 +1,14 @@
 set syn_prop_dict {
-    steps.synth_design.args.directive    {AreaOptimized_high}
+    steps.synth_design.args.directive    {AreaOptimized_medium}
     steps.synth_design.args.assert       {1}
     "steps.synth_design.args.more options" {-verbose}
 }
 
 set impl_prop_dict {
     steps.opt_design.is_enabled          {1}
-    steps.opt_design.args.directive      {Explore}
+    steps.opt_design.args.directive      {ExploreWithRemap}
     steps.opt_design.args.verbose        {1}
-    steps.place_design.args.directive    {ExtraTimingOpt}
+    steps.place_design.args.directive    {Explore}
     steps.phys_opt_design.is_enabled     {1}
     steps.phys_opt_design.args.directive {AggressiveExplore}
     "steps.phys_opt_design.args.more options" {-verbose}
