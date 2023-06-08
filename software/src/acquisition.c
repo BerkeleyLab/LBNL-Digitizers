@@ -147,7 +147,7 @@ isDataSigned(int prop_idx)
 }
 
 static int
-dataWidth(int prop_idx)
+acquisitionDataWidth(int prop_idx)
 {
     return GPIO_READ(prop_idx) & 0xFF;
 }
@@ -193,11 +193,13 @@ acquisitionFetch(uint32_t *buf, int capacity, int channel, int offset, int last)
 {
     int csr_idx;
     int data_idx;
+    int prop_idx;
     int triggerChannel;
     int triggerLocation, base;
     int segMode;
     uint32_t csr;
-    int n = 0;
+    int n = 0, i;
+    int dataWidth, samplesPerWord, mask;
 
     if ((channel < 0) || (channel >= CFG_ACQ_CHANNEL_COUNT) || (capacity < 5)) {
         return 0;
@@ -214,12 +216,19 @@ acquisitionFetch(uint32_t *buf, int capacity, int channel, int offset, int last)
     }
     csr_idx = REG(GPIO_IDX_ADC_0_CSR, channel);
     data_idx = REG(GPIO_IDX_ADC_0_DATA, channel);
+    prop_idx = REG(GPIO_IDX_ADC_0_PROP, channel);
+
+    dataWidth = acquisitionDataWidth(prop_idx);
+    samplesPerWord = sizeof(uint32_t)/(dataWidth/8);
+    mask = (1 << dataWidth) - 1;
+
     segMode = acqConfig[triggerChannel].segMode;
     triggerLocation = GPIO_READ(REG(GPIO_IDX_ADC_0_TRIGGER_LOCATION, triggerChannel));
     base = (triggerLocation - acqConfig[triggerChannel].pretriggerCount +
              CFG_ACQUISITION_BUFFER_CAPACITY) % CFG_ACQUISITION_BUFFER_CAPACITY;
     while ((n < capacity) && (offset < last)) {
         int loc;
+        uint32_t v = 0;
         if (offset == 0) {
             if (debugFlags & DEBUGFLAG_ACQUISITION) {
                 printf("Chan:%d(t%d) trigger@%d (%d:%d)\n", channel,
@@ -230,20 +239,31 @@ acquisitionFetch(uint32_t *buf, int capacity, int channel, int offset, int last)
             }
             *buf++ = GPIO_READ(REG(GPIO_IDX_ADC_0_SECONDS, triggerChannel));
             *buf++ = GPIO_READ(REG(GPIO_IDX_ADC_0_TICKS, triggerChannel));
-            *buf++ = GPIO_READ(REG(GPIO_IDX_ADC_0_PROP, triggerChannel);
+            *buf++ = GPIO_READ(REG(GPIO_IDX_ADC_0_PROP, triggerChannel));
             n = afeFetchCalibration(channel, buf);
 
             if (n == 0) return 0;
             buf += n;
             n += 3;
         }
-        loc = dataLocation(segMode, base, offset);
-        if (loc < 0) {
+
+        for (i = 0; i < samplesPerWord; ++i) {
+            loc = dataLocation(segMode, base, offset);
+            if (loc < 0) {
+                break;
+            }
+
+            v |= ((fetch(csr_idx, data_idx, loc) & mask) << (i*dataWidth));
+            offset++;
+        }
+
+        // nothing is avaiable on "v"
+        if (i == 0) {
             break;
         }
-        *buf++ = fetch(csr_idx, data_idx, loc);
+
         n++;
-        offset++;
+        *buf++ = v;
     }
     return n;
 }
