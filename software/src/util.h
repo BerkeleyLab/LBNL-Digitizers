@@ -40,5 +40,6 @@ int resetRecoverySwitchPressed(void);
 void showReg(unsigned int i);
 
 int serialNumberDFE(void);
+float mean(int32_t *numbers, int length);
 
 #endif /* _UTIL_H_ */
