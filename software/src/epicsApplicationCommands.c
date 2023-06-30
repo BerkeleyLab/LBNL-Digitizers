@@ -91,8 +91,20 @@ epicsApplicationCommand(int commandArgCount, struct hsdPacket *cmdp,
             acquisitionArm(idx, cmdp->args[0]);
             break;
 
+            /*
+             * Modes 0, 1, 2 are without averaging
+             * Modes 3 and 4 are the same as 1 and 2
+             *  but with averaging
+             */
         case HSD_PROTOCOL_CMD_LONGOUT_LO_SET_SEGMENTED_MODE:
-            acquisitionSetSegmentedMode(idx, cmdp->args[0]);
+            if (cmdp->args[0] < 3) {
+                acquisitionSetSegmentedMode(idx, cmdp->args[0]);
+                acquisitionSetSegmentedMeanMode(idx, 0);
+            }
+            else {
+                acquisitionSetSegmentedMode(idx, cmdp->args[0]-2);
+                acquisitionSetSegmentedMeanMode(idx, 1);
+            }
             break;
 
         case HSD_PROTOCOL_CMD_LONGOUT_LO_EARLY_SEGMENT_INTERVAL:
