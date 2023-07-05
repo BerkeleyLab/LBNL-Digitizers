@@ -14,6 +14,10 @@
 #define CSR_R_ACQ_ACTIVE                0x80000000
 #define CSR_R_FULL                      0x40000000
 
+#define CSR_DATA_PROP_WIDTH(w)          ((w) & 0xFF)
+#define CSR_DATA_PROP_SIGN              (1 << 8)
+#define CSR_DATA_PROP_FLOAT             (1 << 24)
+
 #define TRIGGER_CONFIG_LEVEL_MASK       0x00FFFF
 #define TRIGGER_CONFIG_ENABLES_MASK     0x7F0000
 #define TRIGGER_CONFIG_ENABLES_SHIFT    16
@@ -262,7 +266,7 @@ acquisitionNormalFetch(uint32_t *buf, int capacity, int channel, int triggerChan
     return n;
 }
 
-static uint32_t meanSegmentBuff[CFG_LONG_SEGMENT_CAPACITY];
+static uint32_t meanSegmentBuff[LONG_SEGMENT_SAMPLES];
 
 static int
 acquisitionMeanFetch(uint32_t *buf, int capacity, int channel, int triggerChannel,
@@ -274,10 +278,8 @@ acquisitionMeanFetch(uint32_t *buf, int capacity, int channel, int triggerChanne
     int base, triggerLocation;
     int segMode;
     uint32_t csr;
-    int dataWidth, samplesPerWord, mask;
     int samplesPerSegment;
-    int n = 0, i, j;
-    float m;
+    int n = 0, i;
     int segOffset;
     size_t meanSegBufSize = sizeof meanSegmentBuff / sizeof meanSegmentBuff[0];
 
@@ -289,10 +291,6 @@ acquisitionMeanFetch(uint32_t *buf, int capacity, int channel, int triggerChanne
     data_idx = REG(GPIO_IDX_ADC_0_DATA, channel);
     prop_idx = REG(GPIO_IDX_ADC_0_PROP, channel);
 
-    dataWidth = acquisitionDataWidth(prop_idx);
-    samplesPerWord = sizeof(uint32_t)/(dataWidth/8);
-    mask = (1 << dataWidth) - 1;
-
     segMode = acqConfig[triggerChannel].segMode;
     samplesPerSegment = (segMode == SEGMODE_CONTIGUOUS)? CONTINUOUS_ACQUISITION_SAMPLES : (
                                 (segMode == SEGMODE_LONG_SEGMENTS) ?
@@ -303,7 +301,7 @@ acquisitionMeanFetch(uint32_t *buf, int capacity, int channel, int triggerChanne
              CFG_ACQUISITION_BUFFER_CAPACITY) % CFG_ACQUISITION_BUFFER_CAPACITY;
     while ((n < capacity) && (offset < last)) {
         int loc;
-        uint32_t v = 0;
+        float m = 0.0;
         if (segOffset == 0) {
             if (debugFlags & DEBUGFLAG_ACQUISITION) {
                 printf("Chan:%d(t%d) trigger@%d (%d:%d)\n", channel,
@@ -314,7 +312,9 @@ acquisitionMeanFetch(uint32_t *buf, int capacity, int channel, int triggerChanne
             }
             *buf++ = GPIO_READ(REG(GPIO_IDX_ADC_0_SECONDS, triggerChannel));
             *buf++ = GPIO_READ(REG(GPIO_IDX_ADC_0_TICKS, triggerChannel));
-            *buf++ = GPIO_READ(REG(GPIO_IDX_ADC_0_PROP, triggerChannel));
+            /* The data read by the FPGA will be processed and
+             * transmitted as float, 32-bit*/
+            *buf++ = CSR_DATA_PROP_FLOAT | CSR_DATA_PROP_SIGN | CSR_DATA_PROP_WIDTH(32);
             n = afeFetchCalibration(channel, buf);
 
             if (n == 0) return 0;
@@ -322,57 +322,39 @@ acquisitionMeanFetch(uint32_t *buf, int capacity, int channel, int triggerChanne
             n += 3;
         }
 
-        for (i = 0; i < samplesPerWord; ++i) {
-
-            /* fetch 1 segment worth of data */
-            for (j = 0; j < samplesPerSegment && j < meanSegBufSize; ++j) {
-                loc = dataLocation(segMode, base, segOffset);
-                if (loc < 0) {
-                    break;
-                }
-
-                meanSegmentBuff[j] = fetch(csr_idx, data_idx, loc);
-                segOffset++;
-            }
-
-            if (j == 0) {
+        /* fetch 1 segment worth of data */
+        for (i = 0; i < samplesPerSegment && i < meanSegBufSize; ++i) {
+            loc = dataLocation(segMode, base, segOffset);
+            if (loc < 0) {
                 break;
             }
 
-            if (j < samplesPerSegment) {
-                printf("Incomplete segment when calculating mean (channel %d)\n",
-                        channel);
-                return 0;
-            }
-
-#if 0
-            if (debugFlags & DEBUGFLAG_ACQUISITION) {
-                printf("Mean of segment %d (channel %d):\n", n*samplesPerWord+i-6, channel);
-
-                for (j = 0; j < samplesPerSegment; ++j) {
-                    printf("%u ", meanSegmentBuff[j]);
-                }
-            }
-#endif
-
-            m = mean((int32_t *)meanSegmentBuff, samplesPerSegment);
-
-            if (debugFlags & DEBUGFLAG_ACQUISITION) {
-                printf("Mean of segment %d (channel %d): %f\n",
-                        offset, channel, m);
-            }
-
-            offset++;
-            v |= (((int32_t)m & mask) << (i*dataWidth));
+            meanSegmentBuff[i] = fetch(csr_idx, data_idx, loc);
+            segOffset++;
         }
 
-        // nothing is avaiable on "v"
         if (i == 0) {
             break;
         }
 
+        if (i < samplesPerSegment) {
+            printf("Incomplete segment when calculating mean (channel %d)\n",
+                    channel);
+            return 0;
+        }
+
+        m = mean((int32_t *)meanSegmentBuff, samplesPerSegment);
+
+        if (debugFlags & DEBUGFLAG_ACQUISITION) {
+            printf("Mean of segment %d (channel %d): %f\n",
+                    offset, channel, m);
+        }
+
+        offset++;
         n++;
-        *buf++ = v;
+        // blind copy, no cast as we interpret data as float on the client side
+        memcpy(buf, &m, sizeof(float));
+        buf++;
     }
     return n;
 }
