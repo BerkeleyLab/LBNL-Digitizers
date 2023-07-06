@@ -108,3 +108,26 @@ serialNumberDFE(void)
 {
     return GPIO_READ(GPIO_IDX_USER_GPIO_CSR) & 0xFF;
 }
+
+/*
+ * Calculate the mean by using the formula:
+ *
+ * mean_n = mean_n-1 + (x_n - mean_n-1)/n
+ */
+static
+float incrementalMean(int32_t *numbers, int length)
+{
+    int i;
+    float avg = 0;
+
+    for (i = 0; i < length; ++i) {
+        avg += (numbers[i] - avg)/(float) (i + 1);
+    }
+
+    return avg;
+}
+
+float mean(int32_t *number, int length)
+{
+    return incrementalMean(number, length);
+}

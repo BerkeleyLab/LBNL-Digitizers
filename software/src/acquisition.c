@@ -14,6 +14,10 @@
 #define CSR_R_ACQ_ACTIVE                0x80000000
 #define CSR_R_FULL                      0x40000000
 
+#define CSR_DATA_PROP_WIDTH(w)          ((w) & 0xFF)
+#define CSR_DATA_PROP_SIGN              (1 << 8)
+#define CSR_DATA_PROP_FLOAT             (1 << 24)
+
 #define TRIGGER_CONFIG_LEVEL_MASK       0x00FFFF
 #define TRIGGER_CONFIG_ENABLES_MASK     0x7F0000
 #define TRIGGER_CONFIG_ENABLES_SHIFT    16
@@ -45,6 +49,8 @@ static struct acqConfig {
     int         pretriggerClocks;
     enum {SEGMODE_CONTIGUOUS=0, SEGMODE_LONG_SEGMENTS, SEGMODE_SHORT_SEGMENTS}
                 segMode;
+    enum {SEGMEANMODE_OFF=0, SEGMEANMODE_ON}
+                segMeanMode;
     uint32_t    earlySegmentInterval;
     uint32_t    laterSegmentInterval;
 } acqConfig[CFG_ACQ_CHANNEL_COUNT];
@@ -141,6 +147,18 @@ acquisitionStatus(uint32_t status[], int capacity)
 }
 
 static int
+isDataSigned(int prop_idx)
+{
+    return !!(GPIO_READ(prop_idx) & 0x100);
+}
+
+static int
+acquisitionDataWidth(int prop_idx)
+{
+    return GPIO_READ(prop_idx) & 0xFF;
+}
+
+static int
 fetch(int csr_idx, int data_idx, int dataLocation)
 {
     GPIO_WRITE(csr_idx, dataLocation);
@@ -176,38 +194,39 @@ dataLocation(int segMode, int base, int offset)
     return (base + off) % CFG_ACQUISITION_BUFFER_CAPACITY;
 }
 
-int
-acquisitionFetch(uint32_t *buf, int capacity, int channel, int offset, int last)
+static int
+acquisitionNormalFetch(uint32_t *buf, int capacity, int channel, int triggerChannel,
+        int offset, int last)
 {
     int csr_idx;
     int data_idx;
-    int triggerChannel;
-    int triggerLocation, base;
+    int prop_idx;
+    int base, triggerLocation;
     int segMode;
     uint32_t csr;
-    int n = 0;
+    int n = 0, i;
 
-    if ((channel < 0) || (channel >= CFG_ACQ_CHANNEL_COUNT) || (capacity < 5)) {
-        return 0;
-    }
-    if (acqConfig[channel].triggerReg & TRIGGER_CONFIG_BONDED) {
-        triggerChannel = channel - (channel % CFG_ADCS_PER_BONDED_GROUP);
-    }
-    else {
-        triggerChannel = channel;
-    }
+    int dataWidth, samplesPerWord, mask;
+
     csr = GPIO_READ(REG(GPIO_IDX_ADC_0_CSR, triggerChannel));
     if (csr & CSR_R_ACQ_ACTIVE) {
         return 0;
     }
     csr_idx = REG(GPIO_IDX_ADC_0_CSR, channel);
     data_idx = REG(GPIO_IDX_ADC_0_DATA, channel);
+    prop_idx = REG(GPIO_IDX_ADC_0_PROP, channel);
+
+    dataWidth = acquisitionDataWidth(prop_idx);
+    samplesPerWord = sizeof(uint32_t)/(dataWidth/8);
+    mask = (1 << dataWidth) - 1;
+
     segMode = acqConfig[triggerChannel].segMode;
     triggerLocation = GPIO_READ(REG(GPIO_IDX_ADC_0_TRIGGER_LOCATION, triggerChannel));
     base = (triggerLocation - acqConfig[triggerChannel].pretriggerCount +
              CFG_ACQUISITION_BUFFER_CAPACITY) % CFG_ACQUISITION_BUFFER_CAPACITY;
     while ((n < capacity) && (offset < last)) {
         int loc;
+        uint32_t v = 0;
         if (offset == 0) {
             if (debugFlags & DEBUGFLAG_ACQUISITION) {
                 printf("Chan:%d(t%d) trigger@%d (%d:%d)\n", channel,
@@ -218,20 +237,157 @@ acquisitionFetch(uint32_t *buf, int capacity, int channel, int offset, int last)
             }
             *buf++ = GPIO_READ(REG(GPIO_IDX_ADC_0_SECONDS, triggerChannel));
             *buf++ = GPIO_READ(REG(GPIO_IDX_ADC_0_TICKS, triggerChannel));
+            *buf++ = GPIO_READ(REG(GPIO_IDX_ADC_0_PROP, triggerChannel));
             n = afeFetchCalibration(channel, buf);
 
             if (n == 0) return 0;
             buf += n;
-            n += 2;
+            n += 3;
         }
-        loc = dataLocation(segMode, base, offset);
-        if (loc < 0) {
+
+        for (i = 0; i < samplesPerWord; ++i) {
+            loc = dataLocation(segMode, base, offset);
+            if (loc < 0) {
+                break;
+            }
+
+            v |= ((fetch(csr_idx, data_idx, loc) & mask) << (i*dataWidth));
+            offset++;
+        }
+
+        // nothing is avaiable on "v"
+        if (i == 0) {
             break;
         }
-        *buf++ = fetch(csr_idx, data_idx, loc);
+
         n++;
-        offset++;
+        *buf++ = v;
     }
+    return n;
+}
+
+static uint32_t meanSegmentBuff[LONG_SEGMENT_SAMPLES];
+
+static int
+acquisitionMeanFetch(uint32_t *buf, int capacity, int channel, int triggerChannel,
+        int offset, int last)
+{
+    int csr_idx;
+    int data_idx;
+    int prop_idx;
+    int base, triggerLocation;
+    int segMode;
+    uint32_t csr;
+    int samplesPerSegment;
+    int n = 0, i;
+    int segOffset;
+    size_t meanSegBufSize = sizeof meanSegmentBuff / sizeof meanSegmentBuff[0];
+
+    csr = GPIO_READ(REG(GPIO_IDX_ADC_0_CSR, triggerChannel));
+    if (csr & CSR_R_ACQ_ACTIVE) {
+        return 0;
+    }
+    csr_idx = REG(GPIO_IDX_ADC_0_CSR, channel);
+    data_idx = REG(GPIO_IDX_ADC_0_DATA, channel);
+    prop_idx = REG(GPIO_IDX_ADC_0_PROP, channel);
+
+    segMode = acqConfig[triggerChannel].segMode;
+    samplesPerSegment = (segMode == SEGMODE_CONTIGUOUS)? CONTINUOUS_ACQUISITION_SAMPLES : (
+                                (segMode == SEGMODE_LONG_SEGMENTS) ?
+                                LONG_SEGMENT_SAMPLES : SHORT_SEGMENT_SAMPLES);
+    segOffset = offset * samplesPerSegment;
+    triggerLocation = GPIO_READ(REG(GPIO_IDX_ADC_0_TRIGGER_LOCATION, triggerChannel));
+    base = (triggerLocation - acqConfig[triggerChannel].pretriggerCount +
+             CFG_ACQUISITION_BUFFER_CAPACITY) % CFG_ACQUISITION_BUFFER_CAPACITY;
+    while ((n < capacity) && (offset < last)) {
+        int loc;
+        float m = 0.0;
+        if (segOffset == 0) {
+            if (debugFlags & DEBUGFLAG_ACQUISITION) {
+                printf("Chan:%d(t%d) trigger@%d (%d:%d)\n", channel,
+                                   triggerChannel,
+                                   triggerLocation,
+                                   triggerLocation / CFG_AXI_SAMPLES_PER_CLOCK,
+                                   triggerLocation % CFG_AXI_SAMPLES_PER_CLOCK);
+            }
+            *buf++ = GPIO_READ(REG(GPIO_IDX_ADC_0_SECONDS, triggerChannel));
+            *buf++ = GPIO_READ(REG(GPIO_IDX_ADC_0_TICKS, triggerChannel));
+            /* The data read by the FPGA will be processed and
+             * transmitted as float, 32-bit*/
+            *buf++ = CSR_DATA_PROP_FLOAT | CSR_DATA_PROP_SIGN | CSR_DATA_PROP_WIDTH(32);
+            n = afeFetchCalibration(channel, buf);
+
+            if (n == 0) return 0;
+            buf += n;
+            n += 3;
+        }
+
+        /* fetch 1 segment worth of data */
+        for (i = 0; i < samplesPerSegment && i < meanSegBufSize; ++i) {
+            loc = dataLocation(segMode, base, segOffset);
+            if (loc < 0) {
+                break;
+            }
+
+            meanSegmentBuff[i] = fetch(csr_idx, data_idx, loc);
+            segOffset++;
+        }
+
+        if (i == 0) {
+            break;
+        }
+
+        if (i < samplesPerSegment) {
+            printf("Incomplete segment when calculating mean (channel %d)\n",
+                    channel);
+            return 0;
+        }
+
+        m = mean((int32_t *)meanSegmentBuff, samplesPerSegment);
+
+        if (debugFlags & DEBUGFLAG_ACQUISITION) {
+            printf("Mean of segment %d (channel %d): %f\n",
+                    offset, channel, m);
+        }
+
+        offset++;
+        n++;
+        // blind copy, no cast as we interpret data as float on the client side
+        memcpy(buf, &m, sizeof(float));
+        buf++;
+    }
+    return n;
+}
+
+int
+acquisitionFetch(uint32_t *buf, int capacity, int channel, int offset, int last)
+{
+    int triggerChannel;
+    int segMeanMode;
+    int n;
+
+    if ((channel < 0) || (channel >= CFG_ACQ_CHANNEL_COUNT) || (capacity < 6)) {
+        return 0;
+    }
+
+    /* get segment information */
+    if (acqConfig[channel].triggerReg & TRIGGER_CONFIG_BONDED) {
+        triggerChannel = channel - (channel % CFG_ADCS_PER_BONDED_GROUP);
+    }
+    else {
+        triggerChannel = channel;
+    }
+
+    segMeanMode = acqConfig[triggerChannel].segMeanMode;
+    if (segMeanMode) {
+        n = acquisitionMeanFetch(buf, capacity, channel, triggerChannel,
+                offset, last);
+    }
+    else {
+        n = acquisitionNormalFetch(buf, capacity, channel, triggerChannel,
+                offset, last);
+    }
+
     return n;
 }
 
@@ -322,6 +478,18 @@ acquisitionSetSegmentedMode(int channel, int segMode)
     acqConfig[channel].segMode = segMode;
     setTrigger(channel, TRIGGER_CONFIG_SEGMODE_MASK,
                                        segMode << TRIGGER_CONFIG_SEGMODE_SHIFT);
+}
+
+void
+acquisitionSetSegmentedMeanMode(int channel, int segMeanMode)
+{
+    if ((channel < 0) || (channel >= CFG_ACQ_CHANNEL_COUNT)) return;
+    switch (segMeanMode) {
+    case SEGMEANMODE_OFF: break;
+    case SEGMEANMODE_ON:  break;
+    default: return;
+    }
+    acqConfig[channel].segMeanMode = segMeanMode;
 }
 
 void
@@ -416,7 +584,7 @@ acquisitionFetch(uint32_t *buf, int capacity, int channel, int offset, int last)
     if ((GPIO_READ(GPIO_IDX_ADC_0_CSR) &  CSR_R_RUNNING)
      || (channel < 0)
      || (channel >= CFG_ACQ_CHANNEL_COUNT)
-     || (capacity < 5)) {
+     || (capacity < 6)) {
         return 0;
     }
     haveNewData = 0;
@@ -426,10 +594,11 @@ acquisitionFetch(uint32_t *buf, int capacity, int channel, int offset, int last)
         if (offset == 0) {
             *buf++ = whenStarted.secPastEpoch;
             *buf++ = whenStarted.ticks;
+            *buf++ = GPIO_READ(GPIO_IDX_ADC_0_PROP);
             n = afeFetchCalibration(channel, buf);
             if (n == 0) return 0;
             buf += n;
-            n += 2;
+            n += 3;
         }
         addr = (base + (offset >> 3)) % (CFG_ACQUISITION_BUFFER_CAPACITY >> 3);
         muxSel = offset & 0x7;

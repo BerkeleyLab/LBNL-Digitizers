@@ -24,6 +24,7 @@ module acquisitionHSD #(
     input       [31:0] GPIO_OUT,
     output wire [31:0] sysStatus,
     output wire [31:0] sysData,
+    output wire [31:0] sysProperties,
     output wire [31:0] sysTriggerLocation,
     output reg  [63:0] sysTriggerTimestamp,
 
@@ -374,10 +375,16 @@ always @(posedge sysClk) begin
     sysDataMux <= (SINGLE_SAMPLE_PER_CLOCK)? dpramQ[0+:ADC_WIDTH] :
         dpramQ[sysMuxSelect*ADC_WIDTH+:ADC_WIDTH];
 end
+
+wire [7:0] sysSampleWidth = ADC_WIDTH + ADC_SHIFT;
+wire       sysSampleSign = 1; // signed
 assign sysStatus = { sysAcqActive, sysFull, sysSegMode,
                      {32-1-1-2-3{1'b0}},
                      acqState};
 assign sysData = $signed(sysDataMux) << ADC_SHIFT;
+assign sysProperties = { {32-8-1{1'b0}},
+                         sysSampleSign,
+                         sysSampleWidth };
 
 generate
 if (SINGLE_SAMPLE_PER_CLOCK) begin

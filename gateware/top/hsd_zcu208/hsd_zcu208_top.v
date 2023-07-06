@@ -291,6 +291,7 @@ acquisitionBRAM #(
     .sysCsrStrobe(GPIO_STROBES[GPIO_IDX_ADC_0_CSR]),
     .GPIO_OUT(GPIO_OUT),
     .sysStatus(GPIO_IN[GPIO_IDX_ADC_0_CSR]),
+    .sysProperties(GPIO_IN[GPIO_IDX_ADC_0_PROP]),
     .adcClk(adcClk),
     .axiValid(adcsTVALID[0]),
     .axiData(adcsTDATA));
@@ -314,6 +315,7 @@ acquisitionBCM #(
     .GPIO_OUT(GPIO_OUT),
     .sysStatusReg(GPIO_IN[GPIO_IDX_ACQUISITION_CSR]),
     .sysReadoutReg(GPIO_IN[GPIO_IDX_ACQUISITION_READOUT]),
+    .sysProperties(GPIO_IN[GPIO_IDX_ACQUISITION_PROP]),
     .triggerTimestamp({GPIO_IN[GPIO_IDX_ACQUISITION_SECONDS],
                        GPIO_IN[GPIO_IDX_ACQUISITION_TICKS]}),
     .evrPostCycleTrigger(evrTriggerBus[2]),
@@ -364,6 +366,7 @@ for (i = 0 ; i < NUMBER_OF_BONDED_GROUPS ; i = i + 1) begin
         .GPIO_OUT(GPIO_OUT),
         .sysStatus(GPIO_IN[GPIO_IDX_ADC_0_CSR+rOff]),
         .sysData(GPIO_IN[GPIO_IDX_ADC_0_DATA+rOff]),
+        .sysProperties(GPIO_IN[GPIO_IDX_ADC_0_PROP+rOff]),
         .sysTriggerLocation(GPIO_IN[GPIO_IDX_ADC_0_TRIGGER_LOCATION+rOff]),
         .sysTriggerTimestamp({GPIO_IN[GPIO_IDX_ADC_0_SECONDS+rOff],
                               GPIO_IN[GPIO_IDX_ADC_0_TICKS+rOff]}),

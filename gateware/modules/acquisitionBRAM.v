@@ -12,6 +12,7 @@ module acquisitionBRAM #(
     input              sysCsrStrobe,
     input       [31:0] GPIO_OUT,
     output wire [31:0] sysStatus,
+    output wire [31:0] sysProperties,
 
     input                        adcClk,
     input                        axiValid,
@@ -49,6 +50,8 @@ end
 localparam MUX_WIDTH = 16;
 localparam MUX_SELECT_WIDTH = $clog2(AXI_CHANNEL_COUNT * AXI_SAMPLES_PER_CLOCK *
                                                   AXI_SAMPLE_WIDTH / MUX_WIDTH);
+wire [7:0] sysSampleWidth = AXI_SAMPLE_WIDTH;
+wire       sysSampleSign = 0; // unsigned
 reg [DPRAM_ADDR_WIDTH-1:0] sysReadAddress = 0;
 reg [MUX_SELECT_WIDTH-1:0] sysReadMuxSel;
 reg [MUX_WIDTH-1:0] sysReadMuxQ;
@@ -67,4 +70,7 @@ assign sysStatus = { sysAcqEnable,
                      {32-1-DPRAM_ADDR_WIDTH-MUX_WIDTH{1'b0}},
                      acqAddress,
                      sysReadMuxQ };
+assign sysProperties = { {32-8-1{1'b0}},
+                         sysSampleSign
+                         sysSampleWidth };
 endmodule

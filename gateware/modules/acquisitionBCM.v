@@ -16,6 +16,7 @@ module acquisitionBCM #(
     input              [31:0] GPIO_OUT,
     output wire        [31:0] sysStatusReg,
     output wire signed [31:0] sysReadoutReg,
+    output wire        [31:0] sysProperties,
     output reg         [63:0] triggerTimestamp,
 
     input        evrClk,
@@ -203,6 +204,8 @@ endgenerate
 // Assumes that there's enough time between the processor writing the readout
 // address and reading the value for all clock crossing to stabilize.
 reg [DPRAM_WIDTH-1:0] dpramMUX;
+wire [7:0] sysSampleWidth = DPRAM_WIDTH + ADC_SHIFT;
+wire       sysSampleSign = 1; // signed
 always @(posedge sysClk) begin
     dpramMUX <= (SINGLE_SAMPLE_PER_CLOCK)?
         dpramQ[(sysChannelIndex * AXI_SAMPLES_PER_CLOCK) * DPRAM_WIDTH+:DPRAM_WIDTH] :
@@ -210,6 +213,9 @@ always @(posedge sysClk) begin
                  sysSampleIndex) * DPRAM_WIDTH+:DPRAM_WIDTH];
 end
 assign sysReadoutReg = $signed(dpramMUX) << ADC_SHIFT;
+assign sysProperties = { {32-8-1{1'b0}},
+                         sysSampleSign,
+                         sysSampleWidth };
 
 //////////////////////////////////////////////////////////////////////////////
 // EVR clock domain
