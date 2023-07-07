@@ -624,6 +624,7 @@ void acquisitionSetTriggerEnables(int channel, int mask){ }
 void acquisitionSetBonding(int channel, int bonded){ }
 void acquisitionSetPretriggerCount(int channel, int n){ }
 void acquisitionSetSegmentedMode(int channel, int isSegmented){ }
+void acquisitionSetSegmentedMeanMode(int channel, int segMeanMode){ }
 void acquisitionSetEarlySegmentInterval(int channel, int adcClockTicks){ }
 void acquisitionSetLaterSegmentInterval(int channel, int adcClockTicks){ }
 void acquisitionSetSize(unsigned int n) { }
@@ -875,6 +876,7 @@ void acquisitionSetTriggerEnables(int channel, int mask){ }
 void acquisitionSetBonding(int channel, int bonded){ }
 void acquisitionSetPretriggerCount(int channel, int n){ }
 void acquisitionSetSegmentedMode(int channel, int isSegmented){ }
+void acquisitionSetSegmentedMeanMode(int channel, int segMeanMode){ }
 void acquisitionSetEarlySegmentInterval(int channel, int adcClockTicks){ }
 void acquisitionSetLaterSegmentInterval(int channel, int adcClockTicks){ }
 
