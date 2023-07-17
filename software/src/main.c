@@ -97,27 +97,17 @@ main(void)
     drawIPv4Address(&ipv4->address, isRecovery);
 
     /* Set up hardware */
-    microsecondSpin(100000);
     sysmonInit();
     sfpChk();
     eyescanInit();
-    microsecondSpin(100000);
     mgtInit();
-    microsecondSpin(100000);
     evrInit();
-    microsecondSpin(100000);
     rfClkInit();
-    microsecondSpin(100000);
     rfClkShow();
-    microsecondSpin(100000);
     mmcmInit();
-    microsecondSpin(100000);
     sysrefInit();
-    microsecondSpin(100000);
     sysrefShow();
-    microsecondSpin(100000);
     rfADCinit();
-    microsecondSpin(100000);
     afeInit();
     rfADCrestart();
     rfADCshow();
