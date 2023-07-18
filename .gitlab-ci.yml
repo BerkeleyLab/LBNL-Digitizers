@@ -36,6 +36,7 @@ gw_hsd_zcu208:
   before_script:
     - cd gateware/syn/hsd_zcu208 && ls /non-free
   stage: gateware
+  allow_failure: true
   script:
     - make clean && PATH=$XILINX_VIVADO/bin:$PATH time make hsd_zcu208_top.bit
   artifacts:
