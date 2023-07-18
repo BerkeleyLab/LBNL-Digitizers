@@ -15,7 +15,7 @@ include ../../../dir_list.mk
 TARGET ?= bcm_zcu111
 VARIANT ?= dc
 
-PLATFORM_ZU28_BCM_VARIANT_DIR = $(PLATFORM_ZU28_BCM_DIR)/bcm_$(VARIANT)
+PLATFORM_ZU28_BCM_VARIANT_DIR = $(PLATFORM_ZU28_DIR)/bcm_$(VARIANT)
 
 # Top level bitstream name
 all: $(TARGET)_top.bit
