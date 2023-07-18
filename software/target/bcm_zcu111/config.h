@@ -18,7 +18,7 @@
 /*
  * Number of ADC AXI clocks per SYSREF clock
  */
-#define ADC_CLK_PER_SYSREF  88
+#define ADC_CLK_PER_SYSREF  80
 
 /*
  * Number of FPGA_REFCLK_OUT_C clocks per SYSREF clock

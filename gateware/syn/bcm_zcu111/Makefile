@@ -13,6 +13,9 @@ include ../../../dir_list.mk
 
 # Top level design name
 TARGET ?= bcm_zcu111
+VARIANT ?= dc
+
+PLATFORM_ZU28_BCM_VARIANT_DIR = $(PLATFORM_ZU28_DIR)/bcm_$(VARIANT)
 
 # Top level bitstream name
 all: $(TARGET)_top.bit
@@ -45,9 +48,9 @@ include $(MODULES_DIR)/evr_axi_rules.mk
 include $(MODULES_DIR)/axi_lite_generic_reg_rules.mk
 
 IP_CORES += evrGTY prbsMMCM
-evrGTY_DIR = $(PLATFORM_ZU28_HSD_DIR)/evrGTY
+evrGTY_DIR = $(PLATFORM_ZU28_BCM_VARIANT_DIR)/evrGTY
 evrGTY_TOP = $(evrGTY_DIR)/synth/evrGTY.v
-prbsMMCM_DIR = $(PLATFORM_ZU28_HSD_DIR)/prbsMMCM
+prbsMMCM_DIR = $(PLATFORM_ZU28_BCM_VARIANT_DIR)/prbsMMCM
 prbsMMCM_TOP = $(prbsMMCM_DIR)/prbsMMCM.v
 
 IP_CORES_TOP_LVL_SRCS += $(evrGTY_TOP) $(prbsMMCM_TOP)
@@ -59,7 +62,7 @@ IP_CORES_SRCS_DIRS += $(addsuffix /synth, $(IP_CORES_DIRS))
 IP_CORES_SRCS_DIRS += $(addsuffix /hdl, $(IP_CORES_DIRS))
 
 BD += system
-system_DIR = $(PLATFORM_ZU28_HSD_DIR)/system
+system_DIR = $(PLATFORM_ZU28_BCM_VARIANT_DIR)/system
 system_TOP = $(system_DIR)/synth/system.v
 
 BD_TOP_LVL_SRCS += $(system_TOP)

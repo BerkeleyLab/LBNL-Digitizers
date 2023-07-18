@@ -3,6 +3,7 @@ include dir_list.mk
 CROSS_COMPILE    ?=
 PLATFORM         ?= zcu111
 APP              ?= hsd
+GW_VARIANT       ?= dc
 
 TARGET       = $(APP)_$(PLATFORM)
 GW_TGT_DIR   = $(GW_SYN_DIR)/$(TARGET)
@@ -14,7 +15,7 @@ SW_TGT_DIR   = $(SW_APP_DIR)/$(APP)
 all: bit sw
 
 bit:
-	make -C $(GW_TGT_DIR) TARGET=$(TARGET) $(TARGET)_top.bit
+	make -C $(GW_TGT_DIR) TARGET=$(TARGET) VARIANT=$(GW_VARIANT) $(TARGET)_top.bit
 
 sw:
 	make -C $(SW_TGT_DIR) TARGET=$(TARGET) BIT=$(BIT) all
