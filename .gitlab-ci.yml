@@ -51,7 +51,7 @@ gw_bcm_ac_zcu111:
     - cd gateware/syn/bcm_zcu111 && ls /non-free
   stage: gateware
   script:
-    - make clean && PATH=$XILINX_VIVADO/bin:$PATH time make VARIANT=ac bcm_zcu111_top.bit
+    - make VARIANT=ac clean && PATH=$XILINX_VIVADO/bin:$PATH time make VARIANT=ac bcm_zcu111_top.bit
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_REF_NAME"
     expire_in: 7 days
@@ -65,7 +65,7 @@ gw_bcm_dc_zcu111:
     - cd gateware/syn/bcm_zcu111 && ls /non-free
   stage: gateware
   script:
-    - make clean && PATH=$XILINX_VIVADO/bin:$PATH time make VARIANT=dc bcm_zcu111_top.bit
+    - make VARIANT=dc clean && PATH=$XILINX_VIVADO/bin:$PATH time make VARIANT=dc bcm_zcu111_top.bit
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_REF_NAME"
     expire_in: 7 days
