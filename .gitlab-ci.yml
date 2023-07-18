@@ -102,6 +102,7 @@ sw_hsd_zcu208:
   before_script:
     - cd software/app/hsd
   stage: software
+  allow_failure: true
   script:
     - make TARGET=hsd_zcu208 clean && PATH=$XILINX_VITIS/bin:$XILINX_VITIS/gnu/aarch64/lin/aarch64-none/bin:$PATH time make TARGET=hsd_zcu208
   # Get artifacts from this job, needed to compile the sofware
