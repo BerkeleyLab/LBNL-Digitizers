@@ -18,25 +18,6 @@
 #include "sysmon.h"
 #include "util.h"
 
-int
-duplicateIOCcheck(unsigned long address, unsigned int port)
-{
-    uint32_t now = MICROSECONDS_SINCE_BOOT()/1000000; // in seconds
-    static unsigned long oldAddress;
-    static unsigned short oldPort;
-    static uint32_t whenChanged, whenDuplicate;
-
-    if (address != 0) {
-        if ((address != oldAddress) || (port != oldPort)) {
-            if ((now - whenChanged) < 10) whenDuplicate = now;
-            oldPort = port;
-            oldAddress = address;
-            whenChanged = now;
-        }
-    }
-    return ((now - whenDuplicate) < 15);
-}
-
 /*
  * 32-bit endian swap
  * Assume that we're using GCC
@@ -273,12 +254,6 @@ epics_callback(void *arg, struct udp_pcb *pcb, struct pbuf *p,
         return;
     }
     commandArgCount = HSD_PROTOCOL_SIZE_TO_ARG_COUNT(p->len);
-
-    /*
-     * Record last time we receive a command from a client
-     * in an attempt to detect deuplicate IOC connections.
-     */
-    duplicateIOCcheck(addr, fromPort);
 
     /*
      * Must make copy rather than just using payload area
