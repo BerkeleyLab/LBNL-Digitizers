@@ -117,12 +117,15 @@ reg [SEGMENT_COUNTER_WIDTH:0] segmentCounter = 0, sysSegmentCounterLoad = -1;
 wire segmentCounterDone = segmentCounter[SEGMENT_COUNTER_WIDTH];
 
 localparam SEG_GAP_COUNTER_WIDTH = 27;
+// Note that we use SEG_GAP_COUNTER_WIDTH and not the usual
+// SEG_GAP_COUNTER_WIDTH-1 on the ranges below. The extra bit
+// is for the "counter done"" condition.
 (*mark_debug=DEBUG*) reg [SEG_GAP_COUNTER_WIDTH:0] segGapCounter = 0;
 wire segGapCounterDone = segGapCounter[SEG_GAP_COUNTER_WIDTH];
 wire [SEG_GAP_COUNTER_WIDTH:0] earlySegGapCounterLoad =
-          {{SEG_GAP_COUNTER_WIDTH-14{sysAcqConfig1[31]}}, sysAcqConfig1[31:18]};
+          {{SEG_GAP_COUNTER_WIDTH+1-14{1'b0}}, sysAcqConfig1[31:18]};
 wire [SEG_GAP_COUNTER_WIDTH:0] laterSegGapCounterLoad =
-                                         sysAcqConfig2[SEG_GAP_COUNTER_WIDTH:0];
+            {1'b0, sysAcqConfig2[SEG_GAP_COUNTER_WIDTH-1:0]};
 
 ///////////////////////////////////////////////////////////////////////////////
 // ADC AXI Clock Domain
@@ -282,7 +285,7 @@ always @(posedge adcClk) begin
             end
         end
         ACQ_S_ACQUIRE: begin
-            // Does this counter counts samples or clock cycles?
+            // Clock cycles to wait between segments
             segGapCounter <= earlySegmentsCounterDone ? laterSegGapCounterLoad :
                                                         earlySegGapCounterLoad;
             if (axiValid) begin
