@@ -76,7 +76,8 @@ main(void)
 
     /* Announce our presence */
     st7789vInit();
-    printf("\nFirmware POSIX seconds: %d\n", GPIO_READ(GPIO_IDX_FIRMWARE_BUILD_DATE));
+    printf("\nGit ID (32-bit): 0x%08x\n", GPIO_READ(GPIO_IDX_GITHASH));
+    printf("Firmware POSIX seconds: %d\n", GPIO_READ(GPIO_IDX_FIRMWARE_BUILD_DATE));
     printf("Software POSIX seconds: %d\n", SOFTWARE_BUILD_DATE);
 
     /* Set up file system */

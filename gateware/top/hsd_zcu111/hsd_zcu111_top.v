@@ -60,8 +60,6 @@ module hsd_zcu111_top #(
     input  PMOD1_6,
     input  PMOD1_7);
 
-`include "firmwareBuildDate.v"
-
 //////////////////////////////////////////////////////////////////////////////
 // Static outputs
 assign SFP0_TX_ENABLE = 1'b1;
@@ -80,7 +78,11 @@ for (i = 0 ; i < GPIO_IDX_COUNT ; i = i + 1) begin : gpio_flatten
     assign GPIO_IN_FLATTENED[i*32+:32] = GPIO_IN[i];
 end
 endgenerate
+
+`include "firmwareBuildDate.v"
 assign GPIO_IN[GPIO_IDX_FIRMWARE_BUILD_DATE] = FIRMWARE_BUILD_DATE;
+`include "gitHash.vh"
+assign GPIO_IN[GPIO_IDX_GITHASH] = GIT_REV_32BIT;
 
 //////////////////////////////////////////////////////////////////////////////
 // Clocks
