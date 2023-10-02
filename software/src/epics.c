@@ -121,6 +121,10 @@ epicsCommonCommand(int commandArgCount, struct hsdPacket *cmdp,
             replyp->args[0] = CFG_ADC_SAMPLING_CLK_FREQ*1000; // kHz
             break;
 
+        case HSD_PROTOCOL_CMD_LONGIN_IDX_GIT_HASH_ID:
+            replyp->args[0] = GPIO_READ(GPIO_IDX_GITHASH);
+            break;
+
         default: return -1;
         }
         break;
