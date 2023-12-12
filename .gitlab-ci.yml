@@ -123,7 +123,8 @@ sw_bcm_ac_zcu111:
     - cd software/app/bcm
   stage: software
   script:
-    - make TARGET=bcm_zcu111 clean && PATH=$XILINX_VITIS/bin:$XILINX_VITIS/gnu/aarch64/lin/aarch64-none/bin:$PATH time make TARGET=bcm_zcu111
+    - make BIN_NAME_SUFFIX=_ac TARGET=bcm_zcu111 clean
+    - PATH=$XILINX_VITIS/bin:$XILINX_VITIS/gnu/aarch64/lin/aarch64-none/bin:$PATH time make BIN_NAME_SUFFIX=_ac TARGET=bcm_zcu111
   # Get artifacts from this job, needed to compile the sofware
   needs:
     - job: gw_bcm_ac_zcu111
@@ -142,7 +143,8 @@ sw_bcm_dc_zcu111:
     - cd software/app/bcm
   stage: software
   script:
-    - make TARGET=bcm_zcu111 clean && PATH=$XILINX_VITIS/bin:$XILINX_VITIS/gnu/aarch64/lin/aarch64-none/bin:$PATH time make TARGET=bcm_zcu111
+    - make BIN_NAME_SUFFIX=_dc TARGET=bcm_zcu111 clean
+    - PATH=$XILINX_VITIS/bin:$XILINX_VITIS/gnu/aarch64/lin/aarch64-none/bin:$PATH time make BIN_NAME_SUFFIX=_dc TARGET=bcm_zcu111
   # Get artifacts from this job, needed to compile the sofware
   needs:
     - job: gw_bcm_dc_zcu111
