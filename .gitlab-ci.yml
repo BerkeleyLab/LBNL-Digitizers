@@ -96,7 +96,7 @@ sw_hsd_zcu111:
       - software/app/hsd/hsd_zcu111/platform/zynqmp_fsbl/fsbl_a53.elf
       - software/app/hsd/hsd_zcu111/platform/export/platform/sw/platform/boot/pmufw.elf
       - software/app/hsd/hsd_zcu111.elf
-      - software/app/hsd/BOOT.bin
+      - software/app/hsd/hsd_zcu111*.bin
 
 sw_hsd_zcu208:
   before_script:
@@ -116,14 +116,15 @@ sw_hsd_zcu208:
       - software/app/hsd/hsd_zcu208/platform/zynqmp_fsbl/fsbl_a53.elf
       - software/app/hsd/hsd_zcu208/platform/export/platform/sw/platform/boot/pmufw.elf
       - software/app/hsd/hsd_zcu208.elf
-      - software/app/hsd/BOOT.bin
+      - software/app/hsd/hsd_zcu208*.bin
 
 sw_bcm_ac_zcu111:
   before_script:
     - cd software/app/bcm
   stage: software
   script:
-    - make TARGET=bcm_zcu111 clean && PATH=$XILINX_VITIS/bin:$XILINX_VITIS/gnu/aarch64/lin/aarch64-none/bin:$PATH time make TARGET=bcm_zcu111
+    - make BIN_NAME_SUFFIX=_ac TARGET=bcm_zcu111 clean
+    - PATH=$XILINX_VITIS/bin:$XILINX_VITIS/gnu/aarch64/lin/aarch64-none/bin:$PATH time make BIN_NAME_SUFFIX=_ac TARGET=bcm_zcu111
   # Get artifacts from this job, needed to compile the sofware
   needs:
     - job: gw_bcm_ac_zcu111
@@ -135,14 +136,15 @@ sw_bcm_ac_zcu111:
       - software/app/bcm/bcm_zcu111/platform/zynqmp_fsbl/fsbl_a53.elf
       - software/app/bcm/bcm_zcu111/platform/export/platform/sw/platform/boot/pmufw.elf
       - software/app/bcm/bcm_zcu111.elf
-      - software/app/bcm/BOOT.bin
+      - software/app/bcm/bcm_zcu111*.bin
 
 sw_bcm_dc_zcu111:
   before_script:
     - cd software/app/bcm
   stage: software
   script:
-    - make TARGET=bcm_zcu111 clean && PATH=$XILINX_VITIS/bin:$XILINX_VITIS/gnu/aarch64/lin/aarch64-none/bin:$PATH time make TARGET=bcm_zcu111
+    - make BIN_NAME_SUFFIX=_dc TARGET=bcm_zcu111 clean
+    - PATH=$XILINX_VITIS/bin:$XILINX_VITIS/gnu/aarch64/lin/aarch64-none/bin:$PATH time make BIN_NAME_SUFFIX=_dc TARGET=bcm_zcu111
   # Get artifacts from this job, needed to compile the sofware
   needs:
     - job: gw_bcm_dc_zcu111
@@ -154,5 +156,5 @@ sw_bcm_dc_zcu111:
       - software/app/bcm/bcm_zcu111/platform/zynqmp_fsbl/fsbl_a53.elf
       - software/app/bcm/bcm_zcu111/platform/export/platform/sw/platform/boot/pmufw.elf
       - software/app/bcm/bcm_zcu111.elf
-      - software/app/bcm/BOOT.bin
+      - software/app/bcm/bcm_zcu111*.bin
 

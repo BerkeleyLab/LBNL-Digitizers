@@ -11,12 +11,14 @@ include ../../../dir_list.mk
 
 TARGET   ?= hsd_zcu111
 GW_HSD_TGT_DIR = $(GW_SYN_DIR)/$(TARGET)
+GIT_COMMIT = $(shell git rev-parse --short=8 --verify HEAD || echo "NOCOMMIT")
 BIT      ?= $(GW_HSD_TGT_DIR)/$(TARGET)_top.bit
 
 BIF   = $(SW_HSD_SCRIPTS_DIR)/BOOTGEN.bif
 ELF   = $(THIS_DIR)/$(TARGET).elf
 PMUFW = $(THIS_DIR)/$(TARGET)/platform/export/platform/sw/platform/boot/pmufw.elf
-BIN   = $(THIS_DIR)/BOOT.bin
+TARGET_NAME_SUFFIX ?=
+BIN   = $(THIS_DIR)/$(TARGET)$(TARGET_NAME_SUFFIX).$(GIT_COMMIT).bin
 
 # Vivado 2020.1 uses executable.elf name and Vivado 2020.2 uses fsbl_a53.elf
 FSBL  = $(THIS_DIR)/$(TARGET)/platform/zynqmp_fsbl/fsbl_a53.elf
