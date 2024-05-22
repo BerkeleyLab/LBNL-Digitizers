@@ -314,6 +314,7 @@ infoDraw(int redraw)
   }
   uint32_t microsecondsNow = GPIO_READ(GPIO_IDX_MICROSECONDS_SINCE_BOOT);
   if ((microsecondsNow - microsecondsThen > 1000000) || redraw) {
+    st7789vSetCharacterRGB(ST7789V_WHITE, ST7789V_BLACK);
     for (int i=0; i<sizeof(cbuf)/sizeof(cbuf[0]); i++) {
       st7789vShowString(DISPLAY_WIDTH - st7789vCharWidth * (i==0? 22:20),
                         st7789vCharHeight + i * st7789vCharHeight,
