@@ -11,6 +11,10 @@
 #include "systemParameters.h"
 #include "util.h"
 
+#ifndef __TARGET_NAME__
+#define __TARGET_NAME__ 'UNKNOWN'
+#endif
+
 /*
  * Special display modes for internal use
  */
