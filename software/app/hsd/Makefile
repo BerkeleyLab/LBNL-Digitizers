@@ -119,10 +119,14 @@ LIBS = -Wl,--start-group,-lxil,-lgcc,-lc,--end-group -Wl,--start-group,-lxil,-lm
 
 ifeq ($(TARGET),hsd_zcu111)
 	USER_FLAGS += -D__TARGET_HSD_ZCU111__
+	USER_FLAGS += -D__TARGET_NAME__='"HSD_ZCU111"'
+
 else ifeq ($(TARGET),hsd_zcu208)
 	USER_FLAGS += -D__TARGET_HSD_ZCU208__
+	USER_FLAGS += -D__TARGET_NAME__='"HSD_ZCU208"'
 else
 	USER_FLAGS += -D__TARGET_NOT_RECOGNIZED__
+	USER_FLAGS += -D__TARGET_NAME__='"UNKNOWN"'
 endif
 
 INCLUDE_DIRS = \
