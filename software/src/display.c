@@ -292,6 +292,38 @@ drawSerialNumbers(void)
     }
 }
 
+void
+infoDraw(int redraw)
+{
+  static int beenHere;
+  static uint32_t microsecondsThen = 0;
+  static char cbuf[4][30];
+  if (!beenHere) {
+    beenHere = 1;
+    sprintf(cbuf[0], "Information page");
+    #if defined (__TARGET_BCM_ZCU111__)
+      sprintf(cbuf[1], "Target: %s", "BCM_ZCU111");
+    #elif defined (__TARGET_HSD_ZCU111__)
+      sprintf(cbuf[1], "Target: %s", "HSD_ZCU111");
+    #elif defined (__TARGET_HSD_ZCU208__)
+      sprintf(cbuf[1], "Target: %s", "HSD_ZCU208");
+    #elif defined (D__TARGET_NOT_RECOGNIZED__)
+      sprintf(cbuf[1], "Target: %s", "UNKNOWN");
+    #endif
+    sprintf(cbuf[2], "Git hash: %8X", GPIO_READ(GPIO_IDX_GITHASH));
+  }
+  uint32_t microsecondsNow = GPIO_READ(GPIO_IDX_MICROSECONDS_SINCE_BOOT);
+  if ((microsecondsNow - microsecondsThen > 1000000) || redraw) {
+    for (int i=0; i<sizeof(cbuf)/sizeof(cbuf[0]); i++) {
+      st7789vShowString(DISPLAY_WIDTH - st7789vCharWidth * (i==0? 22:20),
+                        st7789vCharHeight + i * st7789vCharHeight,
+                        cbuf[i]);
+    microsecondsThen = GPIO_READ(GPIO_IDX_MICROSECONDS_SINCE_BOOT);
+    }
+  }
+  return;
+}
+
 static int
 displayRefresh(int newMode)
 {
@@ -303,6 +335,7 @@ displayRefresh(int newMode)
                   pageTempInfo,
                   pagePSinfo0,
                   pagePSinfo1,
+                  pageTargetInfo,
                   pageLast } newPage = pageFirst, currentPage = pageLast;
     int isPressed, newPress;
     int redrawAll = 0;
@@ -381,10 +414,11 @@ displayRefresh(int newMode)
         switch (displayMode) {
         case DISPLAY_MODE_PAGES:
             switch(currentPage) {
-            case pagePSinfo0:   sysmonDraw(redrawAll, 0);      break;
-            case pagePSinfo1:   sysmonDraw(redrawAll, 1);      break;
-            case pageTempInfo:  sysmonDraw(redrawAll, 2);      break;
-            default:                                         break;
+            case pagePSinfo0:    sysmonDraw(redrawAll, 0);      break;
+            case pagePSinfo1:    sysmonDraw(redrawAll, 1);      break;
+            case pageTempInfo:   sysmonDraw(redrawAll, 2);      break;
+            case pageTargetInfo:   infoDraw(redrawAll);         break;
+            default:                                            break;
             }
             break;
 
@@ -469,7 +503,7 @@ displayShowWarning(const char *msg)
             memcpy(&cbuf[charIndex], msg, len);
             msgs[msgIndex++] = charIndex;
             charIndex += len;
-            cbuf[charIndex - 1] = '\0'; 
+            cbuf[charIndex - 1] = '\0';
             yNext = st7789vShowText(2, yNext,
                        DISPLAY_WIDTH - 2, displayYsize - yNext,
                        ST7789V_BLACK, ST7789V_YELLOW, msg);
