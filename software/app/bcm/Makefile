@@ -120,8 +120,10 @@ LIBS = -Wl,--start-group,-lxil,-lgcc,-lc,--end-group -Wl,--start-group,-lxil,-lm
 
 ifeq ($(TARGET),bcm_zcu111)
 	USER_FLAGS += -D__TARGET_BCM_ZCU111__
+	USER_FLAGS += -D__TARGET_NAME__='"BCM_ZCU111"'
 else
 	USER_FLAGS += -D__TARGET_NOT_RECOGNIZED__
+	USER_FLAGS += -D__TARGET_NAME__='"UNKNOWN"'
 endif
 
 INCLUDE_DIRS = \
