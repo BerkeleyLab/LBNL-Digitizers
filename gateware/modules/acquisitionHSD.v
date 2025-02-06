@@ -277,7 +277,7 @@ always @(posedge adcClk) begin
         ACQ_S_ARMED: begin
             acqCounter <= sysPosttriggerLoad;
             if (triggered) begin
-                triggerToggle = !triggerToggle;
+                triggerToggle <= !triggerToggle;
                 watchForTrigger <= 0;
                 triggerDpramAddr <= dpramWriteAddress;
                 dpramWriteEnable <= 1;
