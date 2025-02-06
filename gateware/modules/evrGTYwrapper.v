@@ -126,6 +126,9 @@ localparam COMMA_COUNTER_RELOAD = COMMAS_NEEDED - 1;
 localparam COMMA_COUNTER_WIDTH = $clog2(COMMA_COUNTER_RELOAD+1) + 1;
 reg [COMMA_COUNTER_WIDTH-1:0] commaCounter = COMMA_COUNTER_RELOAD;
 assign evrRxSynchronized = commaCounter[COMMA_COUNTER_WIDTH-1];
+// K character can only appear on word 0
+wire rxDataErr = (rxCharNotInTable != 0) || rxCharIsK[1] || (rxDisparityError != 0);
+
 (*ASYNC_REG="true"*) reg slideRequest_m = 0;
 reg slideRequest_d0 = 0, slideRequest_d1 = 0;
 reg rxslide = 0;
@@ -137,7 +140,7 @@ always @(posedge evrClk) begin
     slideRequest_d1 <= slideRequest_d0;
     rxslide <= slideRequest_d0 ^ slideRequest_d1;
 
-    if (evrRxSynchronized && (rxCharNotInTable == 0) && !rxCharIsK[1]) begin
+    if (evrRxSynchronized && !rxDataErr) begin
         evrChars <= rxData;
         evrCharIsK <= rxCharIsK[1:0];
         evrCharIsComma <= rxCharIsComma[1:0];
@@ -153,7 +156,7 @@ always @(posedge evrClk) begin
         if (rxCharIsK[1]) badKcount <= badKcount + 1;
     end
 
-    if ((rxCharNotInTable != 0) || rxCharIsK[1]) begin
+    if (rxDataErr) begin
         commaCounter <= COMMA_COUNTER_RELOAD;
     end
     else if (!evrRxSynchronized && rxCharIsK[0] && (rxData[7:0] == 8'hBC)) begin
