@@ -592,7 +592,11 @@ evrLogger evrLogger (
     .sysDataTicks(GPIO_IN[GPIO_IDX_EVENT_LOG_TICKS]),
     .evrClk(evrClk),
     .evrChar(evrChars[7:0]),
-    .evrCharIsK(evrCharIsK[0]));
+    .evrCharIsK(evrCharIsK[0]),
+    .evrSeconds(evrTimestamp[63:32]),
+    .evrFraction(evrTimestamp[31:0]),
+    .sysSeconds(GPIO_IN[GPIO_IDX_EVENT_LOG_SECONDS]),
+    .sysFraction(GPIO_IN[GPIO_IDX_EVENT_LOG_FRACTION]));
 
 
 endmodule

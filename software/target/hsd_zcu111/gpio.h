@@ -30,6 +30,8 @@
 #define GPIO_IDX_EVENT_LOG_TICKS         16 // Event logger ticks
 #define GPIO_IDX_ADC_RANGE_CSR           17 // Monitor ADC ranges
 #define GPIO_IDX_GITHASH                 18 // Git 32-bit hash
+#define GPIO_IDX_EVENT_LOG_SECONDS       19
+#define GPIO_IDX_EVENT_LOG_FRACTION      20
 
 /*
  * Application-specific registers

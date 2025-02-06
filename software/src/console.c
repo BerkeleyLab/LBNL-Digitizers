@@ -475,6 +475,8 @@ cmdTLOG(int argc, char **argv)
             }
             else {
                 uint32_t ticks = GPIO_READ(GPIO_IDX_EVENT_LOG_TICKS);
+                uint32_t seconds = GPIO_READ(GPIO_IDX_EVENT_LOG_SECONDS);
+                uint32_t fraction = GPIO_READ(GPIO_IDX_EVENT_LOG_FRACTION);
                 switch(event) {
                 case 122:
                     if (isFirstHB) {
@@ -482,14 +484,16 @@ cmdTLOG(int argc, char **argv)
                         isFirstHB = 0;
                     }
                     else {
-                        printf("HB %d\n", ticks - lastHbTicks);
+                        printf("HB %d %u:%u\n", ticks - lastHbTicks,
+                                seconds, fraction);
                     }
                     lastHbTicks = ticks;
                     break;
 
                 case 125:
                     if (todBitCount == 32) {
-                        printf("PPS %d %d\n", todShift, ticks - lastEvTicks);
+                        printf("PPS %d %d %u:%u\n", todShift, ticks - lastEvTicks,
+                                seconds, fraction);
                     }
                     else {
                         printf("PPS %d\n", ticks - lastEvTicks);
@@ -499,7 +503,8 @@ cmdTLOG(int argc, char **argv)
                     break;
 
                 default:
-                    printf("%d %d\n", event, ticks - lastEvTicks);
+                    printf("%d %d %u:%u\n", event, ticks - lastEvTicks,
+                            seconds, fraction);
                     lastEvTicks = ticks;
                     break;
                 }

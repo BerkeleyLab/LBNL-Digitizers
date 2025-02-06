@@ -7,15 +7,24 @@ module evrLogger #(
     input  wire [31:0] sysGpioOut,
     output wire [31:0] sysCsr,
     output wire [31:0] sysDataTicks,
-    
+    output wire [31:0] sysSeconds,
+    output wire [31:0] sysFraction,
+
     input  wire        evrClk,
     input  wire  [7:0] evrChar,
-    input  wire        evrCharIsK);
+    input  wire        evrCharIsK,
+
+    input        [31:0] evrSeconds,
+    input        [31:0] evrFraction
+
+);
 
 reg [ADDR_WIDTH-1:0] sysReadAddress = 0, evrWriteAddress = 0;
 reg sysRunning = 0;
 wire [3:0] addrWidth = ADDR_WIDTH;
-reg [39:0] dpram[0:(1<<ADDR_WIDTH)-1], dpramQ;
+reg [32+32+8+32-1:0] dpram[0:(1<<ADDR_WIDTH)-1], dpramQ;
+assign sysSeconds = dpramQ[103:72];
+assign sysFraction = dpramQ[71:40];
 wire [7:0] sysDataEvent = dpramQ[39:32];
 assign sysDataTicks = dpramQ[31:0];
 assign sysCsr = { sysRunning, {3{1'b0}}, addrWidth,
@@ -41,7 +50,7 @@ always @(posedge evrClk) begin
     evrDPRAMwen <= evrRunning && !evrCharIsK && (evrChar != 0);
     evrDPRAMevent <= evrChar;
     if (evrDPRAMwen) begin
-        dpram[evrWriteAddress] <= { evrDPRAMevent, evrTickCounter };
+        dpram[evrWriteAddress] <= { evrSeconds, evrFraction, evrDPRAMevent, evrTickCounter};
         evrWriteAddress <= evrWriteAddress + 1;
     end
     else if (!evrRunning) begin

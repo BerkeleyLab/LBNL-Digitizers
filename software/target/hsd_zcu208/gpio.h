@@ -31,6 +31,8 @@
 #define GPIO_IDX_ADC_RANGE_CSR           17 // Monitor ADC ranges
 #define GPIO_IDX_CLK104_SPI_MUX_CSR      18 // Select CLK104 SPI MUX
 #define GPIO_IDX_GITHASH                 19 // Git 32-bit hash
+#define GPIO_IDX_EVENT_LOG_SECONDS       20
+#define GPIO_IDX_EVENT_LOG_FRACTION      21
 
 /*
  * Application-specific registers
