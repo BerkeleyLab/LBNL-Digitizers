@@ -1,21 +1,21 @@
 `timescale 1ns / 1ps
 //////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date:    14:36:28 03/12/2010 
-// Design Name: 
-// Module Name:    EventReceiverTop 
-// Project Name: 
-// Target Devices: 
-// Tool versions: 
-// Description: 
+// Company:
+// Engineer:
 //
-// Dependencies: 
+// Create Date:    14:36:28 03/12/2010
+// Design Name:
+// Module Name:    EventReceiverTop
+// Project Name:
+// Target Devices:
+// Tool versions:
+// Description:
 //
-// Revision: 
+// Dependencies:
+//
+// Revision:
 // Revision 0.01 - File Created
-// Additional Comments: 
+// Additional Comments:
 //
 //////////////////////////////////////////////////////////////////////////////////
 module EventReceiverTop(
@@ -46,7 +46,7 @@ module EventReceiverTop(
 //	 input	[31:0]	Bus2IP_Addr,
 //	 input	[2:0]		Bus2IP_CS,        // Bus to IP chip select for user logic memory selection
 //	 input				Bus2IP_RNW,       // Bus to IP read/not write
-//	 input	[31:0]	Bus2IP_Data,      // Bus to IP data bus	 
+//	 input	[31:0]	Bus2IP_Data,      // Bus to IP data bus
 //	 input	[31:0]	Bus2IP_RdCE,		// reg rd selects
 //	 input 	[31:0] 	Bus2IP_WrCE,		// reg wr selects
 //	 input	[31:0]	slv_reg0,			// channel 0 delay
@@ -66,8 +66,8 @@ module EventReceiverTop(
 //	 input	[31:0]	slv_reg14,			// channel 7 delay
 //	 input	[31:0]	slv_reg15,			// channel 7 width
 //	 input	[31:0]	slv_reg16,			// all channels polarity
-//	 input	[31:0]	slv_reg17,			// select map ram A (0) or B (1) multiplex distributed bus (2) 
-//	 input	[31:0]	slv_reg18,			
+//	 input	[31:0]	slv_reg17,			// select map ram A (0) or B (1) multiplex distributed bus (2)
+//	 input	[31:0]	slv_reg18,
 //	 input	[31:0]	slv_reg19,
 //	 input	[31:0]	slv_reg20,
 //	 input	[31:0]	slv_reg21,
@@ -75,7 +75,7 @@ module EventReceiverTop(
 //	 output	[31:0]	slv_reg23,			// data buffer size, fault, ready
 //	 output	[31:0]	slv_reg24,			// Time Stamp seconds
 //	 output	[31:0]	slv_reg25,			// Time Stamp offset
-//	 output	[31:0]	slv_reg26,			// Time Stamp reg seconds (latched on event) 
+//	 output	[31:0]	slv_reg26,			// Time Stamp reg seconds (latched on event)
 //	 output	[31:0]	slv_reg27,			// Time Stamp reg offset
 //	 output	[31:0]	slv_reg28,			// Time Stamp FIFO flags
 // 	 output	[31:0]	slv_reg29,			// Time Stamp FIFO seconds
@@ -105,13 +105,13 @@ module EventReceiverTop(
 //	 inout   [35:0]   CONTROL2,
 //	 output [7:0] evr_leds
     );
-	
+
 	assign intr_FIFO_notEmpty = !timeStampFIFOempty;
 	assign intr_FIFO_full = timeStampFIFOfull;
 	assign intr_BuffRdy = PacketReady;
-	parameter DEBUG = 0;	
-	
-	
+	parameter DEBUG = 0;
+
+
 //	wire ResetOut;
 	wire LocalReset;
 	wire [7:0] EventStream;
@@ -130,7 +130,7 @@ module EventReceiverTop(
 	wire [11:0] PacketSize;
 	wire [7:0] 	DataBufferData;
 	wire [7:0]  DataStream;
-	
+
     wire MultiplexDisBus;
     wire  DistBusClock;
 	wire  mappingRamWrA;
@@ -143,7 +143,7 @@ module EventReceiverTop(
  	reg  [63:0] timeStampLatch;
 	reg  [7:0]	eventStream_reg;
 //	reg  [7:0]  DataStream_reg;
-	
+
 //	 reg	[31:0]	slv_reg0;			// channel 0 delay
 //	 reg	[31:0]	slv_reg1;			// channel 0 width
 //	 reg	[31:0]	slv_reg2;			// channel 1 delay
@@ -161,8 +161,8 @@ module EventReceiverTop(
 //	 reg	[31:0]	slv_reg14;			// channel 7 delay
 //	 reg	[31:0]	slv_reg15;     		// channel 7 width
 //	 reg	[31:0]	slv_reg16;			// all channels polarity
-//	 reg	[31:0]	slv_reg17;			// select map ram A (0) or B (1) multiplex distributed bus (2) 
-//	 reg	[31:0]	slv_reg18;			
+//	 reg	[31:0]	slv_reg17;			// select map ram A (0) or B (1) multiplex distributed bus (2)
+//	 reg	[31:0]	slv_reg18;
 //	 reg	[31:0]	slv_reg19;
 //	 reg	[31:0]	slv_reg20;
 //	 reg	[31:0]	slv_reg21;
@@ -170,20 +170,20 @@ module EventReceiverTop(
 //	 reg	[31:0]	slv_reg23;     		// data buffer size, fault, ready
 //	 reg	[31:0]	slv_reg24;			// Time Stamp seconds
 //	 reg	[31:0]	slv_reg25;			// Time Stamp offset
-//	 reg	[31:0]	slv_reg26;			// Time Stamp reg seconds (latched on event) 
+//	 reg	[31:0]	slv_reg26;			// Time Stamp reg seconds (latched on event)
 //	 reg	[31:0]	slv_reg27;			// Time Stamp reg offset
 //	 reg	[31:0]	slv_reg28;			// Time Stamp FIFO flags
 // 	 reg	[31:0]	slv_reg29;			// Time Stamp FIFO seconds
 //	 reg	[31:0]	slv_reg30;			// Time Stamp FIFO offset
 //	 reg	[31:0]	slv_reg31;			// Time Stamp FIFO event
-	 
+
 	 wire  [31:0]  reg_sel;
 
 
     /////////////////////////////////
     // Generic Bus to EVR interface logic
-    
-    
+
+
     //  Address Decoding
     //  ================
     //  This component consumes 32kB of address space.
@@ -194,7 +194,7 @@ module EventReceiverTop(
     //        ^                    ^                 ^
     //        |                    |                 |
     //        |                    |                 +-- Byte select (always 00)
-    //        |                    | 
+    //        |                    |
     //        |                    +-------------------- Index (10 bits)
     //        |
     //        +------------------------------------------ Bank select
@@ -209,7 +209,7 @@ module EventReceiverTop(
     assign dataBufBankSel = bus_addr[14:13] == 2'b11;
     wire [2:0] evrChipSelects;
     assign evrChipSelects = { dataBufBankSel, mapBBankSel, mapABankSel };
-    
+
     //
     // Read data multiplexer is registered, so:
     //   - Register block has 1 cycle read latency.
@@ -240,7 +240,7 @@ module EventReceiverTop(
     end
 //    assign bus_rd_en_1sh = regBankSel ? (bus_rd_en_ff1 & ~bus_rd_en) : (bus_rd_en_ff2 & ~bus_rd_en_ff1);
     assign bus_rd_ack = regBankSel ? bus_rd_en_1sh : bus_rd_en_1sh_dly2;
-    
+
     //
     // Multiplex read lines from all blocks.
     // Register mux output to help this meet timing requirements.
@@ -256,7 +256,7 @@ module EventReceiverTop(
         end
     end
     assign bus_rd_data = readData;
-    
+
     //
     // Register bank
     //
@@ -267,7 +267,7 @@ module EventReceiverTop(
     wire [31:0] regReadSelects;
     wire [31:0] regWriteSelects;
     genvar i;
-    
+
     generate
     for (i = 0 ; i < 32 ; i = i + 1) begin:regSel
         assign regReadSelects[i] = bus_rd_en && (bus_addr[14:13] == 2'd0)
@@ -276,7 +276,7 @@ module EventReceiverTop(
                                                 && (bus_addr[6:2] == i);
     end
     endgenerate
-    
+
     // Register write decoder
     always @(posedge bus_clk) begin
         if (bus_reset_n == 0) begin
@@ -315,7 +315,7 @@ module EventReceiverTop(
             end
         end
     end
-    
+
     // Register read multiplexer
     always @(bus_addr or
              reg00 or reg01 or reg02 or reg03 or reg04 or
@@ -378,20 +378,20 @@ module EventReceiverTop(
 	assign reg30 = timeStampFIFOdataOut[39:8];
 	assign reg31 = {24'd0,timeStampFIFOdataOut[7:0]};
 	assign DIST_BUS  = DataStream;
-	
+
 	assign evrReadData = evrChipSelects[0] ? {16'd0,mappingRamDataA}: (evrChipSelects[1] ? {16'd0,mappingRamDataB} : {24'd0,DataBufferData});
 	assign mappingRamWrA = (evrChipSelects[0] & bus_wr_en);
 	assign mappingRamWrB = (evrChipSelects[1] & bus_wr_en);
 	assign Events = reg17[0] ? EventsB : EventsA;
-	
+
 	assign EventStream = mgt_par_data[7:0];
 	assign DataStream = mgt_par_data[15:8];
-	
+
 	parameter Kstart = 8'b00011100; // start of packet
     parameter Kstop  = 8'b00111100; // end of packet
 
     reg distBusClockDiv;
-    
+
     always @ (posedge mgt_rec_clk) begin
         if ((mgt_charisk == 2'b10) && (DataStream == Kstart))
             PacketStart <= 1'b1;
@@ -402,7 +402,7 @@ module EventReceiverTop(
             PacketStop <= 1'b0;
         end
     end
-    
+
     // distributed bus clock conditioning circuit
     assign MultiplexDisBus = reg17[2];
     assign DistBusClock = MultiplexDisBus ? mgt_rec_clk : distBusClockDiv;
@@ -427,13 +427,13 @@ module EventReceiverTop(
 //        if (mgt_bitslide_sync)
 //            DataStream_reg <= DataStream;
 //    end
-	
+
 	// Get time stamp into system clock domain
     timestamp_forward timestamp_forward (.clk_in(mgt_rec_clk),
                                          .timestamp_in(TimeStamp),
                                          .clk_out(bus_clk),
                                          .timestamp_out(timeStamp_bus));
-	
+
 	// create a latched version of the time stamp stored when bit 14
 	// of the mapping ram is '1'
 	always @ (posedge mgt_rec_clk)
@@ -445,7 +445,7 @@ module EventReceiverTop(
 	// delay the event stream input into the FIFO by one clock tick
 //	always @ (posedge mgt_rec_clk) eventStream_reg <= mgt_bitslide_sync ? EventStream : 8'h0;
 	always @ (posedge mgt_rec_clk) eventStream_reg <= EventStream;
-	
+
 	// state machine to pop the next value off the time stamp FIFO after
 	// reading the event from the FIFO
    parameter IDLE = 3'b001;
@@ -496,82 +496,82 @@ module EventReceiverTop(
 	// dictates the clock input is recovered from the serial data stream
 	// and is synchonized to the beam therefore the TRIGGER output is as well
 	EventReceiverChannel EventReceiverChannel_0 (
-		 .Clock(mgt_rec_clk), 
-		 .Reset((LocalReset || regWriteSelects[0] || regWriteSelects[1] || regWriteSelects[16])), 
+		 .Clock(mgt_rec_clk),
+		 .Reset((LocalReset || regWriteSelects[0] || regWriteSelects[1] || regWriteSelects[16])),
 		 .myEvent(Events[0]),
-		 .myDelay(reg00), 
-		 .myWidth(reg01), 
-		 .myPolarity(reg16[0]), 
+		 .myDelay(reg00),
+		 .myWidth(reg01),
+		 .myPolarity(reg16[0]),
 		 .trigger(TRIGGER[0])
 		 );
 
 	EventReceiverChannel EventReceiverChannel_1 (
-		 .Clock(mgt_rec_clk), 
-		 .Reset((LocalReset || regWriteSelects[2] || regWriteSelects[3] || regWriteSelects[16])), 
-		 .myEvent(Events[1]), 
-		 .myDelay(reg02), 
-		 .myWidth(reg03), 
-		 .myPolarity(reg16[1]), 
+		 .Clock(mgt_rec_clk),
+		 .Reset((LocalReset || regWriteSelects[2] || regWriteSelects[3] || regWriteSelects[16])),
+		 .myEvent(Events[1]),
+		 .myDelay(reg02),
+		 .myWidth(reg03),
+		 .myPolarity(reg16[1]),
 		 .trigger(TRIGGER[1])
 		 );
 
 	EventReceiverChannel EventReceiverChannel_2 (
-		 .Clock(mgt_rec_clk), 
-		 .Reset((LocalReset || regWriteSelects[4] || regWriteSelects[5] || regWriteSelects[16])), 
-		 .myEvent(Events[2]), 
-		 .myDelay(reg04), 
-		 .myWidth(reg05), 
-		 .myPolarity(reg16[2]), 
+		 .Clock(mgt_rec_clk),
+		 .Reset((LocalReset || regWriteSelects[4] || regWriteSelects[5] || regWriteSelects[16])),
+		 .myEvent(Events[2]),
+		 .myDelay(reg04),
+		 .myWidth(reg05),
+		 .myPolarity(reg16[2]),
 		 .trigger(TRIGGER[2])
 		 );
 
 	EventReceiverChannel EventReceiverChannel_3 (
-		 .Clock(mgt_rec_clk), 
-		 .Reset((LocalReset || regWriteSelects[6] || regWriteSelects[7] || regWriteSelects[16])), 
-		 .myEvent(Events[3]), 
-		 .myDelay(reg06), 
-		 .myWidth(reg07), 
-		 .myPolarity(reg16[3]), 
+		 .Clock(mgt_rec_clk),
+		 .Reset((LocalReset || regWriteSelects[6] || regWriteSelects[7] || regWriteSelects[16])),
+		 .myEvent(Events[3]),
+		 .myDelay(reg06),
+		 .myWidth(reg07),
+		 .myPolarity(reg16[3]),
 		 .trigger(TRIGGER[3])
 		 );
 
 	EventReceiverChannel EventReceiverChannel_4 (
-		 .Clock(mgt_rec_clk), 
-		 .Reset((LocalReset || regWriteSelects[8] || regWriteSelects[9] || regWriteSelects[16])), 
-		 .myEvent(Events[4]), 
-		 .myDelay(reg08), 
-		 .myWidth(reg09), 
-		 .myPolarity(reg16[4]), 
+		 .Clock(mgt_rec_clk),
+		 .Reset((LocalReset || regWriteSelects[8] || regWriteSelects[9] || regWriteSelects[16])),
+		 .myEvent(Events[4]),
+		 .myDelay(reg08),
+		 .myWidth(reg09),
+		 .myPolarity(reg16[4]),
 		 .trigger(TRIGGER[4])
 		 );
 
 	EventReceiverChannel EventReceiverChannel_5 (
-		 .Clock(mgt_rec_clk), 
-		 .Reset((LocalReset || regWriteSelects[10] || regWriteSelects[11] || regWriteSelects[16])), 
-		 .myEvent(Events[5]), 
-		 .myDelay(reg10), 
-		 .myWidth(reg11), 
-		 .myPolarity(reg16[5]), 
+		 .Clock(mgt_rec_clk),
+		 .Reset((LocalReset || regWriteSelects[10] || regWriteSelects[11] || regWriteSelects[16])),
+		 .myEvent(Events[5]),
+		 .myDelay(reg10),
+		 .myWidth(reg11),
+		 .myPolarity(reg16[5]),
 		 .trigger(TRIGGER[5])
 		 );
 
 	EventReceiverChannel EventReceiverChannel_6 (
-		 .Clock(mgt_rec_clk), 
-		 .Reset((LocalReset || regWriteSelects[12] || regWriteSelects[13] || regWriteSelects[16])), 
+		 .Clock(mgt_rec_clk),
+		 .Reset((LocalReset || regWriteSelects[12] || regWriteSelects[13] || regWriteSelects[16])),
 		 .myEvent(Events[6]),
-		 .myDelay(reg12), 
-		 .myWidth(reg13), 
-		 .myPolarity(reg16[6]), 
+		 .myDelay(reg12),
+		 .myWidth(reg13),
+		 .myPolarity(reg16[6]),
 		 .trigger(TRIGGER[6])
 		 );
 
 	EventReceiverChannel EventReceiverChannel_7 (
-		 .Clock(mgt_rec_clk), 
-		 .Reset((LocalReset || regWriteSelects[14] || regWriteSelects[15] || regWriteSelects[16])), 
-		 .myEvent(Events[7]), 
-		 .myDelay(reg14), 
-		 .myWidth(reg15), 
-		 .myPolarity(reg16[7]), 
+		 .Clock(mgt_rec_clk),
+		 .Reset((LocalReset || regWriteSelects[14] || regWriteSelects[15] || regWriteSelects[16])),
+		 .myEvent(Events[7]),
+		 .myDelay(reg14),
+		 .myWidth(reg15),
+		 .myPolarity(reg16[7]),
 		 .trigger(TRIGGER[7])
 		 );
 
@@ -582,12 +582,12 @@ module EventReceiverTop(
 //wire [7:0] serial_receiver_debug_out;
 
 //	serialReceiver mySerialReceiver (
-//		 .ClockIn(GtxRefClock), 
+//		 .ClockIn(GtxRefClock),
 //		 .evr125RfLockedClk(evr125RfLockedClk),
 //		 .DistBusClock(DistBusClock),
 //		 .MultiplexDisBus(slv_reg17[2]),
-//		 .ResetIn(RESET), 
-//		 .ResetOut(ResetOut), 
+//		 .ResetIn(RESET),
+//		 .ResetOut(ResetOut),
 //		 .EventStreamOut({DataStream[7:0],EventStream[7:0]}),
 //		 .PacketStart(PacketStart),
 //	     .PacketStop(PacketStop),
@@ -596,9 +596,9 @@ module EventReceiverTop(
 //		 .BitslideCount(bitslide_count),
 //		 .BitslideSync(bitslide_sync),
 //		 .DebugOut(serial_receiver_debug_out),
-//		 .RXN_IN(RXN_IN), 
-//		 .RXP_IN(RXP_IN), 
-//		 .TXN_OUT(TXN_OUT), 
+//		 .RXN_IN(RXN_IN),
+//		 .RXP_IN(RXP_IN),
+//		 .TXN_OUT(TXN_OUT),
 //		 .TXP_OUT(TXP_OUT),
 //		 .CONTROL0(CONTROL2)
 //		 );
@@ -607,7 +607,7 @@ module EventReceiverTop(
 		.clka(bus_clk),
 		.wea(mappingRamWrA),
 		.addra(bus_addr[9:2]),
-		.dina(bus_wr_data[15:0]), 
+		.dina(bus_wr_data[15:0]),
 		.douta(mappingRamDataA),
 		.clkb(mgt_rec_clk),
 		.web(1'b0),
@@ -626,18 +626,18 @@ module EventReceiverTop(
 		.addrb(EventStream),
 		.dinb(16'd0),
 		.doutb(EventsB));
-	 
+
 	timeofDayReceiver myTimeofDayReceiver (
-		 .Clock(mgt_rec_clk), 
-		 .Reset(LocalReset), 
-		 .EventStream(EventStream), 
+		 .Clock(mgt_rec_clk),
+		 .Reset(LocalReset),
+		 .EventStream(EventStream),
          .tooManyCount(tooManyCount),
          .tooFewCount(tooFewCount),
          .outOfSeqCount(outOfSeqCount),
 		 .TimeStamp(TimeStamp));
 
 	timeStampFIFO myTimeStampFIFO (
-	    .rst(LocalReset), 
+	    .rst(LocalReset),
 	    .wr_clk(mgt_rec_clk),
 	    .rd_clk(bus_clk),
 	    .din({TimeStamp,eventStream_reg}),
@@ -646,19 +646,19 @@ module EventReceiverTop(
 	    .dout(timeStampFIFOdataOut),
 	    .full(timeStampFIFOfull),
 	    .empty(timeStampFIFOempty));
-		 
+
 	DataBufferCntrlr myDataBufferCntrlr (
-		 .RxClock(mgt_rec_clk), 
-		 .SysClock(bus_clk), 
-		 .Reset(LocalReset), 
-		 .PacketStart(PacketStart), 
-		 .PacketStop(PacketStop), 
-		 .DataIn(DataStream[7:0]), 
-		 .Address(bus_addr[12:2]), 
-		 .ReadEna(evrChipSelects[2]), 
-		 .PacketReady(PacketReady), 
-		 .PacketSize(PacketSize), 
-		 .DataOut(DataBufferData), 
+		 .RxClock(mgt_rec_clk),
+		 .SysClock(bus_clk),
+		 .Reset(LocalReset),
+		 .PacketStart(PacketStart),
+		 .PacketStop(PacketStop),
+		 .DataIn(DataStream[7:0]),
+		 .Address(bus_addr[12:2]),
+		 .ReadEna(evrChipSelects[2]),
+		 .PacketReady(PacketReady),
+		 .PacketSize(PacketSize),
+		 .DataOut(DataBufferData),
 		 .PacketFault(PacketFault)
 		 );
 
@@ -666,17 +666,17 @@ module EventReceiverTop(
 //assign evr_leds = serial_receiver_debug_out;
 
 //	generate
-//	if (DEBUG) 
+//	if (DEBUG)
 //		begin : chipscope
-		
+
 //		reg [2:0]quickCount;
 //		always @(posedge bus_clk) quickCount <= quickCount + 1;
 
 //		reg [2:0]quickCount2;
 //		always @(posedge mgt_rec_clk) quickCount2 <= quickCount2 + 1;
-		
+
 //		wire [255:0] TRIG0;
-		
+
 //		assign TRIG0[63:0] 		= TimeStamp;
 //		assign TRIG0[95:64] 		= bus_rd_data;
 //		assign TRIG0[127:96]		= {16'd0,mappingRamDataA};
@@ -694,13 +694,13 @@ module EventReceiverTop(
 //		assign TRIG0[154]			= Bus2IP_RdCE[30];
 //		assign TRIG0[155]			= Bus2IP_RdCE[31];
 //		assign TRIG0[156]			= bus_addr[22];
-//		assign TRIG0[164:157] 	= EventStream;	
-//		assign TRIG0[196:165] 	= timeStampFIFOdataOut[71:40];	
+//		assign TRIG0[164:157] 	= EventStream;
+//		assign TRIG0[196:165] 	= timeStampFIFOdataOut[71:40];
 //		assign TRIG0[228:197]	= timeStampFIFOdataOut[39:8];
 //		assign TRIG0[236:229]	= timeStampFIFOdataOut[7:0];
 //		assign TRIG0[237]			= timeStampFIFOrdEna;
-//		assign TRIG0[255:238] 	= 0;		
-		
+//		assign TRIG0[255:238] 	= 0;
+
 //		ila myILA (
 //		 .CONTROL(CONTROL1), // INOUT BUS [35:0]
 //		 .CLK(bus_clk), // IN

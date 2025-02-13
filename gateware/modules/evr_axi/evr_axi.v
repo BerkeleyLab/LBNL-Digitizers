@@ -89,7 +89,7 @@
 		input wire  s00_axi_rready
 	);
 // Instantiation of Axi Bus Interface S00_AXI
-	evr_axi_S00_AXI # ( 
+	evr_axi_S00_AXI # (
 		.C_S_AXI_ID_WIDTH(C_S00_AXI_ID_WIDTH),
 		.C_S_AXI_DATA_WIDTH(C_S00_AXI_DATA_WIDTH),
 		.C_S_AXI_ADDR_WIDTH(C_S00_AXI_ADDR_WIDTH),

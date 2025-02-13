@@ -1,21 +1,21 @@
 `timescale 1ns / 1ps
 //////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date:    15:00:41 03/12/2010 
-// Design Name: 
-// Module Name:    EventReceiverChannel 
-// Project Name: 
-// Target Devices: 
-// Tool versions: 
-// Description: 
+// Company:
+// Engineer:
 //
-// Dependencies: 
+// Create Date:    15:00:41 03/12/2010
+// Design Name:
+// Module Name:    EventReceiverChannel
+// Project Name:
+// Target Devices:
+// Tool versions:
+// Description:
 //
-// Revision: 
+// Dependencies:
+//
+// Revision:
 // Revision 0.01 - File Created
-// Additional Comments: 
+// Additional Comments:
 //
 //////////////////////////////////////////////////////////////////////////////////
 module EventReceiverChannel(
@@ -42,7 +42,7 @@ module EventReceiverChannel(
 		else if (delayCounter >= (myDelay)) delayCounter <= 0;
 		else delayCounter <= delayCounter;
 	 end
-	 
+
 	 always @ (posedge Clock)
 	 begin
 		if (Reset) widthCounter <= 0;
@@ -50,7 +50,7 @@ module EventReceiverChannel(
 		else if (widthCounter >= myWidth) widthCounter <= 0;
 		else widthCounter <= widthCounter;
 	 end
-	 
+
 	 always @ (posedge Clock)
 	 begin
 		if (Reset) startDelay <= 0;
@@ -58,7 +58,7 @@ module EventReceiverChannel(
 		else if (delayCounter == (myDelay - 1)) startDelay <= 0;
 		else startDelay <= startDelay;
 	 end
-	 
+
 	 always @ (posedge Clock)
 	 begin
 		if (Reset) startWidth <= 0;
@@ -66,7 +66,7 @@ module EventReceiverChannel(
 		else if (widthCounter == (myWidth - 1)) startWidth <= 0;
 		else startWidth <= startWidth;
 	 end
-	 
+
 	 assign triggVal = (myPolarity) ? !startWidth : startWidth;
 	 assign trigger = ((myDelay != 32'd0) && (myWidth != 32'd0)) ? triggVal : 1'b0;
 
