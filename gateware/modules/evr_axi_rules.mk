@@ -6,7 +6,7 @@ __evr_axi_SRCS = \
 			   evr_axi_S00_AXI.v \
 			   evr_axi.v \
 			   irq_forward.v \
-			   timeofDayReceiver.v \
+			   todReceiver.v \
 			   timestamp_forward.v
 evr_axi_SRCS = $(addprefix $(evr_axi_DIR)/, $(__evr_axi_SRCS))
 evr_axi_VERSION = 3.1
