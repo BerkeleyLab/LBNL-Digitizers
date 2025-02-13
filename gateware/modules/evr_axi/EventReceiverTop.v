@@ -385,7 +385,9 @@ module EventReceiverTop(
 	assign Events = reg17[0] ? EventsB : EventsA;
 
 	assign EventStream = mgt_par_data[7:0];
+    wire EventStreamIsK = (mgt_charisk[0] == 1'b1);
 	assign DataStream = mgt_par_data[15:8];
+    wire DataStreamIsK = (mgt_charisk[1] == 1'b1);
 
 	parameter Kstart = 8'b00011100; // start of packet
     parameter Kstop  = 8'b00111100; // end of packet
@@ -627,14 +629,16 @@ module EventReceiverTop(
 		.dinb(16'd0),
 		.doutb(EventsB));
 
-	timeofDayReceiver myTimeofDayReceiver (
-		 .Clock(mgt_rec_clk),
-		 .Reset(LocalReset),
-		 .EventStream(EventStream),
-         .tooManyCount(tooManyCount),
-         .tooFewCount(tooFewCount),
-         .outOfSeqCount(outOfSeqCount),
-		 .TimeStamp(TimeStamp));
+     todReceiver myTimeofDayReceiver (
+        .clk(mgt_rec_clk),
+        .rst(LocalReset),
+        .evCode(EventStream),
+        .evCodeValid(!EventStreamIsK),
+        .tooManyBitsCounter(tooManyCount),
+        .tooFewBitsCounter(tooFewCount),
+        .outOfSeqCounter(outOfSeqCount),
+        .timestamp(TimeStamp),
+        .timestampValid());
 
 	timeStampFIFO myTimeStampFIFO (
 	    .rst(LocalReset),
