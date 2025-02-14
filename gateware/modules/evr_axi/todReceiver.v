@@ -113,7 +113,6 @@ end
 
 // Compute fractional second increment from filtered clocks per second
 localparam DIVIDER_BITCOUNT_WIDTH = $clog2(FRACTION_INCREMENT_WIDTH)+1;
-localparam DIVIDEND_WIDTH = CLK_COUNTER_WIDTH + FRACTION_INCREMENT_WIDTH;
 
 reg [DIVIDER_BITCOUNT_WIDTH-1:0] dividerBitsLeft;
 wire dividerDone = dividerBitsLeft[DIVIDER_BITCOUNT_WIDTH-1];
