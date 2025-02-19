@@ -42,7 +42,7 @@
 #define GPIO_IDX_ADC_0_TRIGGER_LOCATION  35 // Acquisition trigger location (R)
 #define GPIO_IDX_ADC_0_SECONDS           36 // Acquisition trigger time (R)
 #define GPIO_IDX_ADC_0_CONFIG_1          36 // Acquisition configuration 1 (W)
-#define GPIO_IDX_ADC_0_TICKS             37 // Acquisition trigger time (R)
+#define GPIO_IDX_ADC_0_FRACTION          37 // Acquisition trigger time (R)
 #define GPIO_IDX_ADC_0_CONFIG_2          37 // Acquisition configuration 2 (W)
 #define GPIO_IDX_PER_ADC             6
 
