@@ -637,8 +637,10 @@ module EventReceiverTop(
         .tooManyBitsCounter(tooManyCount),
         .tooFewBitsCounter(tooFewCount),
         .outOfSeqCounter(outOfSeqCount),
-        .timestamp(TimeStamp),
-        .timestampValid());
+        .timestamp(),
+        .timestampValid(),
+        .timestampHA(TimeStamp),
+        .timestampHAValid());
 
     timeStampFIFO myTimeStampFIFO (
         .rst(LocalReset),
