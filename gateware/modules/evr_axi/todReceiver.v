@@ -25,13 +25,22 @@ module todReceiver #(
     output reg    [STATUS_COUNTER_WIDTH-1:0] tooFewBitsCounter = 0,
     output reg    [STATUS_COUNTER_WIDTH-1:0] outOfSeqCounter = 0,
     output wire   [TIMESTAMP_WIDTH-1:0]      timestamp,
-    output wire                              timestampValid
+    output wire                              timestampValid,
+    output wire   [TIMESTAMP_WIDTH-1:0]      timestampHA,
+    output wire                              timestampHAValid
 );
 
 localparam SECONDS_WIDTH = TIMESTAMP_WIDTH/2;
 localparam FRACTION_WIDTH = TIMESTAMP_WIDTH/2;
 reg [SECONDS_WIDTH-1:0] seconds = 0, expectSeconds = 0;
-assign timestamp = {seconds, fraction};
+
+localparam TICKS_WIDTH = TIMESTAMP_WIDTH/2;
+reg [TICKS_WIDTH-1:0] ticks = 0;
+
+// High-accuracy timestamp
+assign timestampHA = {seconds, fraction};
+// Old-style timestamp, counting ticks. Kept for compatibility
+assign timestamp = {seconds, ticks};
 
 reg         [SECONDS_WIDTH-1:0] shiftReg;
 reg [$clog2(SECONDS_WIDTH)-1:0] bitsLeft = SECONDS_WIDTH - 1;
@@ -208,11 +217,13 @@ end
 // Seconds receiver
 ///////////////////////////////////////////////////////////////////////////////
 
+assign timestampHAValid = secondsValid && ppsValid;
 assign timestampValid = secondsValid && ppsValid;
 
 always @(posedge clk) begin
     if (rst) begin
         seconds <= 0;
+        ticks <= 0;
         secondsValid <= 0;
         enoughBits <= 0;
         tooManyBits <= 0;
@@ -236,12 +247,22 @@ always @(posedge clk) begin
                 seconds <= seconds + 1;
             end
 
+            ticks <= 0;
             bitsLeft <= SECONDS_WIDTH - 1;
             enoughBits <= 0;
             tooManyBits <= 0;
         end
-        else if (fractionOverflow) begin
-            secondsValid <= 0;
+        else begin
+            if (fractionOverflow) begin
+                secondsValid <= 0;
+            end
+
+            if (ticks[TICKS_WIDTH-1] == 0) begin
+                ticks <= ticks + 1;
+            end
+            else begin
+                secondsValid <= 0;
+            end
         end
 
         if(evCodeValid &&
