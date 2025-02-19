@@ -84,22 +84,22 @@ evrInit(void)
     for (;;) {
         if ((Xil_In32(EVR_REG(28)) & 0x1) == 0) {
             unsigned int seconds = Xil_In32(EVR_REG(29));
-            unsigned int ticks = Xil_In32(EVR_REG(30));
+            unsigned int fraction = Xil_In32(EVR_REG(30));
             int eventCode = Xil_In32(EVR_REG(31));
             switch(eventCode) {
             case EVENT_HEARTBEAT: evGot(&heartbeat); break;
             case EVENT_PPS:       evGot(&pps);       break;
             default:
                 /*
-                 * For unknown reasons the event receiver often (always?) 
+                 * For unknown reasons the event receiver often (always?)
                  * emits a spurious event 0 on startup.
                  */
                 if ((eventCode == 0) && firstEvent0) {
                     firstEvent0 = 0;
                     break;
                 }
-                printf("Warning -- Unexpected event %d (seconds/ticks:%d/%d)\n",
-                                                    eventCode, seconds, ticks);
+                printf("Warning -- Unexpected event %d (seconds/fraction:%d/%d)\n",
+                                                    eventCode, seconds, fraction);
                 break;
             }
         }
@@ -194,7 +194,7 @@ evrShow(void)
     if (evrNtooManySecondEvents())
         printf("   Too many seconds codes: %d\n", evrNtooManySecondEvents());
     evrCurrentTime(&ts);
-    printf("EVR seconds:ticks  %d:%09d\n", ts.secPastEpoch, ts.ticks);
+    printf("EVR seconds:fraction  %d:%09d\n", ts.secPastEpoch, ts.fraction);
 }
 
 void
@@ -204,7 +204,7 @@ evrCurrentTime(evrTimestamp *ts)
 
     ts->secPastEpoch = Xil_In32(EVR_REG(24));
     for (;;) {
-        ts->ticks = Xil_In32(EVR_REG(25));
+        ts->fraction = Xil_In32(EVR_REG(25));
         s = Xil_In32(EVR_REG(24));
         if (s == ts->secPastEpoch)
             return;
