@@ -92,16 +92,17 @@ rfADCshow(void)
             printf("\n");
             i = XRFdc_GetMixerSettings(&rfDC, XRFDC_ADC_TILE, tile,adc,&mixer);
             if (i == XST_SUCCESS) {
-                printf("Mixer.Freq %g\n", mixer.Freq);
-                printf("Mixer.PhaseOffset %g\n", mixer.PhaseOffset);
-                printf("Mixer.EventSource %d\n", mixer.EventSource);
-                printf("Mixer.CoarseMixFreq %d\n", mixer.CoarseMixFreq);
-                printf("Mixer.MixerMode %d\n", mixer.MixerMode);
-                printf("Mixer.FineMixerScale %d\n", mixer.FineMixerScale);
-                printf("Mixer.MixerType %d\n", mixer.MixerType);
+                printf("   Mixer Settings\n");
+                printf("          Freq: %g\n", mixer.Freq);
+                printf("   PhaseOffset: %g\n", mixer.PhaseOffset);
+                printf("   EventSource: %d\n", mixer.EventSource);
+                printf(" CoarseMixFreq: %d\n", mixer.CoarseMixFreq);
+                printf("     MixerMode: %d\n", mixer.MixerMode);
+                printf("FineMixerScale: %d\n", mixer.FineMixerScale);
+                printf("     MixerType: %d\n", mixer.MixerType);
             }
             else {
-                printf("XRFdc_GetMixerSettings()=%d\n", i);
+                printf("   XRFdc_GetMixerSettings()=%d\n", i);
             }
         }
     }
