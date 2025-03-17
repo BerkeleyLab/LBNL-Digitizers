@@ -1,18 +1,18 @@
 [*]
 [*] GTKWave Analyzer v3.3.104 (w)1999-2020 BSI
-[*] Fri Feb 14 23:39:57 2025
+[*] Mon Mar 17 23:41:24 2025
 [*]
 [dumpfile] "/home/lrusso/repos/alsu-digitizers/gateware/modules/evr_axi/todReceiver.vcd"
-[dumpfile_mtime] "Fri Feb 14 23:38:09 2025"
-[dumpfile_size] 83278105
+[dumpfile_mtime] "Mon Mar 17 23:18:48 2025"
+[dumpfile_size] 38259806
 [savefile] "/home/lrusso/repos/alsu-digitizers/gateware/modules/evr_axi/todReceiver.gtkw"
-[timestart] 3998384000
+[timestart] 5996825000
 [size] 2197 1062
 [pos] -1 -1
-*-19.000000 4000340000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-20.000000 6000400000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] todReceiver_tb.
-[sst_width] 214
-[signals_width] 388
+[sst_width] 324
+[signals_width] 511
 [sst_expanded] 1
 [sst_vpaned_height] 314
 @28
@@ -22,9 +22,11 @@ todReceiver_tb.evCodeValid
 todReceiver_tb.evCode[7:0]
 @28
 todReceiver_tb.pps
-todReceiver_tb.ppsRequest
-todReceiver_tb.ppsStrobe
 todReceiver_tb.pps_d
+@29
+todReceiver_tb.ppsStrobe
+@28
+todReceiver_tb.ppsRequest
 @22
 todReceiver_tb.seconds[31:0]
 @28
@@ -51,7 +53,6 @@ todReceiver_tb.todStart
 todReceiver_tb.DUT.clk
 @24
 todReceiver_tb.DUT.bitsLeft[4:0]
-todReceiver_tb.DUT.clockCounter[16:0]
 todReceiver_tb.DUT.dividerBitsLeft[5:0]
 @28
 todReceiver_tb.DUT.dividerDone
@@ -62,44 +63,38 @@ todReceiver_tb.DUT.evCodeValid
 todReceiver_tb.DUT.evCode[7:0]
 @24
 todReceiver_tb.DUT.expectSeconds[31:0]
-todReceiver_tb.DUT.filterAccumulator[20:0]
-todReceiver_tb.DUT.filteredClocksPerSecond[16:0]
 todReceiver_tb.DUT.fractionAccumulator[43:0]
 todReceiver_tb.DUT.nextFractionAccumulator[44:0]
-todReceiver_tb.DUT.fractionIncrement[27:0]
 @28
 todReceiver_tb.DUT.fractionOverflow
+@22
+todReceiver_tb.DUT.shiftReg[31:0]
 @24
 todReceiver_tb.DUT.fraction[31:0]
 @22
 todReceiver_tb.DUT.outOfSeqCounter[9:0]
 @28
 todReceiver_tb.DUT.ppsInitialDone
-@24
-todReceiver_tb.DUT.ppsInitial[17:0]
-@28
 todReceiver_tb.DUT.ppsStrobe
 todReceiver_tb.DUT.ppsValid
 @24
 todReceiver_tb.DUT.ppsValidCounter[2:0]
 @28
 todReceiver_tb.DUT.ppsWindowDone
-@22
-todReceiver_tb.DUT.ppsWindow[11:0]
-@24
-todReceiver_tb.DUT.quotient[27:0]
-@25
-todReceiver_tb.DUT.dividend[17:0]
-@28
 todReceiver_tb.DUT.rst
 todReceiver_tb.DUT.secondsValid
 @22
-todReceiver_tb.DUT.seconds[31:0]
-todReceiver_tb.DUT.shiftReg[31:0]
+todReceiver_tb.DUT.timestampHA[63:0]
 @28
-todReceiver_tb.DUT.timestampValid
+todReceiver_tb.DUT.timestampHAValid
 @22
 todReceiver_tb.DUT.timestamp[63:0]
+@28
+todReceiver_tb.DUT.timestampValid
+@24
+todReceiver_tb.DUT.seconds[31:0]
+todReceiver_tb.DUT.shiftReg[31:0]
+@22
 todReceiver_tb.DUT.tooFewBitsCounter[9:0]
 @28
 todReceiver_tb.DUT.tooManyBits
