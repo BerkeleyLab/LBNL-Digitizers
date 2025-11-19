@@ -62,6 +62,15 @@ methods. For development, JTAG is being used. Remember to check
 the DIP switches on development boards and ensure the switches
 are set to JTAG mode and NOT SD Card mode.
 
+IMPORTANT NOTE: The board will first try to request an IP via DHCP, if it's
+compiled with LWIP_DHCP enabled. If that fails, then it will fallback to IP
+address `192.168.1.10/24`.
+
+If LWIP_DHCP is disabled, then it will use static IP address and the embedded
+software will use the `IP Address`, `IP Netmask` and `IP Gateway` from the
+configured Flash memory. If not configured or Flash memory corrupted, the
+default IP 192.168.1.128/24 will be used.
+
 #### Deploying gateware
 
 The following script can download the gateware via JTAG:
