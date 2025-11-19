@@ -38,7 +38,7 @@ and redirect stdout/stderr to a file so you can inspect it later:
 
 ```bash
 ARM_TOOLCHAIN_LOCATION=/media/Xilinx/Vivado/2020.1/Vitis/2020.1/gnu/aarch64/lin/aarch64-none
-(time make PLATFORM=<PLATFORM_NAME> APP=<APP_NAME> CROSS_COMPILE=${ARM_TOOLCHAIN_LOCATION}/bin/aarch64-none-elf-; date) 2>&1 | tee make_output
+(time make PLATFORM=<PLATFORM_NAME> APP=<APP_NAME> GW_VARIANT=<GW_VARIANT> CROSS_COMPILE=${ARM_TOOLCHAIN_LOCATION}/bin/aarch64-none-elf-; date) 2>&1 | tee make_output
 ```
 
 For now the following combinations of PLATFORM and APP are supported:
@@ -48,11 +48,18 @@ For now the following combinations of PLATFORM and APP are supported:
 |       hsd      |    x   |    x   |
 |       bcm      |    x   |        |
 
-So, for example, to generate the HSD application for the ZCU111 board:
+For now the following combinations of GW_VARIANT and APP are supported:
+
+| APP / GW_VARIANT |   ac   |   dc   |
+|:----------------:|:------:|:------:|
+|       hsd        |        |        |
+|       bcm        |    x   |    x   |
+
+So, for example, to generate the HSD application  you must specify `GW_VARIANT = `:
 
 ```bash
 ARM_TOOLCHAIN_LOCATION=/media/Xilinx/Vivado/2020.1/Vitis/2020.1/gnu/aarch64/lin/aarch64-none
-(time make PLATFORM=zcu111 APP=hsd CROSS_COMPILE=${ARM_TOOLCHAIN_LOCATION}/bin/aarch64-none-elf-; date) 2>&1 | tee make_output
+(time make PLATFORM=zcu111 APP=hsd GW_VARIANT= CROSS_COMPILE=${ARM_TOOLCHAIN_LOCATION}/bin/aarch64-none-elf-; date) 2>&1 | tee make_output
 ```
 
 ### Deploying
