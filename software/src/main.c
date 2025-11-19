@@ -2,6 +2,9 @@
 #include <lwipopts.h>
 #include <lwip/init.h>
 #include <lwip/inet.h>
+#if LWIP_DHCP==1
+#include <lwip/dhcp.h>
+#endif
 #include <netif/xadapter.h>
 #include "acquisition.h"
 #include "afe.h"
@@ -60,6 +63,47 @@ static void sfpChk(void)
     }
 }
 
+#if LWIP_DHCP==1
+extern volatile int dhcp_timoutcntr;
+err_t dhcp_start(struct netif *netif);
+#endif
+
+static int
+tryRequestDHCPIPv4Address(struct netif *netif)
+{
+#if LWIP_DHCP==1
+    /*
+     * Create a new DHCP client for this interface.
+     * Note: you must call dhcp_fine_tmr() and dhcp_coarse_tmr() at
+     * the predefined regular intervals after starting the client.
+     */
+    dhcp_start(netif);
+
+    /*
+     * Reset timeout counter. This is defined in platform_zynqmp.c
+     */
+    dhcp_timoutcntr = 240;
+
+    while (((netif->ip_addr.addr) == 0) && (dhcp_timoutcntr > 0)) {
+        xemacif_input(netif);
+    }
+
+    if (dhcp_timoutcntr <= 0) {
+        if ((netif->ip_addr.addr) == 0) {
+            // Timeout
+            IP4_ADDR(&(netif->ip_addr), 192, 168,   1, 10);
+            IP4_ADDR(&(netif->netmask), 255, 255, 255,  0);
+            IP4_ADDR(&(netif->gw),      192, 168,   1,  1);
+            return -1;
+        }
+    }
+
+    return 0;
+#else
+    return 0;
+#endif
+}
+
 int
 main(void)
 {
@@ -95,7 +139,15 @@ main(void)
         enetMAC = systemParameters.netConfig.ethernetMAC;
         ipv4 = &systemParameters.netConfig.ipv4;
     }
-    drawIPv4Address(&ipv4->address, isRecovery);
+
+    /*
+     * Set default IPv4 configs based on system parameters file and
+     * DHCP
+     */
+    setDefaultIPv4Address(&currentNetConfig,
+            &systemParameters.netConfig,
+            &netDefault, isRecovery);
+    drawIPv4Address(&currentNetConfig.ipv4.address, isRecovery);
 
     /* Set up hardware */
     sysmonInit();
@@ -117,21 +169,41 @@ main(void)
 
     /* Start network */
     lwip_init();
-    printf("Network:\n");
-    printf("       MAC: %s\n", formatMAC(enetMAC));
-    showNetworkConfiguration(ipv4);
-    ipaddr.addr = ipv4->address;
-    netmask.addr = ipv4->netmask;
-    gateway.addr = ipv4->gateway;
+    ipaddr.addr = currentNetConfig.ipv4.address;
+    netmask.addr = currentNetConfig.ipv4.netmask;
+    gateway.addr = currentNetConfig.ipv4.gateway;
     printf("If things lock up at this point it's likely because\n"
            "the network driver can't negotiate a connection.\n");
     displayShowStatusLine("-- Intializing Network --");
-    if (!xemac_add(&netif, &ipaddr, &netmask, &gateway, enetMAC,
+    if (!xemac_add(&netif, &ipaddr, &netmask, &gateway, currentNetConfig.ethernetMAC,
                                                      XPAR_XEMACPS_0_BASEADDR)) {
         fatal("Error adding network interface");
     }
     netif_set_default(&netif);
     netif_set_up(&netif);
+
+    /*
+     * Try to request IP from DHCP. Could fail if timeout.
+     * If DHCP is disabled, returns success
+     */
+    int ret = tryRequestDHCPIPv4Address(&netif);
+    if (ret < 0) {
+        warn("DHCP timeout. Default IP address assigned");
+    }
+
+    /*
+     * Copy possibly changed IPv4 parameters by DHCP into out copy
+     */
+    ipaddr.addr = netif.ip_addr.addr;
+    netmask.addr = netif.netmask.addr;
+    gateway.addr = netif.gw.addr;
+    currentNetConfig.ipv4.address = netif.ip_addr.addr;
+    currentNetConfig.ipv4.netmask = netif.netmask.addr;
+    currentNetConfig.ipv4.gateway = netif.gw.addr;
+
+    printf("Network:\n");
+    printf("       MAC: %s\n", formatMAC(currentNetConfig.ethernetMAC));
+    showNetworkConfiguration(&currentNetConfig.ipv4);
     displayShowStatusLine("");
 
     /* Set up communications and acquisition */

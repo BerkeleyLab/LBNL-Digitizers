@@ -18,6 +18,7 @@ struct sysNetConfig {
     struct sysNetParms ipv4;
 };
 extern struct sysNetConfig netDefault;
+extern struct sysNetConfig currentNetConfig;
 
 extern struct systemParameters {
     struct sysNetConfig netConfig;

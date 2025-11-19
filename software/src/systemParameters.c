@@ -8,6 +8,7 @@
 #include "util.h"
 
 struct systemParameters systemParameters;
+struct sysNetConfig currentNetConfig;
 struct sysNetConfig netDefault;
 
 static int
@@ -42,9 +43,9 @@ systemParametersReadback(void)
     netDefault.ethernetMAC[3] = 'N';
     netDefault.ethernetMAC[4] = 'L';
     netDefault.ethernetMAC[5] = 0x01;
-    netDefault.ipv4.address = htonl((192<<24) | (168<<16) | (  1<< 8) | 128);
-    netDefault.ipv4.netmask = htonl((255<<24) | (255<<16) | (255<< 8) | 0);
-    netDefault.ipv4.gateway = htonl((192<<24) | (168<<16) | (  1<< 8) | 1);
+    netDefault.ipv4.address = IP4_FORMAT(192, 168, 1, 128);
+    netDefault.ipv4.netmask = IP4_FORMAT(255, 255, 255, 0);
+    netDefault.ipv4.gateway = IP4_FORMAT(192, 168, 1, 1);
     if ((eepromRead(0, &systemParameters, sizeof systemParameters) < 0)
      || (checksum() != systemParameters.checksum)) {
         printf("\n====== ASSIGNING DEFAULT PARAMETERS ===\n\n");
@@ -135,6 +136,29 @@ parseIP(const char *str, void *val)
         if (*endp++ != '.')
             return -1;
         cp = endp;
+    }
+}
+
+void
+setDefaultIPv4Address(struct sysNetConfig *netConfig,
+        struct sysNetConfig *sysParamsNetConfig,
+        struct sysNetConfig *defaultNetConfig, int isRecovery)
+{
+    if (isRecovery) {
+        netConfig->ipv4 = defaultNetConfig->ipv4;
+        memcpy(netConfig->ethernetMAC, defaultNetConfig->ethernetMAC,
+                sizeof (netConfig->ethernetMAC));
+    }
+    else {
+#if LWIP_DHCP==1
+        netConfig->ipv4.address = 0;
+        netConfig->ipv4.netmask = 0;
+        netConfig->ipv4.gateway = 0;
+#else
+        netConfig->ipv4 = sysParamsNetConfig->ipv4;
+#endif
+        memcpy (netConfig->ethernetMAC, sysParamsNetConfig->ethernetMAC,
+                sizeof (netConfig->ethernetMAC));
     }
 }
 
