@@ -186,9 +186,14 @@ main(void)
      * Try to request IP from DHCP. Could fail if timeout.
      * If DHCP is disabled, returns success
      */
-    int ret = tryRequestDHCPIPv4Address(&netif);
-    if (ret < 0) {
-        warn("DHCP timeout. Default IP address assigned");
+    if (currentNetConfig.useDHCP) {
+        int ret = tryRequestDHCPIPv4Address(&netif);
+        if (ret < 0) {
+            warn("DHCP timeout. Default IP address assigned");
+        }
+    }
+    else {
+        printf("Configuration file set to disable DHCP. Using static IP address\n");
     }
 
     /*
