@@ -1,0 +1,104 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+<meta content="text/html; charset=UTF-8" http-equiv="content-type">
+<title>Bunch Current Monitor Timing Adjustment</title></head><body>
+<h1>Bunch Current Monitor Timing Adjustment<br>
+</h1>
+
+    
+<h2>Introduction</h2>
+The bunch current monitor obtains its acquisition clock and timing 
+reference marker from the facility timing system.&nbsp; The monitor 
+includes a parameter to adjust for the timing delays between the 
+reference marker and the arrival of the signal from the first bunch in 
+the storage ring.&nbsp; This document presents a procedure to set the 
+value of this parameter.<br>
+<br>
+Until the final timing system changes are in place this procedure will 
+have to be performed each time the timing crate is powered down and back
+ up.&nbsp; Once the new timing system is in place the procedure will 
+need to be performed only when some hardware in the timing or RF system has changed.<br>
+<br>
+The trigger delay value is autosaved and will be restored whenever the bunch current monitor is restarted.<br>
+<br>
+<h2>Preparation</h2>
+<p>Ensure that there is some current in a known storage ring 
+bucket.&nbsp; Typically this is the cam bucket, but any bucket will 
+do.&nbsp; &nbsp; In the examples shown below the maximum charge is known
+ to be bucket number 308.<br>
+  <br>
+</p>
+
+<span style="font-weight: bold;"></span>
+<h2>Script</h2>
+<p>The easiest way to set the trigger delay is to first load the storage
+ ring with the cam bucket (308) containing more charge than any other 
+bucket and then run the script described below.<br>
+</p>
+<ol>
+  <li>Change to the directory containing the script:<br>
+&nbsp;&nbsp;&nbsp; <span style="font-family: monospace;">cd /vxboot/siocbcm/boot/scripts</span><br>
+    <br>
+  </li>
+  <li>Run the script:<br>
+&nbsp;&nbsp;&nbsp; <span style="font-family: monospace;">./setTriggerDelay.py -u</span><br>
+    <br>
+  </li>
+</ol>
+<p>The script accepts a number of optional arguments.&nbsp; With no 
+arguments the script simply prints the optimum trigger delay 
+value.&nbsp; The ‘-u’ argument causes the script to actually write the 
+value into the trigger delay record.&nbsp; A full list of the arguments 
+is shown when the script is run with a ‘-h’ argument:</p>
+<p style="margin-left: 40px;"><span style="font-family: monospace;">./setTriggerDelay.py -h</span><span style="font-family: monospace;"></span><br>
+  <span style="font-family: monospace;"></span><span style="font-family: monospace;">usage: setTriggerDelay.py [-h] [-c CAM] [-p PREFIX] [-u] [-v]</span><span style="font-family: monospace;"></span><br>
+  <span style="font-family: monospace;"></span><span style="font-family: monospace;"></span><br>
+  <span style="font-family: monospace;"></span><span style="font-family: monospace;">Set bunch current monitor trigger delay.</span><span style="font-family: monospace;"></span><br>
+  <span style="font-family: monospace;"></span><span style="font-family: monospace;"></span><br>
+  <span style="font-family: monospace;"></span><span style="font-family: monospace;">optional arguments:</span><span style="font-family: monospace;"></span><br>
+  <span style="font-family: monospace;"></span><span style="font-family: monospace;">&nbsp; -h, --help&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; show this help message and exit</span><span style="font-family: monospace;"></span><br>
+  <span style="font-family: monospace;"></span><span style="font-family: monospace;">&nbsp; -c CAM, --cam CAM&nbsp;&nbsp;&nbsp;&nbsp; Cam bucket number (must be bucket with highest</span><span style="font-family: monospace;"></span><br>
+  <span style="font-family: monospace;"></span><span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+ charge!) (default: 308)</span><span style="font-family: monospace;"></span><br>
+  <span style="font-family: monospace;"></span><span style="font-family: monospace;">&nbsp; -p PREFIX, --prefix PREFIX</span><span style="font-family: monospace;"></span><br>
+  <span style="font-family: monospace;"></span><span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+ PV name prefix (default: SR1:BCM:)</span><span style="font-family: monospace;"></span><br>
+  <span style="font-family: monospace;"></span><span style="font-family: monospace;">&nbsp; -u, --update&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Update with derived value (default: False)</span><span style="font-family: monospace;"></span><br>
+  <span style="font-family: monospace;"></span><span style="font-family: monospace;">&nbsp; -v, --verbose&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Show operations as they take place (default: False<br>
+    <br>
+  </span> </p>
+
+<h2>Manual Procedure</h2>
+<p>If for some reason the script can not be used or does not work the following manual procedure can be performed.<br>
+</p>
+<ol>
+  <li>Open the bunch current monitor  ‘Raw Data’ screen (from the&nbsp; ‘More...’ button of the main screen).<br>
+    <br>
+  </li>
+  <li>Zoom in on the signal from the bucket selected during the preparation stage.<br>
+    <img style=" width: 1200px; height: 437px;" src="Cam.png" alt=""><br>
+    <br>
+  </li>
+  <li>Check if the signal peak is showing up in the correct sample.<br>
+    <br>
+The relationship between peak location and bucket number is<br>
+&nbsp;&nbsp;&nbsp; Peak Location (samples) = (Bucket Number × 80) − 20<br>
+so for bucket 308 the peak should be at sample (308 × 80) − 20 = 24620<br>
+    <br>
+However the above display shows that the peak is actually at sample 
+number 24607.&nbsp; This indicates the the  ‘Trigger Delay’ parameter on 
+the engineering screen is 13 counts (24620−24607) too small.<br>
+    <br>
+  </li>
+  <li>If the peak of the signal from the bucket in question is in the 
+wrong location bring up the  ‘Engineering’ screen and apply the required
+ change to the ‘Trigger Delay’ parameter.</li>
+</ol>
+<br>
+<br>
+<br>
+
+
+    </body></html>

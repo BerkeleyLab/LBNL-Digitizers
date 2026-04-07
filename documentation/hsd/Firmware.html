@@ -1,0 +1,826 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+    <title>HighSpeedDigitizer</title>
+  </head>
+  <body>
+    <h1>High Speed Digitizer Firmware<br>
+</h1>
+    <h2>Introduction</h2>
+    The digitizer consists of a Xilinx ZCU111 RF-SOC FPGA board coupled to
+    a custom analog front end (AFE) daughter card.&nbsp; The AFE card provides programmable input coupling, offset, and gain.<br>
+<br>
+<h2>Data Acquisition Sampling Clock Generation</h2>
+    The ADC sampling clock is synchronized to the storage ring RF
+    reference provided by the facility timing system.&nbsp; The ZCU111
+    RF clock synthesis subsystem produces the ADC sampling clock as well as some others as described
+    below.&nbsp; The values shown are for the Advanced Light Source.<br>
+    <blockquote>F<sub>RF</sub> = 499.64 MHz<br>
+      <br>
+      F<sub>EVR</sub> = F<sub>RF</sub> ÷ 4 = 124.91 MHz<br>
+      <br>
+      F<sub>ref_LMK04208</sub> = F<sub>EVR</sub> = 124.91 MHz&nbsp;&nbsp;&nbsp; (J95–J109 SMA jumper)<br>
+      <br>
+      F<sub>ref_LMX2594</sub> = F<sub>ref_LMK04208</sub> = 124.91 
+      MHz&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (LMK04208 output 4)<br>
+      <br>
+      F<sub>VCO</sub> = F<sub>ref_LMX2594</sub> × 64 = 7994.24 MHz<br>
+      <br>
+      F<sub>samp</sub> = F<sub>VCO</sub> ÷ 2 = F<sub>RF</sub> × 8
+      = 3997.12 MHz&nbsp;&nbsp;&nbsp; (LMX2594 outputs, block design adc<span style="font-style: italic;">xx</span> inputs)<br>
+      <br>
+      F<sub>FPGA_REFLK_OUT_C</sub> = F<sub>ref_LMK04208</sub> ÷ 11 = 11.355454545 MHz&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (LMK04208
+      output 2)<br>
+      <br>
+      F<sub>ADC_AXI</sub> = F<sub>FPGA_REFCLK_OUT_C</sub> × 104.5 ÷ 2.375 
+      =&nbsp;499.64 MHz = F<sub>samp</sub> ÷ 8 &nbsp;&nbsp;&nbsp;&nbsp; (MMCM)<br>
+      <br>
+      F<sub>SYSREF</sub> = F<sub>ref_LMK04208</sub> ÷ 22 = 5.67772727
+      MHz&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (LMK04208 outputs 0 and 1)</blockquote>
+    The above values meet a number of constraints imposed by the
+    hardware:<br>
+    <ul>
+      <li>F<sub>samp</sub> ≤ 4 GHz</li>
+      <li>F<sub>FPGA_REFLK_OUT_C</sub> &gt; 10 MHz (minimum reference to
+        MMCM)</li>
+      <li>F<sub>SYSREF</sub> &lt; 10 MHz</li>
+      <li>F<sub>ADC_AXI</sub> synthesizable from F<sub>FPGA_REFLK_OUT_C</sub>
+        with MMCM<br>
+      </li>
+      <li>F<sub>ADC_AXI</sub> integer multiple of F<sub>SYSREF<br>
+</sub></li>
+    </ul>LMK04208 outputs 0 and 1 are delayed with respect to output 2 
+to avoid metastability in&nbsp; the FPGA SYSREF synchronization 
+firmware.<br>
+<br>
+Changes to the above values require reconfiguring the LMK04208
+    jitter cleaner and the LMX2594 RF synthesizer chips as well as the GTY receiver settings as described
+    in the following steps.&nbsp; The clock constraints in 
+HighSpeedDigitizerTop.xdc are good for sampling frequencies up to 4 GHz.
+ <br>
+    <ol>
+      <li>Choose the event system bit rate, ADC sampling rate and other timing values to meet the above constraints.<br>
+</li><li>Use the Vivado transceiver wizard to configure the GTY to
+        match the chosen event link rate.</li>
+<li>Build the project firmware.<br>
+</li>
+
+      <li>Run TICSPRO to set lmk04208.tcs and lmx2594.tcs&nbsp; to match the timing and
+        acquisition settings.</li>
+      <li>Run the createRFCLKheader.sh&nbsp; script to convert the .tcs 
+files to their .h equivalents. &nbsp;&nbsp; These values are programmed 
+into the devices at software startup so changes don't require a firmware
+ rebuild. </li>
+<li>Set the MMCM ADC_CLK_MMCM_MULTIPLIER and ADC_CLK_MMCM_DIVIDER values
+ in config.h.&nbsp; These values are programmed into the MMCM at 
+software startup so changes don't require a firmware rebuild.</li>
+
+      
+      <li>Build the project software.<br>
+      </li>
+    </ol>
+    <blockquote>
+    </blockquote>
+    <h3>LMK04208 Jitter Cleaner<br>
+    </h3>
+    <p>The jitter cleaner is configured to be a simple clock
+      distribution element as shown below.&nbsp; It would be preferable
+      to use the jitter cleaning capability but this is not possible
+      since the VCXO does not have adequate range to track the ALS
+      storage ring RF.&nbsp; The <a href="#createRFCLKheader">createRFCLKheader.sh</a>
+      script converts the&nbsp; lmk04208.tcs and
+      lmx2594.tcs produced by the <a name="TICSPro"></a>TICS Pro
+      application to C initializers.<br>
+    </p>
+    <p><img src="LMK04208.png" alt="" style=" width: 918px; height: 707px;"></p>
+    <p>Outputs:<br>
+</p>
+<ul>
+  <li>SYSREF_FPGA<br>
+  </li>
+  <li>SYSREF_RFSOC<br>
+  </li>
+  <li>FPGA_REFCLK_OUT</li>
+  <li>LMX2594 RF synthesizers SYNC<br>
+</li>
+  <li>LMX2594 Reference</li>
+  <li>Monitor SMA<br>
+  </li>
+</ul>
+<img src="LMK04208out.png" alt="" style=" width: 918px; height: 714px;">
+
+    <h3>LMX2594 RF Synthesizer</h3>
+    <p>The RF synthesizer produces the ADC sampling clock as described
+      above.&nbsp; The device is configured as shown below:<br>
+    </p>
+    <p><img src="LMX2594.png" alt="" style=" width: 918px; height: 707px;"><br>
+      <br>
+    </p>
+    
+<h2>Orbit Marker<br>
+</h2>
+
+
+The firmware places an orbit marker signal on the first GPIO pin (RFMC_DACIO_00) 
+of the AFE for applications that need this synchronization.<br>
+<br>
+ 
+<h2 style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-family: -webkit-standard; font-style: normal;
+      font-variant-caps: normal; letter-spacing: normal; orphans: auto;
+      text-align: start; text-indent: 0px; text-transform: none;
+      white-space: normal; widows: auto; word-spacing: 0px;
+      -webkit-text-size-adjust: auto; -webkit-text-stroke-width: 0px;
+      text-decoration: none;"><a name="SettjngNetworkParameters"></a>Setting
+      Network Parameters</h2>
+
+    <ol style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-family: -webkit-standard; font-style: normal;
+      font-variant-caps: normal; font-weight: normal; letter-spacing:
+      normal; orphans: auto; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; widows: auto;
+      word-spacing: 0px; -webkit-text-size-adjust: auto;
+      -webkit-text-stroke-width: 0px; text-decoration: none;">
+      <li>Depress the "Recovery" push button on the front panel while
+        the system is powering up or rebooting.&nbsp; This sets the IPv4
+        network address to 192.168.1.128 and the Ethernet MAC address to
+        AA:4C:42:4E:4C:01.<span class="Apple-converted-space">&nbsp;</span><br>
+      </li>
+      <li>Connect the chassis to a 192.168.1.0/24 network
+        and run the <a href="#scriptCONSOLE">console.py</a> script from
+        a host on that same network.<br>
+      </li>
+      <li>Use the <a href="#cmdMAC">mac</a> and/or <a href="#cmdNET">net</a>
+        commands to set the Ethernet and/or IPv4 addresses.</li>
+      <li>Reboot or power cycle the system.</li>
+    </ol>
+    <p><span style="font-family: -webkit-standard;">Alternatively, a
+        terminal emulator program and USB cable can be used to
+        communicate with the system through its USB console serial port
+        (115200-8N1) to issue the </span> <a href="file:///Users/wenorum/xildev/src/siocbcm/head/documentation/Firmware.html#cmdMAC">mac</a>
+      and/or <a href="file:///Users/wenorum/xildev/src/siocbcm/head/documentation/Firmware.html#cmdNET">net</a>
+      commands. </p>
+    <h2>Diagnostic LEDs</h2>
+    <p>The latter two ZCU111 diagnositic LEDs are assigned as follows:<br>
+    </p>
+    <ul>
+      <li>GPIO_LED_6 (DS12) — Event system 'Pulse Per Second' (Event
+        125)</li>
+      <li>GPIO_LED_7 (DS11) — Event system 'Heartbeat' (Event 122)</li>
+    </ul>
+    <h2 style=" caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-family: -webkit-standard; font-style: normal;
+      font-variant-caps: normal; letter-spacing: normal; orphans: auto;
+      text-align: start; text-indent: 0px; text-transform: none;
+      white-space: normal; widows: auto; word-spacing: 0px;
+      -webkit-text-size-adjust: auto; -webkit-text-stroke-width: 0px;
+      text-decoration: none;">Console Commands</h2>
+    <p style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-family: -webkit-standard; font-style: normal;
+      font-variant-caps: normal; font-weight: normal; letter-spacing:
+      normal; orphans: auto; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; widows: auto;
+      word-spacing: 0px; -webkit-text-size-adjust: auto;
+      -webkit-text-stroke-width: 0px; text-decoration: none;">The FPGA
+      sends startup and diagnostic messages to its USB console serial
+      port and to a UDP port accessible through the <a href="file:///Users/wenorum/xildev/src/siocbcm/documentation/Firmware.html#scriptCONSOLE">console.py</a>
+      script.&nbsp; The serial port is run at 115200-8N1.&nbsp;<span class="Apple-converted-space"></span> Commands are entered using
+      a simple command line interpreter.&nbsp; There is no command
+      history and the only editing available is the backspace or delete
+      key which erases the character currently at the end of the
+      line.&nbsp; A carriage-return or line-feed character marks the end
+      of a line.&nbsp; Only enough of a command to make it unique is
+      required.&nbsp; Since no existing commands share a common leading
+      letter this means that only the first character of a command is
+      needed.&nbsp; The commands are:<br>
+    </p>
+    <dl style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-family: -webkit-standard; font-style: normal;
+      font-variant-caps: normal; font-weight: normal; letter-spacing:
+      normal; orphans: auto; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; widows: auto;
+      word-spacing: 0px; -webkit-text-size-adjust: auto;
+      -webkit-text-stroke-width: 0px; text-decoration: none;">
+      <dt><span style="font-weight: bold;">boot</span><span style="font-weight: bold;"> [<span style="font-style: italic;">n</span>]</span></dt>
+      <dd>The FPGA prompts for confirmation and then restarts as if
+        powered up. The optional numeric argument selects a different boot image (BOOT000<span style="font-style: italic;">n</span>.BIN).<br>
+</dd>
+      <dt><br>
+      </dt>
+      <dt><span style="font-weight: bold;">cal [-t] [dac]<br>
+</span></dt>
+      <dd>Set the calibration signals.&nbsp; The <span style="font-weight: bold;">-t</span> argument enables the training tone.&nbsp; The <span style="font-weight: bold;">dac</span> argument sets the DAC value.&nbsp; These settings apply only until the gain of any channel is updated from the IOC.<br>
+</dd>
+      <dt><br>
+        <span style="font-weight: bold;"><span style="font-style:
+            italic;"></span></span><span style="font-weight: bold;">debug [-s] [<span style="font-style: italic;">n</span>]</span></dt>
+      <dd>The debugging flags are set to the specified value, if one is
+        given.&nbsp; The bits are</dd>
+    </dl>
+    
+<ul style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0); font-family: -webkit-standard; font-style: normal; font-variant-caps: normal; font-weight: normal; letter-spacing: normal; text-align: start; text-indent: 0px; text-transform: none; white-space: normal; word-spacing: 0px; -moz-text-size-adjust: auto; -webkit-text-stroke-width: 0px; text-decoration: none; margin-left: 40px;">
+
+
+      <li>Bit 0 &nbsp; — Enable messages related to the EPICS UDP port.<br>
+      </li>
+      <li>Bit 1 &nbsp; — Enable messages related to the TFTP UDP port.</li>
+      
+      <li>Bit 3 &nbsp; — Enable messsages related to waveform
+        acquisition.</li>
+      <li>Bit 4 &nbsp; — Enable messages related to I<sup>2</sup>C I/O
+        transactions.<br>
+      </li>
+      
+      <li>Bit 6 &nbsp; — Enable messages related to dynamic
+        reconfiguration port (eye scan) transactions.</li>
+  <li>Bit 7 &nbsp; — Report the results of calibration operations.</li>
+
+<li>Bit 8 &nbsp; — Display a test pattern on the front panel display.</li>
+<li>Bit 9 &nbsp; — Show the contents of the AFE programmable gain amplifier registers.<br>
+</li>
+
+<li>Bit 12 — Show ADC MMCM status.<br>
+</li>
+
+      <li>Bit 13 — Show all the RF synthesizer register contents.<br>
+      </li>
+      <li>Bit 14 — Show the status of the RF ADCs.</li>
+      <li>Bit 15 — Show the eye scan dynamic reconfiguration port
+        registers.</li>
+      <li>Bit 16 — Reset the event receiver GTY transceiver.<br>
+</li>
+      <li>Bit 17 — Slide the event receiver GTY transceiver by one
+        bit.&nbsp; Should trigger an automatic GTY synchronization.</li>
+  
+  <li>Bit 20 — Resynchronize the RF ADCs.</li>
+  <li>Bit 21 — Restart the RF ADCs.</li>
+</ul>
+<div style="margin-left: 40px;">If the optional <span style="font-weight: bold;">-s</span>
+        argument is present the value of the debugging flags will be
+        written to flash memory and the flags will be set to that value
+        on startup.</div>
+<ul style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-family: -webkit-standard; font-style: normal;
+      font-variant-caps: normal; font-weight: normal; letter-spacing:
+      normal; orphans: auto; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; widows: auto;
+      word-spacing: 0px; -webkit-text-size-adjust: auto;
+      -webkit-text-stroke-width: 0px; text-decoration: none;
+      margin-left: 40px;">
+
+
+    
+</ul>
+
+
+    <dl style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-family: -webkit-standard; font-style: normal;
+      font-variant-caps: normal; font-weight: normal; letter-spacing:
+      normal; orphans: auto; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; widows: auto;
+      word-spacing: 0px; -webkit-text-size-adjust: auto;
+      -webkit-text-stroke-width: 0px; text-decoration: none;">
+      </dl>
+<dl style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-family: -webkit-standard; font-style: normal;
+      font-variant-caps: normal; font-weight: normal; letter-spacing:
+      normal; orphans: auto; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; widows: auto;
+      word-spacing: 0px; -webkit-text-size-adjust: auto;
+      -webkit-text-stroke-width: 0px; text-decoration: none;">
+<dt><span style="font-weight: bold;">DIR</span></dt><dd>List the contents of the µSD card.</dd>
+</dl>
+<dl style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-family: -webkit-standard; font-style: normal;
+      font-variant-caps: normal; font-weight: normal; letter-spacing:
+      normal; orphans: auto; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; widows: auto;
+      word-spacing: 0px; -webkit-text-size-adjust: auto;
+      -webkit-text-stroke-width: 0px; text-decoration: none;">
+<dt><span style="font-weight: bold;">evr</span></dt>
+      <dd>Show the embedded event receiver settings.</dd><dt><br>
+</dt>
+<dt><span style="font-weight: bold;">fmon</span></dt>
+<dd>Show the frequencies of the various FPGA clocks.</dd>
+</dl>
+
+    <dl style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-family: -webkit-standard; font-style: normal;
+      font-variant-caps: normal; font-weight: normal; letter-spacing:
+      normal; orphans: auto; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; widows: auto;
+      word-spacing: 0px; -webkit-text-size-adjust: auto;
+      -webkit-text-stroke-width: 0px; text-decoration: none;">
+      <dt><span style="font-weight: bold;">log</span></dt>
+      <dd>Replay console startup messages.</dd>
+      <dt><br>
+        <span style="font-weight: bold;"><a name="cmdMAC"></a>mac
+          [aa:bb:cc:dd:ee:ff]</span></dt>
+      <dd>Show the Ethernet MAC address if no argument is present
+        otherwise set the MAC address in flash memory.&nbsp; The FPGA
+        prompts for confirmation before writing to the flash memory.<br>
+      </dd>
+      <dt><br>
+      </dt>
+      <dt><span style="font-weight: bold;"><a name="cmdNET"></a>net [</span><span style="font-weight: bold;">www.xxx.yyy.zzz[/n]]</span></dt>
+      <dd>Show the network settings if no argument is present otherwise
+        set network parameters in flash memory based on the
+        argument.&nbsp; The network address is set to the specified
+        value.&nbsp; The netmask is set based on the optional network
+        address length (/n).&nbsp; If the network address length is
+        omitted a value of 24 (Class C network) is used.&nbsp; The FPGA
+        prompts for confirmation before writing to the flash memory.</dd>
+    </dl>
+    <dl style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-family: -webkit-standard; font-style: normal;
+      font-variant-caps: normal; font-weight: normal; letter-spacing:
+      normal; orphans: auto; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; widows: auto;
+      word-spacing: 0px; -webkit-text-size-adjust: auto;
+      -webkit-text-stroke-width: 0px; text-decoration: none;">
+      <dt><span style="font-weight: bold;">reg r [n]</span></dt>
+      <dd><span style="font-weight: bold;"></span>Show the contents of<span class="Apple-converted-space">&nbsp;</span><span style="font-weight: bold;">n</span><span class="Apple-converted-space">&nbsp;</span>(default 1)
+        general-purpose I/O registers starting at register<span class="Apple-converted-space">&nbsp;</span><span style="font-weight: bold;">r</span>.</dd>
+      <dt><br>
+        <span style="font-weight: bold;">stats</span></dt>
+      <dd>Show the network statistics.</dd></dl>
+<dl style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-family: -webkit-standard; font-style: normal;
+      font-variant-caps: normal; font-weight: normal; letter-spacing:
+      normal; orphans: auto; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; widows: auto;
+      word-spacing: 0px; -webkit-text-size-adjust: auto;
+      -webkit-text-stroke-width: 0px; text-decoration: none;">
+<dt><span style="font-weight: bold;">tlog</span></dt><dd>Start the event
+ system logger. Logging continues until any key is pressed.&nbsp; Normal
+ digitzer operations continue to take place while logging is enabled.<br>
+</dd>
+</dl>
+<dl style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-family: -webkit-standard; font-style: normal;
+      font-variant-caps: normal; font-weight: normal; letter-spacing:
+      normal; orphans: auto; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; widows: auto;
+      word-spacing: 0px; -webkit-text-size-adjust: auto;
+      -webkit-text-stroke-width: 0px; text-decoration: none;">
+<dt><span style="font-weight: bold;">userMGT [ppm]<br>
+</span></dt><dd>Set/show the offset of the clock used to drive the user 
+clock input to the event link GTY transceiver.&nbsp; The transceiver 
+clock/data recovery hardware has a limited range over which it will lock
+ to the incoming stream.&nbsp; An offset of 0 parts per million 
+corresponds to a user clock of 156.25 MHz, an event link bit rate of 
+2.500 Gb/s and an acquisition clock of 4.000 Gsamples/s.&nbsp; An offset
+ of -700 parts per million is appropriate for the ALS or the ALS-U 
+injector and booster ring event system.&nbsp; An offset of +700 parts 
+per million is appropriate for the ALS-U accumulator and storage ring 
+event system.<br>
+</dd>
+</dl>
+<dl style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-family: -webkit-standard; font-style: normal;
+      font-variant-caps: normal; font-weight: normal; letter-spacing:
+      normal; orphans: auto; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; widows: auto;
+      word-spacing: 0px; -webkit-text-size-adjust: auto;
+      -webkit-text-stroke-width: 0px; text-decoration: none;">
+
+    
+</dl>
+
+    <dl style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-family: -webkit-standard; font-style: normal;
+      font-variant-caps: normal; font-weight: normal; letter-spacing:
+      normal; orphans: auto; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; widows: auto;
+      word-spacing: 0px; -webkit-text-size-adjust: auto;
+      -webkit-text-stroke-width: 0px; text-decoration: none;">
+      <dt><span style="font-weight: bold;">values</span></dt>
+      <dd>Show values of assorted system monitors</dd>
+    </dl>
+    <dl style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-family: -webkit-standard; font-style: normal;
+      font-variant-caps: normal; font-weight: normal; letter-spacing:
+      normal; orphans: auto; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; widows: auto;
+      word-spacing: 0px; -webkit-text-size-adjust: auto;
+      -webkit-text-stroke-width: 0px; text-decoration: none;">
+      <dt><span style="font-weight: bold;">xcvr [-n | -r]<br>
+        </span></dt>
+      <dd>Generate event link GTY transceiver eye diagram.&nbsp; The
+        default is an ASCII-art image.&nbsp; The -n option changes the
+        display to a numeric value of floor(log<sub>2</sub>(errorCount))
+        at each point (points at which the error count saturated are
+        still shown as '@' characters and points at which the error
+        count is 0 are still shown as space characters).&nbsp;&nbsp; The
+        -r option produces a raw table with first column the horizontal
+        offset, the second column the vertical offset and the third and
+        final column the error count.<br>
+      </dd>
+    </dl>
+    <h2>Support Scripts<br>
+    </h2>
+    <dl>
+      <dt> <span style="font-weight: bold;"><a name="scriptCONSOLE"></a>console.py
+          [[-a] IP_name_or_address]<br>
+        </span></dt>
+      <dd>Connect to the console port of the FPGA.</dd>
+    </dl>
+    <dl>
+      <dt><span style="font-weight: bold;"><span style="font-weight:
+            bold;"><a name="lmx2594"></a>lmx2594.py [-h] [-f FILE] [-p
+            PREFIX] [-v]</span><br>
+        </span></dt>
+      <dd>Show or, if the TICS Pro <span style="font-weight: bold;">FILE</span>
+        is specified, set the values of the LMX2594 frequency
+        synthesizer registers.</dd>
+    </dl>
+    <dl>
+      <dt><span style="font-weight: bold;"><span style="font-weight:
+            bold;"><a name="createRFCLKheader"></a>createRFCLKheader.sh</span><br>
+        </span></dt>
+      <dd>Convert the lmk04208.tcs and lmx2594.tcs files produced by the
+        <a href="#TICSPro">TICS Pro</a> application to C initializers.<br>
+      </dd>
+    </dl>
+    <p><br>
+      <span style="font-weight: bold;"></span></p>
+    <p><span style="font-weight: bold;"></span></p>
+    <dl>
+    </dl>
+    <dl>
+    </dl>
+    <h2>TFTP server</h2>
+    <p style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-family: -webkit-standard; font-style: normal;
+      font-variant-caps: normal; font-weight: normal; letter-spacing:
+      normal; orphans: auto; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; widows: auto;
+      word-spacing: 0px; -webkit-text-size-adjust: auto;
+      -webkit-text-stroke-width: 0px; text-decoration: none;">The FPGA
+      firmware, bootstrap loader and executable image are stored in a
+      single file on the micro SD card.&nbsp; This file, with name
+      'BOOT.bin', can be uploaded to, or downloaded from, the card using the TFTP server in the FPGA application. <br>
+    </p>
+    <p style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-family: -webkit-standard; font-style: normal;
+      font-variant-caps: normal; font-weight: normal; letter-spacing:
+      normal; orphans: auto; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; widows: auto;
+      word-spacing: 0px; -webkit-text-size-adjust: auto;
+      -webkit-text-stroke-width: 0px; text-decoration: none;"><span class="Apple-converted-space"></span><span class="Apple-converted-space"></span>A
+ snapshot of the front
+      panel screen can be obtained by downloading the file 'SCREEN.ppm'
+      from the FPGA.&nbsp; Fetching the image from the display takes 
+over a second during which time other operations, such as communication 
+with the IOC, are suspended.<br>
+    </p>
+    <p style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-family: -webkit-standard; font-style: normal;
+      font-variant-caps: normal; font-weight: normal; letter-spacing:
+      normal; orphans: auto; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; widows: auto;
+      word-spacing: 0px; -webkit-text-size-adjust: auto;
+      -webkit-text-stroke-width: 0px; text-decoration: none;">File
+      transfers must be performed in 'octet' (binary) mode.&nbsp; The
+      TFTP server is limited to a single active transfer at a
+      time.&nbsp; Don't attempt simultaneous transfers from multiple
+      clients.</p>
+    <h2>Creating Bootable Image</h2>Run make in the scripts directory.&nbsp; Transfer 
+the resulting BOOT.bin file to the boostrap micro SD card using the procedure outlined below.<br>
+<h2>Updating Flash Memory Bootable Image</h2>
+To minimize the chances of ending up with an unbootable ('bricked') 
+system the procedure noted below should be followed to update the flash 
+memory.&nbsp; <br>
+<ol>
+  <li>Use the programFlash.sh script in the IOC FPGA directory to 
+transfer BOOT.bin to BOOT0002.bin on the micro SD card.&nbsp; The '2' 
+argument arranges for the name change between the local filesystem and 
+the micro SD card.&nbsp; For example:<br>
+&nbsp;<span style="font-weight: bold;"><span style="font-family: Courier New, Courier, monospace;">sh programFlash.sh 2 131.243.93.161</span></span></li>
+  <li>Connect to the FPGA console and boot the new image by providing the '2' argument to the 'boot' command:<br>
+    <span style="font-weight: bold;"><span style="font-family: Courier New, Courier, monospace;">boot 2</span></span><br>
+Alternatively, press and hold the Display button then press the Reboot/Recovery button for a couple of seconds.<br>
+This directs the FPGA to boot the alternate image that was transferred to the micro SD card in step 1.</li>
+  <li>If the FPGA boots and starts properly go on to the next step, 
+otherwise press the Reboot/Recovery button for a couple of seconds or 
+power cycle the unit to reboot the old BOOT.bin.</li>
+  <li>Use the programFlash.sh script in the IOC FPGA directory to transfer 
+BOOT.bin to BOOT.bin on the micro SD card.&nbsp; For example:<br>
+
+&nbsp;<span style="font-weight: bold;"><span style="font-family: Courier New, Courier, monospace;">sh programFlash.sh 131.243.93.161</span></span></li>
+  <li>Connect to the FPGA console and issue the 'boot' command with no arguments, or press the Reboot/Recovery button for a couple of seconds, or power cycle the unit to reboot the new BOOT.bin.</li>
+</ol>
+If things go wrong and you end up with a bricked system your only 
+recourse is to remove the micro SD card and transfer the BOOT.bin image 
+to it directly.<br>
+
+    
+    
+    
+    <h2>Front Panel<br>
+    </h2>
+    <p>The ZCU111 PMOD1 connector connects to the front panel Display
+      and Reset/Recovery push buttons and drives a 240×320
+      display equipped with a Sitronix ST7789V controller configured for
+      4-line serial operation.&nbsp; The connector pin assignments are
+      shown in the following table.<br>
+    </p>
+    <table style="text-align: left; width: 500px; margin-left: 40px;" cellspacing="2" cellpadding="2" border="1">
+      <tbody>
+        <tr>
+          <td style="text-align: center;"><span style="font-weight:
+              bold;">PMOD1</span><span style="font-weight: bold;"><br>
+            </span><span style="font-weight: bold;">Line</span><br>
+          </td>
+          <td style="vertical-align: middle; text-align: center;"><span style="font-weight: bold;">ST7789V</span><span style="font-weight: bold;"><br>
+            </span><span style="font-weight: bold;">Line</span><br>
+          </td>
+          <td style="vertical-align: middle; text-align: center;"><span style="font-weight: bold;">De</span><span style="font-weight: bold;">scrip</span><span style="font-weight: bold;">tion</span><br>
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">0<br>
+          </td>
+          <td style="text-align: center;"><span style="text-decoration:overline"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mover><mtext>CS</mtext><mo>¯</mo></mover><annotation encoding="TeX">\overline{\text{CS}}</annotation></semantics></math></span>
+          </td>
+          <td style="vertical-align: top;"><br>
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">1<br>
+          </td>
+          <td style="text-align: center;">SDA<br>
+          </td>
+          <td style="vertical-align: top;">Bidirectional data transfer.<br>
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">2<br>
+          </td>
+          <td style="text-align: center;">–<br>
+          </td>
+          <td style=" vertical-align: top;">Enable display backlight
+            driver<br>
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">3<br>
+          </td>
+          <td style="text-align: center;">SCLK<br>
+          </td>
+          <td style="vertical-align: top;"><br>
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">4<br>
+          </td>
+          <td style="text-align: center;"><span style="text-decoration:overline"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mover><mtext>RESET</mtext><mo>¯</mo></mover><annotation encoding="TeX">\overline{\text{RESET}}</annotation></semantics></math></span></td>
+          <td style="vertical-align: top;"><br>
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">5<br>
+          </td>
+          <td style="text-align: center;"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext>D/</mtext><mover><mtext>C</mtext><mo>¯</mo></mover></mrow><annotation encoding="TeX">\text{D/}\overline{\text{C}}</annotation></semantics></math><br>
+          </td>
+          <td style="vertical-align: top;"><br>
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">6<br>
+          </td>
+          <td style="text-align: center;">–<br>
+          </td>
+          <td style="vertical-align: top;">Reset/Recovery button
+            (active low, on-board pull-up)<br>
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">7<br>
+          </td>
+          <td style="text-align: center;">–<br>
+          </td>
+          <td style="vertical-align: top;">Display button (active low, on-board
+            pull-up)</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>The buttons provide momentary closure to ground.&nbsp; If the
+      Reset/Recovery button is held down at FPGA boot time the Ethernet
+      MAC and IP addresses are set to default values, as <a href="#SettjngNetworkParameters">described above.</a>&nbsp;&nbsp;&nbsp;
+
+
+      The Display button cycles through the assorted display
+      pages.&nbsp; If the display button is held down while the 
+Reset/Recovery button is pressed to an alternate boot image 
+(BOOT0002.BIN) will be loaded.&nbsp; If the display is showing a warning
+ message (black
+      text on a yellow background) pressing and holding the Display
+      button for more than a second will clear the message and restore
+      normal display operation.&nbsp; The FPGA 'GPIO_SW_W' push button
+      has the same effect as the front panel Reset/Recovery button and
+      the FPGA 'GPIO_SW_E' push button has the same effect as the front
+      panel Display button.<br>
+    </p>
+    <p>A typical display is shown below:<br>
+    </p>
+    <div style="margin-left: 40px;"><img src="screenGrab.png" alt="" style=" width: 320px; height: 240px;"><br>
+      <br>
+    </div>
+    The time and date obtained from the timing system is shown at the
+    left side of the bottom line.&nbsp; The green heartbeat indicator at
+    the lower right corner flashes when a heartbeat event (event number
+    122) is received from the timing system.&nbsp; If an interlock relay
+    is present its status is shown to the left of the heartbeat
+    indicator.&nbsp; The IP address of the monitor is shown at the left
+    of the second line from the bottom.&nbsp; If this text appears as
+    black text on a white background it indicates that the recovery mode
+    address is in use.&nbsp; The serial numbers of the FPGA board and
+    the analog front end board are shown at the right of the second line
+    from the bottom.&nbsp;&nbsp; The remainder of the display shows
+    assorted system status information.&nbsp; Each press of the Display
+    button cycles to the next screen of information.<br>
+    <br>
+    <h3>Interlock Indicator</h3>
+    <p>As mentioned above, the status of the interlock relay, if
+      present, is shown on the bottom line of the display.&nbsp; The
+      indicator can take on the following values:<br>
+    </p>
+    <div style="margin-left: 40px;">
+      <table style=" text-align: left; width: 493px; height: 271px;" cellspacing="2" cellpadding="2" border="1">
+        <tbody>
+          <tr>
+            <th style=" vertical-align: middle; text-align: center;">Indicator<br>
+            </th>
+            <th style="vertical-align: middle; text-align: center;">Description<br>
+            </th>
+          </tr>
+          <tr>
+            <td style="text-align: left;">Red open contact<br>
+            </td>
+            <td style="text-align: left;">Interlock relay is open.<br>
+            </td>
+          </tr>
+          <tr>
+            <td style="text-align: left;">Green closed contact<br>
+            </td>
+            <td style="text-align: left;">Interlock relay is closed.<br>
+            </td>
+          </tr>
+          <tr>
+            <td style="text-align: left;">Black rectangle<br>
+            </td>
+            <td style="text-align: left;">Interlock relay is not
+              installed (neither open nor closed readback are active).</td>
+          </tr>
+          <tr>
+            <td style="text-align: left;">Red rectangle<br>
+            </td>
+            <td style="text-align: left;">Interlock relay has been
+              requested to close, but has not done so.<br>
+            </td>
+          </tr>
+          <tr>
+            <td style="text-align: left;">Green rectangle</td>
+            <td style="text-align: left;">Interlock relay has been
+              requested to open, but has not done so.</td>
+          </tr>
+          <tr>
+            <td style="text-align: left;">Orange rectangle<br>
+            </td>
+            <td style="text-align: left;">Interlock relay state is
+              unknown (both open and closed readback are active).<br>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <br>
+</div>
+<p>The ZCU111 PMOD0 connector carries the interlock signals.&nbsp; The connector pin assignments are
+      shown in the following table.<br>
+    </p>
+
+    
+<table style="text-align: left; width: 500px; margin-left: 40px;" cellspacing="2" cellpadding="2" border="1">
+
+      <tbody>
+        <tr>
+          <td style="text-align: center;"><span style="font-weight:
+              bold;">PMOD0</span><span style="font-weight: bold;"><br>
+            </span><span style="font-weight: bold;">Line</span><br>
+          </td>
+          
+          <td style="vertical-align: middle; text-align: center;"><span style="font-weight: bold;">De</span><span style="font-weight: bold;">scrip</span><span style="font-weight: bold;">tion</span><br>
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">0<br>
+          </td>
+          
+          <td style="vertical-align: top;"><br>
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">1<br>
+          </td>
+          
+          <td style="vertical-align: top;"><br>
+</td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">2<br>
+          </td>
+          
+          <td style=" vertical-align: top;"><br>
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">3<br>
+          </td>
+          
+          <td style="vertical-align: top;"><br>
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">4<br>
+          </td>
+          
+          <td style="vertical-align: top;">Interlock relay drive (active high).<br>
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">5<br>
+          </td>
+          
+          <td style="vertical-align: top;">Interlock relay closed (active low, on-board pull-up)
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">6<br>
+          </td>
+          
+          <td style="vertical-align: top;">Interlock relay open (active low, on-board pull-up)<br>
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">7<br>
+          </td>
+          
+          <td style="vertical-align: top;">Front panel interlock reset button (active low, on-board
+            pull-up)</td>
+        </tr>
+      </tbody>
+    
+</table>
+
+    <br>
+The FPGA 'GPIO_SW_N' push button
+      has the same effect as the front panel interlock reset button.<br>
+<div style="margin-left: 40px;">
+</div>
+
+<h2>ZCU111 Bootstrap</h2>
+<p>The following notes are based on ZCU111 User Guide (UG1271), "RFSoC Device Configuration".<br>
+<br>
+The ZCU111 should be configured to boot from the micro SD card.&nbsp;&nbsp; To do this set SW6-1 ON and SW6-2 through SW6-4 OFF:<br>
+<br>
+</p>
+<p><img src="BootSD.png" alt="" style=" width: 345px; height: 287px;" hspace="100"><br>
+</p>
+<p><br>
+Booting from the micro SD card can fail if a Xilinx virtual cable server
+ is running and connected to the USB/JTAG converter on the FPGA 
+board.&nbsp; Ensure that no such servers are running before attempting a
+ micro SD card boot.&nbsp; Server processes such as hw_server and 
+cs_server can continue running even after Vivado/Vitis windows have been
+ closed.<br>
+</p>
+<p>To boot using the JTAG interface:<br>
+</p>
+
+<ul>
+  <li>Set  SW6-1 through SW6-4 ON.</li>
+  <li>Xilinx -&gt; Program FPGA</li>
+  <li>Click on green 'Run System Debugger' button.</li>
+  <li>If either of the two preceding steps fail, issue a 'rst -por' 
+command in the XSCT&nbsp; pane then try again from the 'Program FPGA' 
+step.</li></ul><p><br>
+</p>
+<ul>
+
+</ul>
+
+
+<div style="margin-left: 40px;">
+    </div>
+
+    <dl>
+    </dl>
+    <blockquote>
+      <blockquote> </blockquote>
+    </blockquote>
+  
+
+
+
+</body></html>
