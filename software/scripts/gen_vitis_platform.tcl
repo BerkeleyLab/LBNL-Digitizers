@@ -18,6 +18,7 @@ proc gen_vitis_platform {platform_name xsa_file} {
     bsp config memp_n_udp_pcb 32
     bsp config n_rx_descriptors 128
     bsp config n_tx_descriptors 128
+    bsp config lwip_dhcp true
     # bsp config lwip_stats true
     # bsp config lwip_debug true
     # bsp config pbuf_debug true

@@ -3,7 +3,7 @@ include dir_list.mk
 CROSS_COMPILE    ?=
 PLATFORM         ?= zcu111
 APP              ?= hsd
-GW_VARIANT       ?= dc
+GW_VARIANT       ?=
 
 TARGET       = $(APP)_$(PLATFORM)
 GW_TGT_DIR   = $(GW_SYN_DIR)/$(TARGET)
