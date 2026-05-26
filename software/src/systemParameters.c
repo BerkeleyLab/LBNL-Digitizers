@@ -9,7 +9,7 @@
 #include "util.h"
 #include "ffs.h"
 #include "serdes.h"
-#include "rfdc.h"
+#include "rfadc.h"
 
 struct systemParameters systemParameters;
 struct systemParameters systemParametersCandidate;

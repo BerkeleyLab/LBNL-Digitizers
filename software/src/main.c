@@ -108,8 +108,6 @@ int
 main(void)
 {
     int isRecovery;
-    unsigned char *enetMAC;
-    const struct sysNetParms *ipv4;
     static ip_addr_t ipaddr, netmask, gateway;
     static struct netif netif;
 
