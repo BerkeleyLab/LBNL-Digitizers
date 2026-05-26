@@ -6,6 +6,9 @@
 #define _SYSTEM_PARAMETERS_H_
 
 #include <stdint.h>
+#include <lwip/ip_addr.h>
+
+#define SYSTEM_PARAMETERS_NAME "sysParms.csv"
 
 struct sysNetParms {
     uint32_t  address;
@@ -29,14 +32,15 @@ extern struct systemParameters {
 } systemParameters;
 
 
-void systemParametersReadback(void);
-void systemParametersStash(void);
+void systemParametersSetDefaults(void);
+int systemParametersFetchEEPROM(void);
+int systemParametersStashEEPROM(void);
+void systemParametersCommit(void);
 
-char *formatIP(const void *val);
-int   parseIP(const char *str, void *val);
-char *formatMAC(const void *val);
-int   parseMAC(const char *str, void *val);
-
+void setDefaultNetAddress(struct sysNetConfig *netConfig,
+        struct sysNetConfig *sysParamsNetConfig,
+        struct sysNetConfig *defaultNetConfig, int isRecovery,
+        uint8_t *eepromMAC, int size);
 void showNetworkConfiguration(const struct sysNetParms *ipv4);
 void systemParametersShowUserMGTrefClkOffsetPPM(void);
 

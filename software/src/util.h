@@ -48,5 +48,6 @@ void showReg(unsigned int i);
 
 int serialNumberDFE(void);
 float mean(int32_t *numbers, int length);
+void bufferDisplay(uint8_t *buf, int n);
 
 #endif /* _UTIL_H_ */

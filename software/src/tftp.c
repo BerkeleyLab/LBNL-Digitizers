@@ -8,11 +8,11 @@
 #include <stdio.h>
 #include <string.h>
 #include <lwip/udp.h>
-#include "afe.h"
 #include "ffs.h"
 #include "st7789v.h"
 #include "tftp.h"
 #include "util.h"
+#include "systemParameters.h"
 
 #define TFTP_PORT 69
 
@@ -23,6 +23,46 @@
 #define TFTP_OPCODE_ERROR 5
 
 #define TFTP_ERROR_ACCESS_VIOLATION 2
+
+struct fileInfo {
+    const char *name;
+    const char *description;
+    int       (*preTransmit)(void);
+    int       (*postReceive)(void);
+    void      (*commit)(void);
+    void      (*defaults)(void);
+};
+
+static int dummyPreTransmit(void)
+{
+    return 0;
+}
+
+static int dummyPostReceive(void)
+{
+    return 0;
+}
+
+static void dummyCommit(void)
+{}
+
+static struct fileInfo fileTable[] = {
+   {"SCREEN.ppm", "SCREEN grab",
+                                                    st7789vGrabScreen,
+                                                    dummyPostReceive,
+                                                    dummyCommit},
+   {SYSTEM_PARAMETERS_NAME, "System parameters",
+                                                    systemParametersFetchEEPROM,
+                                                    systemParametersStashEEPROM,
+                                                    systemParametersCommit,
+                                                    systemParametersCommit},
+   {"BOOT.bin", "Bitsream + Software image",
+                                                    dummyPreTransmit,
+                                                    dummyPostReceive,
+                                                    dummyCommit},
+};
+
+#define FILE_TABLE_SIZE ((sizeof fileTable / sizeof fileTable[0]))
 
 /*
  * Send an error reply
@@ -114,6 +154,28 @@ sendBlock(struct udp_pcb *pcb, const ip_addr_t *fromAddr, u16_t fromPort,
 }
 
 /*
+ * Filename matcher
+ *   Ignore case.
+ *   Ignore characters after table name and before name extension.
+ */
+static int
+match(const char *name, const char *table)
+{
+    const char *fileExt, *tableExt;
+    int l;
+
+    fileExt = strrchr(name, '.');
+    tableExt = strrchr(table, '.');
+    if ((fileExt == NULL) || (tableExt == NULL))
+        return 0;
+    l =  tableExt - table;
+    if ((strncasecmp(name, table, l) != 0)
+     || (strcasecmp(fileExt, tableExt) != 0))
+        return 0;
+    return 1;
+}
+
+/*
  * Handle an incoming packet
  */
 static void
@@ -125,9 +187,10 @@ tftp_recv_callback(void *arg, struct udp_pcb *pcb, struct pbuf *p,
     int ackBlock = -1;
     static u16_t lastBlock;
     static int lastSend;
+    int bytesTrans;
+    static int fileIndex = -1;
     FRESULT fr;
     static FIL fil, *fp;
-    static char stashAFE;
 
     if (debugFlags & DEBUGFLAG_TFTP)
         printf("%3d on port %d from %d.%d.%d.%d:%d  %02X%02X %02X%02X\n",
@@ -149,30 +212,45 @@ tftp_recv_callback(void *arg, struct udp_pcb *pcb, struct pbuf *p,
             char *name = (char *)cp + 2, *mode = NULL;
             int nullCount = 0, i = 2;
             lastBlock = 0;
+            fileIndex = -1;
             while (i < p->len) {
                 if (cp[i++] == '\0') {
                     nullCount++;
                     if (nullCount == 1)
                         mode = (char *)cp + i;
+
                     if (nullCount == 2) {
+                        int f;
                         if (debugFlags & DEBUGFLAG_TFTP)
                             printf("NAME:%s  MODE:%s\n", name, mode);
+
                         if (strcasecmp(mode, "octet") != 0) {
                             replyERR(pcb, fromAddr, fromPort, "Bad Type");
                         }
                         else {
-                            stashAFE = 0;
-                            if (strcasecmp(name, "SCREEN.ppm") == 0) {
-                                st7789vGrabScreen();
-                            }
-                            if (strcasecmp(name, AFE_EEPROM_NAME) == 0) {
-                                if (opcode == TFTP_OPCODE_RRQ) {
-                                    afeFetchEEPROM();
-                                }
-                                else {
-                                    stashAFE = 1;
+                            for (f = 0 ; f < FILE_TABLE_SIZE ; f++) {
+                                if (match(name, fileTable[f].name)) {
+                                    fileIndex = f;
+                                    break;
                                 }
                             }
+
+                            if (fileIndex < 0) {
+                                replyERR(pcb, fromAddr, fromPort, "Bad Name");
+                                break;
+                            }
+
+                            if (opcode == TFTP_OPCODE_RRQ) {
+                                int (*funcp)(void) = fileTable[fileIndex].preTransmit;
+                                if (funcp) {
+                                    bytesTrans = (*funcp)();
+                                    if (bytesTrans < 0) {
+                                        replyERR(pcb, fromAddr, fromPort, "Error Fetching File");
+                                        break;
+                                    }
+                                }
+                            }
+
                             if (fp) {
                                 f_close(fp);
                                 fp = NULL;
@@ -202,7 +280,7 @@ tftp_recv_callback(void *arg, struct udp_pcb *pcb, struct pbuf *p,
                 lastSend = sendBlock(pcb, fromAddr, fromPort, lastBlock, fp);
             }
         }
-        else if (opcode == TFTP_OPCODE_DATA) {
+        else if (opcode == TFTP_OPCODE_DATA && fileIndex >= 0) {
             int block = (cp[2] << 8) | cp[3];
             if (block == lastBlock) {
                 ackBlock = block;
@@ -223,7 +301,7 @@ tftp_recv_callback(void *arg, struct udp_pcb *pcb, struct pbuf *p,
                         replyERR(pcb, fromAddr, fromPort, ffsStrerror(fr));
                     }
                 }
-                if (fp && (nBytes < 512)) { 
+                if (fp && (nBytes < 512)) {
                     fr = f_close(fp);
                     fp = NULL;
                     if (fr != FR_OK) {
@@ -233,14 +311,26 @@ tftp_recv_callback(void *arg, struct udp_pcb *pcb, struct pbuf *p,
                         }
                         replyERR(pcb, fromAddr, fromPort, ffsStrerror(fr));
                     }
-                    if (stashAFE) {
-                        stashAFE = 0;
-                        afeStashEEPROM();
+
+                    bytesTrans = 0;
+                    int (*funcPostReceive)(void) = fileTable[fileIndex].postReceive;
+                    if (funcPostReceive) {
+                        bytesTrans = (*funcPostReceive)();
+                        if (bytesTrans < 0) {
+                            replyERR(pcb, fromAddr, fromPort, "Error Stashing File");
+                        }
                     }
+
+                    void (*funcCommit)(void) = fileTable[fileIndex].commit;
+                    if (funcCommit && bytesTrans > 0) {
+                        (*funcCommit)();
+                    }
+
+                    fileIndex = -1;
                 }
             }
         }
-        else if (opcode == TFTP_OPCODE_ACK) {
+        else if (opcode == TFTP_OPCODE_ACK && fileIndex >= 0) {
             int block = (cp[2] << 8) | cp[3];
             if (block == lastBlock) {
                 lastBlock++;
@@ -250,6 +340,7 @@ tftp_recv_callback(void *arg, struct udp_pcb *pcb, struct pbuf *p,
                 else {
                     f_close(fp);
                     fp = NULL;
+                    fileIndex = -1;
                 }
             }
             else {
@@ -260,6 +351,40 @@ tftp_recv_callback(void *arg, struct udp_pcb *pcb, struct pbuf *p,
     pbuf_free(p);
     if (ackBlock >= 0)
         replyACK(pcb, fromAddr, fromPort, ackBlock);
+}
+
+/*
+ * Read back 'filesystem' values on startup
+ */
+void
+filesystemReadbacks(void)
+{
+    int i, bytesTrans;
+
+    for (i = 0 ; i < FILE_TABLE_SIZE ; i++) {
+        bytesTrans = 0;
+        int (*funcPostReceive)(void) = fileTable[i].postReceive;
+        if (funcPostReceive) {
+            bytesTrans = (*funcPostReceive)();
+            if (bytesTrans < 0) {
+                printf("%s (%s): Error reading back file\n",
+                        fileTable[i].description, fileTable[i].name);
+            }
+            else {
+                printf("%s (%s): File readback successfully\n",
+                        fileTable[i].description, fileTable[i].name);
+            }
+        }
+
+        void (*funcCommit)(void) = fileTable[i].commit;
+        void (*funcDefaults)(void) = fileTable[i].defaults;
+        if (funcCommit && bytesTrans > 0) {
+            (*funcCommit)();
+        }
+        else if (funcDefaults) {
+            (*funcDefaults)();
+        }
+    }
 }
 
 /*

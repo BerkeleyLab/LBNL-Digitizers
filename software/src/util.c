@@ -131,3 +131,29 @@ float mean(int32_t *number, int length)
 {
     return incrementalMean(number, length);
 }
+
+void
+bufferDisplay(uint8_t *buf, int n)
+{
+    int i = 0;
+
+    if (!buf) {
+        return;
+    }
+
+    for (i = 0; i < n; ++i) {
+        if ((i % 16) == 0) {
+            printf("    0x%04X:", i);
+        }
+        printf(" %02X", buf[i]);
+
+        if(((i+1) % 16) == 0) {
+            printf("\n");
+        }
+    }
+
+    // In case n is not a multiple of 16
+    if ((i % 16) != 0) {
+        printf("\n");
+    }
+}
