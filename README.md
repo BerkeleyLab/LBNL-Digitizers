@@ -57,6 +57,10 @@ For now the following combinations of GW_VARIANT and APP are supported:
 
 So, for example, to generate the HSD application  you must specify `GW_VARIANT = `:
 
+* Note on BCM `GW_VARIANT`. Usually, the `ac` variant is used with the `XM-500`
+balun board. For ALS operations, the `dc` variant is used with a custom balun
+board.
+
 ```bash
 ARM_TOOLCHAIN_LOCATION=/media/Xilinx/Vivado/2020.1/Vitis/2020.1/gnu/aarch64/lin/aarch64-none
 (time make PLATFORM=zcu111 APP=hsd GW_VARIANT= CROSS_COMPILE=${ARM_TOOLCHAIN_LOCATION}/bin/aarch64-none-elf-; date) 2>&1 | tee make_output
