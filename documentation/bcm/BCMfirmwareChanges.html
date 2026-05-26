@@ -1,0 +1,216 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+    <title>BunchCurrentMonitor</title>
+  </head>
+  <body>
+    <h1>Bunch Current Monitor Changes from High Speed Digitizer<br>
+</h1>The bunch current monitor shares its hardware platform and much of 
+its FPGA firmware and software with the high speed digitizer 
+(HSD).&nbsp; Changes to the HSD firmware, software, and build procedure are noted below.<br>
+    <br>
+<h2>Orbit Marker<br>
+</h2>
+<p>The orbit marker signal is is placed on the training signal line when
+ the training signal is not being used to recalibrate an ADC channel 
+after a programmable amplifier gain change. <br>
+</p>
+<br>
+    <h2>Data Acquisition Sampling Clock Generation</h2>
+<ol>
+<li>Run the WorkspaceBCM/BunchCurrentMonitor/scripts/checkInterleave.py
+
+        script and pick an appropriate ADC sampling frequency.&nbsp;
+        Running the output of the script through ’sort -n’ puts things
+        into a nice order.&nbsp; The maximum number of ADC samples per
+        turn is 131072.</li>
+  <li>Follow the steps in the high speed digitizer documentation to set the timing system components.<br>
+  </li>
+  <li>If using EDM, edit BCM_RawData.edl and set the X axis label to
+        the time per interleaved sample (T<sub>eff</sub>).</li>
+</ol>
+<p>Here are example values for the Advanced Light Source.&nbsp; The 
+LMK04208 jitter cleaner settings are the same as those of the high speed
+ digitizer.<br>
+</p>
+
+    <blockquote>F<sub>RF</sub> = 499.64 MHz<br>
+      <br>
+      F<sub>EVR</sub> = F<sub>RF</sub> ÷ 4 = 124.91 MHz<br>
+      <br>
+      F<sub>ref_LMK04208</sub> = F<sub>EVR</sub> = 124.91 MHz&nbsp;&nbsp;&nbsp; (J95–J109 SMA jumper)<br>
+      <br>
+      F<sub>ref_LMX2594</sub> = F<sub>ref_LMK04208</sub> = 124.91 
+      MHz&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (LMK04208 output 4)<br>
+      <br>
+      F<sub>VCO</sub> = F<sub>ref_LMX2594</sub> × (116+4/11) =
+      14534.9818181818 MHz<br>
+      <br>
+      F<sub>samp</sub> = F<sub>VCO</sub> ÷ 4 = F<sub>RF</sub> × 80 ÷ 11
+      = 3633.74545454545 MHz<br>
+      <br>
+      F<sub>FPGA_REFLK_OUT_C</sub> = F<sub>ref_LMK04208</sub> ÷ 11 = 11.355454545 MHz&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (LMK04208
+      output 2)<br>
+      <br>
+      F<sub>ADC_AXI</sub> = F<sub>FPGA_REFLK_OUT_C</sub>  
+× 105
+÷ 2.625      =&nbsp;454.2181818 MHz = F<sub>samp</sub> ÷ 8 &nbsp;&nbsp;&nbsp; (MMCM)<br>
+      <br>
+      F<sub>SYSREF</sub> = F<sub>ref_LMK04208</sub> ÷ 22 = 5.67772727
+      MHz&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (LMK04208 outputs 0 and 1)</blockquote>Signals from multiple turns are interleaved resulting in an
+    effective sampling frequency 80 times that of the RF reference:<br>
+    <blockquote>F<sub>eff</sub> = F<sub>RF</sub> × 80 = 39.971 GHz
+      &nbsp; &nbsp;&nbsp; (T<sub>eff</sub> ≈ 25.018 ps, 80 points per
+      bucket, 26240 points per turn)<br>
+    </blockquote>
+    A complete acquisition with maximum points per sample takes about
+    29.6 ms to complete:<br>
+    <blockquote>26240 points × 4096 samples per point per acquisition ÷
+      3633.75×10<sup>6</sup> samples per second ≈ 29.6 ms per
+      acquisition<br>
+    </blockquote><blockquote>
+    </blockquote><p><br>
+</p><br>
+<p>
+<img style=" width: 916px; height: 706px;" alt="" src="LMX2594.png"><br>
+      <br>
+
+    </p>
+
+
+    <h3>Interlock Indicator</h3>
+    <p>The status of the interlock relay, if
+      present, is shown on the bottom line of the display.&nbsp; The
+      indicator can take on the following values:<br>
+    </p>
+    <div style="margin-left: 40px;">
+      <table style=" text-align: left; width: 493px; height: 271px;" cellspacing="2" cellpadding="2" border="1">
+        <tbody>
+          <tr>
+            <th style=" vertical-align: middle; text-align: center;">Indicator<br>
+            </th>
+            <th style="vertical-align: middle; text-align: center;">Description<br>
+            </th>
+          </tr>
+          <tr>
+            <td style="text-align: left;">Red open contact<br>
+            </td>
+            <td style="text-align: left;">Interlock relay is open.<br>
+            </td>
+          </tr>
+          <tr>
+            <td style="text-align: left;">Green closed contact<br>
+            </td>
+            <td style="text-align: left;">Interlock relay is closed.<br>
+            </td>
+          </tr>
+          <tr>
+            <td style="text-align: left;">Black rectangle<br>
+            </td>
+            <td style="text-align: left;">Interlock relay is not
+              installed (neither open nor closed readback are active).</td>
+          </tr>
+          <tr>
+            <td style="text-align: left;">Red rectangle<br>
+            </td>
+            <td style="text-align: left;">Interlock relay has been
+              requested to close, but has not done so.<br>
+            </td>
+          </tr>
+          <tr>
+            <td style="text-align: left;">Green rectangle</td>
+            <td style="text-align: left;">Interlock relay has been
+              requested to open, but has not done so.</td>
+          </tr>
+          <tr>
+            <td style="text-align: left;">Orange rectangle<br>
+            </td>
+            <td style="text-align: left;">Interlock relay state is
+              unknown (both open and closed readback are active).<br>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <br>
+<br>
+</div>
+<h1>Adapting to Other Sites</h1>
+<div style="margin-left: 40px;">
+<ul>
+  </ul></div>
+<ul>
+  
+<li>Run the checkInterleave.py script in the 
+WorkspaceBCM/BunchCurrentMonitor/scripts directory to find an acceptable
+ sampling frequency and interleave factor.</li>
+
+  <li>Run the TICS Pro software (Windows only) to produce a set of LMX2594 register values.</li>
+  <li>Run TICS Pro to get a 
+new set of LMK04208 register values as well.&nbsp; Make sure that all 
+the constraints noted in the HSD documentation are met.</li>
+  <li>Run the createRFCLKheader.sh script in the 
+WorkspaceBCM/BunchCurrentMonitor/scripts directory to convert the TICS Pro '.tcs' files to C initializers.</li>
+  <li>Edit config.h and set the values based on the above.&nbsp; The 
+MMCM multiplier should be set to place the MMCM VCO between 800 and 1440
+ 
+MHz.&nbsp; The MMCM multiplier and divider fractions, if any, must be an
+ integer number of eighths (0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 
+0.875).&nbsp; You can also use the the Vivado block design editor to 
+determine the settings and then copy the multiplier and divider value 
+that the design wizard chooses.<br>
+</li>
+<li>Edit the HighSpeedDigitizerTop.xdc constraints file and enter the 
+appropriate numbers for the FPGA_REFCLK_OUT_C_P and SYSREF_FPGA_C_P 
+clocks periods.</li>
+
+</ul>
+
+<h1>Using XM-500</h1>
+<p>With a minor change the firmware and software will work with the 
+XM-500 mezzanine card that is supplied with the ZCU111 kit.&nbsp; Open 
+the block design and configure the ADCs to AC Link coupling then 
+regenerate the block design and rebuild the project.&nbsp; On startup 
+there will be lots of messages about inability to set values to the 
+analog front end card components, but these can be ignored.&nbsp; To properly perform an initial calibration the RF
+ ADCs require that there be no signal present during a (re)start 
+operation.&nbsp; This can not be controlled by the FPGA when the XM-500 
+is used so the ADC should be restarted when no beam signal is present.<br>
+</p>
+<p>The orbit timing marker signal is present on ADCIO_13 (J10-14).&nbsp; A pseudo-ground is present on ADCIO_14 (J10-12).<br>
+</p>
+
+<h1>Building</h1>
+
+<ul>
+  <li>Run the createVerilogIDX.sh script in the 
+WorkspaceBCM/BunchCurrentMonitor/src directory to create gpioIDX.v in the firmware source directory.</li>
+  <li>Change directories to the firmware source directory (HighSpeedDigitizer/HighSpeedDigitizer.srcs/sources_1/hdl).</li>
+  <li>Run the startVivado.sh script to start the Vivado session.</li>
+  <li>Click the 'Run Synthesis' command and work through the synthesis, implementation, and bitstream generation steps.<br>
+  </li>
+  <li>Export the hardware to HighSpeedDigitizer/BunchCurrentMonitor.xsa.</li>
+  <li>Start Vitis and set the workspace to HighSpeedDigitizer/WorkspaceBCM.</li>
+  <li>Update the BunchCurrentMonitorProject hadware specification from HighSpeedDigitizer/BunchCurrentMonitor.xsa.</li>
+  <li>Clean and build all projects.</li>
+  <li>Run 'startVivado.sh bash' in the 
+WorkspaceBCM/BunchCurrentMonitor/src directory to start a shell session 
+with Xilinx environment.</li>
+  <li>Run make in the WorkspaceBCM/BunchCurrentMonitor/scripts directory to create a bootable image.</li>
+  <li>Run programFlash.sh in the 
+WorkspaceBCM/BunchCurrentMonitor/scripts directory to download the 
+bootable image created in the previous step to the microSD card on the 
+FPGA or mount a microSD card and copy the bootable image to it.<br>
+  </li>
+</ul>
+<div style="margin-left: 40px;">
+    </div>
+
+    <dl>
+    </dl>
+    <blockquote>
+      <blockquote> </blockquote>
+    </blockquote>
+  
+
+
+</body></html>

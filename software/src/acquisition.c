@@ -236,7 +236,7 @@ acquisitionNormalFetch(uint32_t *buf, int capacity, int channel, int triggerChan
                                    triggerLocation % CFG_AXI_SAMPLES_PER_CLOCK);
             }
             *buf++ = GPIO_READ(REG(GPIO_IDX_ADC_0_SECONDS, triggerChannel));
-            *buf++ = GPIO_READ(REG(GPIO_IDX_ADC_0_TICKS, triggerChannel));
+            *buf++ = GPIO_READ(REG(GPIO_IDX_ADC_0_FRACTION, triggerChannel));
             *buf++ = GPIO_READ(REG(GPIO_IDX_ADC_0_PROP, triggerChannel));
             n = afeFetchCalibration(channel, buf);
 
@@ -311,7 +311,7 @@ acquisitionMeanFetch(uint32_t *buf, int capacity, int channel, int triggerChanne
                                    triggerLocation % CFG_AXI_SAMPLES_PER_CLOCK);
             }
             *buf++ = GPIO_READ(REG(GPIO_IDX_ADC_0_SECONDS, triggerChannel));
-            *buf++ = GPIO_READ(REG(GPIO_IDX_ADC_0_TICKS, triggerChannel));
+            *buf++ = GPIO_READ(REG(GPIO_IDX_ADC_0_FRACTION, triggerChannel));
             /* The data read by the FPGA will be processed and
              * transmitted as float, 32-bit*/
             *buf++ = CSR_DATA_PROP_FLOAT | CSR_DATA_PROP_SIGN | CSR_DATA_PROP_WIDTH(32);
@@ -593,7 +593,7 @@ acquisitionFetch(uint32_t *buf, int capacity, int channel, int offset, int last)
         uint32_t s;
         if (offset == 0) {
             *buf++ = whenStarted.secPastEpoch;
-            *buf++ = whenStarted.ticks;
+            *buf++ = whenStarted.fraction;
             *buf++ = GPIO_READ(GPIO_IDX_ADC_0_PROP);
             n = afeFetchCalibration(channel, buf);
             if (n == 0) return 0;
@@ -797,7 +797,7 @@ acquisitionFetch(uint32_t *buf, int capacity, int channel, int offset, int last)
             uint32_t acqStatus = rfADCstatus();
             uint32_t *base = buf;
             *buf++ = GPIO_READ(GPIO_IDX_ACQUISITION_SECONDS);
-            *buf++ = GPIO_READ(GPIO_IDX_ACQUISITION_TICKS);
+            *buf++ = GPIO_READ(GPIO_IDX_ACQUISITION_FRACTION);
             /* Steal some unused bits in the RF ADC status word */
             if (csr & CSR_R_FOLLOWS_INJECTION) {
                 acqStatus |= BCM_PROTOCOL_ACQ_FOLLOWS_INJECTION;

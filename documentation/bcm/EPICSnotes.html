@@ -1,0 +1,726 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>Bunch Current Monitor Support</title>
+    <meta name="generator" content="amaya 8.5, see
+      http://www.w3.org/Amaya/">
+  </head>
+  <body>
+    <h1>Introduction</h1>
+    This support module provides ASYN drivers to control and acquire data from the ALS bunch current monitor.<span style="font-weight: bold;"></span>&nbsp;
+ The module consists of C
+    source, a database and engineering screens.&nbsp; The monitor is 
+based on the high speed digitizer platform and shares much of its 
+firmware and software with the high speed digitizer application.&nbsp; 
+The following documentation describes only the records unique the the 
+bunch current monitor.&nbsp; Other records are as described in the high speed digitizer documentation<br>
+    <p></p><h1>Database Development</h1>
+    <p>The example application distributed with this support module
+      comes with a database containing all the following records and EDM
+      screens to display them.&nbsp; All record names begin with the
+      macros <span style="font-family: monospace;">$(P)$(R)</span>.&nbsp;
+      Only the portion of the record name following these macros is
+      shown in the following tables.<br>
+    </p>
+    <h2>Waveform Input Records<br>
+    </h2>
+    Set SCAN="I/O Intr", DTYP=asynInt16Array or asynFloat32ArrayIn to match the FTVL shown below, INP="@asyn($(PORT) <span style="font-style: italic;">xxx</span>)", where <span style="font-style: italic;"></span> $(PORT) expands to the port
+    name in the bunchCurrentMonitorConfigure command and <span style="font-style:
+      italic;">xxx</span> is a numeric value&nbsp; shown in the
+    following table.&nbsp; The equivalent sampling rate of the first 
+three waveform records shown below is 32 times the storage ring RF 
+frequency.&nbsp; Records should have TSE="-2" since the time stamps are 
+provided by the 
+bunch current monitor hardware and are the time at which the acquisition
+ operation began, as triggered by the arrival of event 70, "Post SR 
+Injection Continuous".<br>
+    <br>
+    <table style=" text-align: left; margin-left: auto; margin-right: auto; width: 90%; height: 78px;" border="1" cellspacing="2" cellpadding="2">
+      <tbody>
+        <tr>
+          <td style="text-align: center;"><span style="font-weight:
+              bold;">Name</span><br>
+          </td>
+          <th style="text-align: center;">
+            <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+            ASYN<br>
+            Subaddress<br>
+          </th>
+          <td style="text-align: center;"><b>FTVL</b><br>
+</td>
+<td style="text-align: center;"><b>NELM</b><br>
+</td>
+<th style="vertical-align: middle; text-align: center;">Description<br>
+          </th>
+        </tr>
+        <tr>
+          <td style="text-align: center;"><a name="data:raw"></a>ADC<br>
+          </td>
+          <td style="text-align: center;">F200<br>
+          </td>
+          <td style="text-align: center;">SHORT<br>
+</td>
+<td style="text-align: center;">Samples<br>
+per turn<br>
+</td>
+<td style="text-align: left;">ADC 
+values from data channel.&nbsp; Values are scaled to a range of 
+[-32768,32767] and averaged over the specified number of acquisition 
+cycles.&nbsp; The calibration 0 volt reading has been subtracted from 
+the values in this record.<br>
+</td>
+        </tr><tr>
+  <td style="text-align: center;"><a name="trig:raw"></a>Trigger<br>
+  </td>
+  <td style="text-align: center;">F201<br>
+  </td>
+  <td style="text-align: center;">SHORT<br>
+  </td>
+  <td style="text-align: center;">Samples<br>
+
+per turn
+  </td>
+  <td style="text-align: left;">ADC values from trigger channel.&nbsp; 
+Values are scaled to a range of [-32768,32767] and averaged over the 
+specified number of acquisition cycles.&nbsp; The calibration 0 volt reading has been subtracted from the values in this record.</td>
+</tr>
+<tr>
+  <td style="text-align: center;"><a name="ADC:Filtered"></a>ADC:Filtered<br>
+  </td>
+  <td style="text-align: center;">F202<br>
+  </td>
+  <td style="text-align: center;">FLOAT<br>
+  </td>
+  <td style="text-align: center;">Samples<br>
+per turn<br>
+  </td>
+  <td style="text-align: left;">Data channel waveform record values after the application of<span style="text-decoration: underline;"> </span><span style="text-decoration: underline;"></span>the FIR filter and with DC offset removed.&nbsp; FIR filter coefficients are obtained from the&nbsp;<a href="#filterCoefficients">acq:filter</a> record.<br>
+  </td>
+</tr>
+<tr>
+  <td style="text-align: center;">Trigger:Filtered<br>
+  </td>
+  <td style="text-align: center;">F203<br>
+  </td>
+  <td style="text-align: center;">FLOAT<br>
+  </td>
+  <td style="text-align: center;">Samples<br>
+per&nbsp; turn<br>
+  </td>
+  <td style="text-align: left;"><span style="text-decoration: underline;"></span>Trigger channel waveform record values after the application of the FIR filter 
+and with DC offset removed.&nbsp; FIR filter coefficients are obtained from 
+the&nbsp;<a href="file:///Users/wenorum%201/xildev/src/siocBunchCurrentMonitor/documentation/EPICSnotes.html#filterCoefficients">acq:filter</a> record.</td>
+</tr>
+<tr>
+  <td style="text-align: center;">Peaks<br>
+  </td>
+  <td style="text-align: center;">F204<br>
+  </td>
+  <td style="text-align: center;">SHORT<br>
+  </td>
+  <td style="text-align: center;">Samples<br>
+
+per turn
+  </td>
+  <td style="text-align: left;">Shows the locations of the peaks in 
+the <a moz-do-not-send="true" href="file:///Users/wenorum%201/xildev/src/siocBunchCurrentMonitor/documentation/EPICSnotes.html#data:raw">ADC</a>  record chosen by the peak finding algorithm and which values were used in the bunch charge computation.&nbsp; A 
+value of 5000 indicates that the corresponding location in the <a moz-do-not-send="true" href="#data:raw">ADC</a> 
+record waqs chosen as a&nbsp; bunch peak.&nbsp; A value equal to the
+ squelch level indicates that the corresponding value in the <a moz-do-not-send="true" href="#data:raw">ADC</a> record was 
+used to compute the charge.&nbsp; A value of 0 indicates that the 
+corresponding value in the <a moz-do-not-send="true" href="l#data:raw">ADC</a> record was unused.<br>
+  </td>
+</tr>
+<tr>
+  <td style="text-align: center;"><a name="BunchQ_WF"></a>BunchQ<br>
+  </td>
+  <td style="text-align: center;">F205<br>
+  </td>
+  <td style="text-align: center;">FLOAT<br>
+  </td>
+  <td style="text-align: center;">Bunches<br>
+
+per turn
+  </td>
+  <td style="text-align: left;">Shows the results of the peak 
+analysis algorithm.&nbsp; The values are in units of mA unless the beam 
+current value was not available when this record was processed, in which case the units are simply scaled
+so that the largest peak is 1.00.&nbsp; The record name implies that the units are those of 
+charge, not current.&nbsp; This is a leftover from a previous version of
+ the monitor.&nbsp; Some facilities rename this record and the 
+corresponding <a href="#BunchQ_SI">string input time stamp record</a> with an ‘I’ in place of the ‘Q’.<br>
+</td>
+</tr><tr>
+  <td style="text-align: center;">BunchQdelta</td>
+  <td style="text-align: center;">F206<br>
+  </td>
+  <td style="text-align: center;">FLOAT<br>
+  </td>
+  <td style="text-align: center;">Bunches<br>
+
+
+per turn</td>
+  <td style="text-align: left;">Difference between previous and current BunchQ values.<br>
+  </td>
+</tr>
+<tr>
+  <td style="text-align: center;">BunchQinj</td>
+  <td style="text-align: center;">F207<br>
+  </td>
+  <td style="text-align: center;">FLOAT<br>
+  </td>
+  <td style="text-align: center;">Bunches<br>
+
+
+per turn</td>
+  <td style="text-align: left;">As above, but updated only following an 
+actual injection cycle. as indicated by the arrival of event 68, "Post 
+SR Injection", before the event 70 that triggered the acquisition.<br>
+  </td>
+</tr>
+
+
+      </tbody>
+    </table>
+    <br>
+As part of waveform processing some scalar ai records (DTYP=asynFloat64) are also updated:<br>
+
+    
+<table style=" text-align: left; margin-left: auto; margin-right: auto; width: 90%;" border="1" cellspacing="2" cellpadding="2">
+
+      <tbody>
+        <tr>
+          <td style="text-align: center;"><span style="font-weight:
+              bold;">Name</span><br>
+          </td>
+          <th style="text-align: center;">ASYN<br>
+            Subaddress<br>
+          </th>
+          <th style="vertical-align: middle; text-align: center;">Description<br>
+          </th>
+        </tr>
+        <tr>
+  <td style="text-align: center;">MaximumQ<br>
+  </td>
+  <td style="text-align: center;">F10B<br>
+  </td>
+  <td style="text-align: left;">Charge in largest bunch.&nbsp; &nbsp; Value is in units of mA unless the beam 
+current value is not available in which case the units are simply scaled
+ ADC counts.&nbsp; 
+  </td>
+</tr>
+<tr>
+  <td style="text-align: center;">MaximumADC</td>
+  <td style="text-align: center;">F109<br>
+  </td>
+  <td style="text-align: left;">Highest ADC reading.<br>
+</td>
+</tr><tr>
+  <td style="text-align: center;">MaximumV<br>
+  </td>
+  <td style="text-align: center;">F10A<br>
+  </td>
+  <td style="text-align: left;">Highest voltage reading.<br>
+  </td>
+</tr>
+
+
+
+        
+        
+        
+        
+        
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</tbody>
+    
+</table>
+
+    <span style="font-weight: bold;"></span><br>
+<h2>Waveform Records<br>
+    </h2>
+
+    Set SCAN=Passive", PINI="YES", DTYP=asynInt16ArrayIn, INP="@asyn($(PORT) <span style="font-style: italic;">xxx</span>)", where <span style="font-style: italic;"></span> $(PORT) expands to the port
+    name in the bunchCurrentMonitorConfigure command and <span style="font-style:
+      italic;">xxx</span> is the numeric value&nbsp; shown in the
+    following table.<br>
+
+    <br>
+
+    
+<table style=" text-align: left; margin-left: auto; margin-right: auto; width: 90%; height: 78px;" border="1" cellspacing="2" cellpadding="2">
+
+      <tbody>
+        <tr>
+          <td style="text-align: center;"><span style="font-weight:
+              bold;">Name</span><br>
+          </td>
+          <th style="text-align: center;">
+            
+            ASYN<br>
+            Subaddress<br>
+          </th>
+          <td align="center" valign="middle"><b>FTVL</b><br>
+</td>
+<td align="center" valign="middle"><b>NELM</b><br>
+</td>
+<th style="vertical-align: middle; text-align: center;">Description<br>
+          </th>
+        </tr>
+        
+
+<tr>
+  <td style="text-align: center;">BunchNumbers<br>
+  </td>
+  <td style="text-align: center;">0xF000<br>
+  </td>
+  <td style="text-align: center;">SHORT<br>
+  </td>
+  <td style="text-align: center;">Bunches<br>
+per turn<br>
+  </td>
+  <td style=" vertical-align: middle;">Contains a sequence of numbers beginning at 0 or 1.&nbsp; Intended for use as bunch current plot X-axis.<br>
+  </td>
+</tr>
+
+
+      </tbody>
+    
+</table>
+
+    <br>
+<br>
+Set PINI="YES", DTYP=asynFloat64ArrayOut, INP="@asyn($(PORT) <span style="font-style: italic;">xxx</span>)", where <span style="font-style: italic;"></span> $(PORT) expands to the port
+    name in the bunchCurrentMonitorConfigure command and <span style="font-style:
+      italic;">xxx</span> is the numeric value&nbsp; shown in the
+    following table.<br>
+
+
+    <br>
+
+
+    
+<table style=" text-align: left; margin-left: auto; margin-right: auto; width: 90%; height: 78px;" border="1" cellspacing="2" cellpadding="2">
+
+
+      <tbody>
+        <tr>
+          <td style="text-align: center;"><span style="font-weight:
+              bold;">Name</span><br>
+          </td>
+          <th style="text-align: center;">
+            
+            ASYN<br>
+            Subaddress<br>
+          </th>
+          <td align="center" valign="middle"><b>FTVL</b><br>
+</td>
+<td align="center" valign="middle"><b>NELM</b><br>
+</td>
+<th style="vertical-align: middle; text-align: center;">Description<br>
+          </th>
+        </tr>
+        
+
+<tr>
+  <td style="text-align: center;"><a name="filterCoefficients"></a>acq:filter<br>
+  </td>
+  <td style="text-align: center;">0xF700<br>
+  </td>
+  <td style="text-align: center;">DOUBLE<br>
+  </td>
+  <td style="text-align: center;">200<br>
+  </td>
+  <td style="vertical-align: middle; text-align: left;">Up to 200 coefficients of FIR filter coefficients applied to raw ADC values.&nbsp; Group delay can be compensated by setting <a href="#filterDelay">filterDelay</a>.<br>
+  </td>
+</tr>
+
+
+      </tbody>
+    
+</table>
+
+
+    <br>
+
+
+    
+    
+
+
+    
+    
+<h2>Binary Input Records<br>
+    </h2>
+
+
+    &nbsp;Set DTYP=asynInt32, SCAN="I/O Intr" , and INP="@asyn($(PORT) <span style="font-style: italic;">xxx</span>)", where <span style="font-style: italic;"></span> $(PORT) expands to the port
+    name in the bunchCurrentMonitorConfigure command and <span style="font-style:
+      italic;">xxx</span> is a numeric value as described in the
+    following table.<span style="font-style: italic;"></span><br>
+    <br>
+    <table style=" text-align: left; margin-left: auto; margin-right: auto; width: 90%;" border="1" cellspacing="2" cellpadding="2">
+      <tbody>
+        <tr>
+          <td style="text-align: center;"><span style="font-weight:
+              bold;">Name</span><br>
+          </td>
+          <th style="text-align: center;">ASYN<br>
+            Subaddress<br>
+          </th>
+          <th style="vertical-align: middle; text-align: center;">Description<br>
+          </th>
+        </tr>
+        
+        <tr>
+  <td style="text-align: center;">triggered<br>
+  </td>
+  <td style="text-align: center;">0xF600<br>
+  </td>
+  <td style="text-align: left;">Set when acquisition data processing finds a valid trigger signal (rising edge through <a href="#triggerLevel">TriggerLevel</a>).</td>
+</tr>
+<tr>
+  <td style="text-align: center;">softTrigger<br>
+  </td>
+  <td style="text-align: center;">0xF601<br>
+  </td>
+  <td style="text-align: left;">Set when data acquisition was triggered by software rather than by the arrival of a trigger event.<br>
+  </td>
+</tr>
+
+
+
+      </tbody>
+    </table>
+    <span style="font-weight: bold;"></span><br>
+    <h2>Long Input Records<br>
+    </h2>
+    &nbsp;Set DTYP=asynInt32 and INP="@asyn($(PORT) <span style="font-style: italic;">xxx</span>)", where <span style="font-style: italic;"></span> $(PORT) expands to the port
+    name in the bunchCurrentMonitorConfigure command and <span style="font-style:
+      italic;">xxx</span> is a numeric value as described in the
+    following table.<br>
+    &nbsp; <br>
+    <table style=" text-align: left; margin-left: auto; margin-right: auto; width: 90%;" border="1" cellspacing="2" cellpadding="2">
+      <tbody>
+        <tr>
+          <td style="text-align: center;"><span style="font-weight:
+              bold;">Name</span><br>
+          </td>
+          <th style="text-align: center;">ASYN<br>
+            Subaddress<br>
+          </th>
+          <th style="vertical-align: middle; text-align: center;">Description<br>
+          </th>
+        </tr>
+        <tr>
+  <td style="text-align: center;">waveformPoll_</td>
+  <td style="text-align: center;">0xF200<br>
+  </td>
+  <td style="text-align: left; vertical-align: middle;">Processing
+ this record initiates a waveform readback operation.  If new data have
+ been acquired by the bunch current
+ monitor they are read and pushed into the waveform records listed 
+above.&nbsp; If no new data are ready no transfer takes place and the
+ input waveform records are left unmodified.&nbsp; Typically configured with SCAN=".2 second".</td>
+</tr>
+
+        
+
+      </tbody>
+    </table>
+    <br>
+<h2>Output Records<br>
+    </h2>
+Set DTYP=asynInt32 and OUT="@asyn($(PORT) <span style="font-style: italic;">xxx</span>)", where <span style="font-style: italic;"></span> $(POR4T) expands to the port
+    name in the bunchCurrentMonitorConfigure command and <span style="font-style:
+      italic;">xxx</span> is a numeric value as described in the
+    following table.&nbsp; SCAN="Passive" and PINI="NO" since these values are automatically pushed to the FPGA using the <a href="#reconnect">update on reconnect</a> mechanism.<br>
+<br>
+
+    
+<table style=" text-align: left; margin-left: auto; margin-right: auto; width: 90%;" border="1" cellspacing="2" cellpadding="2">
+
+      <tbody>
+        <tr>
+          <td style="text-align: center;"><span style="font-weight:
+              bold;">Name</span><br>
+          </td>
+          <th style="text-align: center;">ASYN<br>
+            Subaddress<br>
+          </th>
+          <td style="text-align: center;"><span style="font-weight: bold;">Reco</span><span style="font-weight: bold;">rd</span><span style="font-weight: bold;"><br>
+  </span><span style="font-weight: bold;">Type</span><br>
+</td>
+<th style="vertical-align: middle; text-align: center;">Description<br>
+          </th>
+        </tr>
+        <tr>
+  <td style="text-align: center;">clrPowerup_<br>
+  </td>
+  <td style="text-align: center;">0x1000<br>
+  </td>
+  <td style="text-align: center;">longout<br>
+  </td>
+  <td style="text-align: left;">Part of the update on reconnect mechanism.&nbsp; Clears the FPGA 'power up' status.<br>
+  </td>
+</tr>
+<tr>
+  <td style="text-align: center;">acq:SampleCount<br>
+  </td>
+  <td style="text-align: center;">0x1010<br>
+  </td>
+  <td style="text-align: center;">longout<br>
+  </td>
+  <td style="text-align: left;">Set number of samples per 
+acquisition.&nbsp; The value written to the record is unimportant.&nbsp;
+ The configuration value, as specified in config.h, is sent to the 
+FPGA whenever the record is processed.<br>
+  </td>
+</tr>
+<tr>
+  <td style="text-align: center;">acq:PassCount<br>
+  </td>
+  <td style="text-align: center;">0x1011<br>
+  </td>
+  <td style="text-align: center;">longout<br>
+  </td>
+  <td style="text-align: left;">Set the number of passes over which to acquire and average data.<br>
+  </td>
+</tr>
+
+<tr>
+  <td style="text-align: center;">acq:TriggerEvent<br>
+  </td>
+  <td style="text-align: center;">0x1012<br>
+  </td>
+  <td style="text-align: center;">longout<br>
+  </td>
+  <td style="text-align: left;">Set the timing system event to trigger an acquisition.&nbsp; The value written to the record is unimportant.&nbsp;
+ The configuration value, as specified in the IOC startup script, is sent to the 
+FPGA whenever the record is processed.</td>
+</tr>
+<tr>
+  <td style="text-align: center;">acq:InjectionEvent<br>
+  </td>
+  <td style="text-align: center;">0x1013<br>
+  </td>
+  <td style="text-align: center;">longout<br>
+  </td>
+  <td style="text-align: left;">Set the timing system event that 
+indicates that the subsequent (within 100&nbsp;ms or so)  acquisition trigger event follows an 
+injection.&nbsp; The value written to the record is unimportant.&nbsp;
+ The configuration value, as specified in the IOC startup script, is sent to the 
+FPGA whenever the record is processed.</td>
+</tr>
+<tr>
+  <td style="text-align: center;">acq:NoInterleave<br>
+  </td>
+  <td style="text-align: center;">0xF104<br>
+  </td>
+  <td style="text-align: center;">bo<br>
+  </td>
+  <td style="text-align: left;">Disable interleaved acquisition.&nbsp; Raw waveforms will contain samples in the order they were acquired.<br>
+  </td>
+</tr>
+<tr>
+  <td style="text-align: center;">acq:data:negate<br>
+  </td>
+  <td style="text-align: center;">0xF105</td>
+  <td style="text-align: center;">bo<br>
+  </td>
+  <td style="text-align: left;">Negate values in data ADC raw waveform.&nbsp; The peak finding algorithm searches for positive peaks only.<br>
+  </td>
+</tr>
+<tr>
+  <td style="text-align: center;">acq:trig:negate</td>
+  <td style="text-align: center;">0xF106</td>
+  <td style="text-align: center;">bo<br>
+  </td>
+  <td style="text-align: left;">Negate values in trigger ADC raw waveform.&nbsp; The triggering algorithm searches for rising edges only.<br>
+  </td>
+</tr>
+<tr>
+  <td style="text-align: center;"><a name="filterDelay"></a>acq:filterDelay<br>
+  </td>
+  <td style="text-align: center;">0xF107</td>
+  <td style="text-align: center;">longout<br>
+  </td>
+  <td style="text-align: left;">Acquisition <a href="#filterCoefficients">filter</a> group delay.&nbsp; Used to align filtered and unfiltered values on raw waveform display plot.<br>
+  </td>
+</tr>
+<tr>
+          <td style="text-align: center;"><a name="triggerLevel"></a>TriggerLevel<br>
+          </td>
+          <td style="text-align: center;">0xcF100<br>
+          </td>
+          <td style="text-align: center;">longout<br>
+</td>
+<td style="text-align: left;">Set the value, in scaled ADC counts, at which a rising value on waveform 1 will be taken as the trigger point.<br>
+</td>
+        </tr>
+        <tr>
+          <td style="text-align: center;"><span style="font-style:
+              italic;"><span style="font-style: italic;"></span></span>TriggerDelay<br>
+          </td>
+          <td style="text-align: center;">0xF101<br>
+          </td>
+          <td style="text-align: center;">longout</td>
+<td style="text-align: left;">Number of samples that the trigger point is delayed on the raw waveform records.&nbsp; Range is 
+number of samples corresponding to&nbsp; ±1 full turn.<br>
+</td>
+        </tr><tr>
+    <td style="text-align: center;">SquelchPPM<br>
+    </td>
+    <td style="text-align: center;">0xF102<br>
+    </td>
+    <td style="text-align: center;">longout</td>
+<td style="text-align: left;">Sample values less than this fraction (in parts per million) of the peak ADC reading will be ignored.<br>
+    </td>
+  </tr><tr>
+  <td style="text-align: center;">ignoreCalibration<br>
+  </td>
+  <td style="text-align: center;">0x1F0C<br>
+  </td>
+  <td style="text-align: center;">bo<br>
+  </td>
+  <td style="text-align: left;">Inhibit application of calibration factors to ADC readings.<br>
+  </td>
+</tr><tr>
+  <td style="text-align: center;">SquelchCounts</td>
+  <td style="text-align: center;">0x1F0D<br>
+  </td>
+  <td style="text-align: center;">longout<br>
+  </td>
+  <td style="text-align: left;">All <a moz-do-not-send="true" href="#BunchQ_WF">BunchQ</a> values will be set to zero if the peak&nbsp;<a moz-do-not-send="true" href="#ADC:Filtered">ADC:Filtered</a> reading is less than this value.<br>
+  </td>
+</tr>
+
+
+
+
+
+      </tbody>
+</table>
+
+    <br>In addition to the above records, some high speed digitizer 
+records are present, including those to set the input channel gain and 
+coupling.<br>
+<br>
+    <h2>String Input Records</h2>
+<table style=" text-align: left; margin-left: auto; margin-right: auto; width: 90%;" border="1" cellspacing="2" cellpadding="2">
+<tbody><tr><td style="text-align: center;"><span style="font-weight:
+              bold;">Name</span><br>
+          </td><th style="text-align: center;">DTYP<br>
+          </th><th style="vertical-align: middle; text-align: center;">Description<br>
+          </th></tr>
+<tr><td style="text-align: center;"><span style="font-style:
+              italic;"><span style="font-style: italic;"></span></span><a name="BunchQ_SI"></a>BunchQ_SI 
+          </td><td style="text-align: center;">Soft Timestamp
+          </td><td style="text-align: left;">Human-readable representation of input waveform timestamps.&nbsp; SCAN=Passive, forward linked from <a href="#BunchQ_WF">BunchQ_WF</a>.
+</td></tr><tr>
+  <td style="text-align: center;"><span style="font-style:
+              italic;"><span style="font-style: italic;"></span></span>BunchQinj_SI 
+          </td>
+  <td style="text-align: center;">Soft Timestamp
+          </td>
+  <td style="text-align: left;">Human-readable representation of input 
+waveform timestamp for most recent injection acquisition.&nbsp; 
+SCAN=Passive, forward linked from $(P)$(R)BunchQinj_WF.
+  </td>
+</tr>
+</tbody>
+</table>
+<br>
+<br>
+<h1>Using bunch current monitor support in an application</h1>
+
+
+    
+<p>Several files need minor modifications to use bunch current monitor support in an
+      application.</p>
+
+    
+<ol>
+<li>Add the full path to the bunch current monitor support directory to the
+        application <tt>configure/RELEASE</tt> file:<br>
+        <tt>BCM=</tt><em>xxxx</em><tt>/modules/instrument/bunchCurrentMonitor/</tt><tt>&lt;release&gt;</tt><br>
+        Where <tt>&lt;release&gt;</tt> is the release number of of the
+        bunch current monitor support. You'll need to provide a similar line for the ASYN
+        support module.</li><li>Add instrument support to application database definition file<br>
+        The application database definition file must include the
+        database definition files for the bunch current monitor. There are two ways that
+        this can be done:
+        <ul><li>If you are building your application database definition
+            file the old-fashioned way from an <em>xxx</em><tt>Include.dbd</tt>
+            file you include the additional database definitions in that
+            file:<br>
+            <tt>include "base.dbd"</tt><br>
+            <tt>include "bunchCurrentMonitorSup.dbd"</tt><br>
+          </li><li>If you are building your application database definition
+            file from the application Makefile you specify the
+            additional database definitions there:<br>
+            <em>xxx</em><tt>_DBD += base.dbd</tt><br>
+            <em>xxx</em><tt>_DBD += bunchCurrentMonitorSup.dbd</tt><br>
+          </li></ul>
+      </li><li>Add the bunchCurrentMonitorSup support libraries to the application<br>
+        You must link the bunchCurrentMonitorSup support library and the ASYN support
+        library with the application. Add the following lines to the
+        application Makefile: <br>
+        <em>xxx</em><tt>_LIBS += bunchCurrentMonitor</tt><br>
+        <em>xxx</em><tt>_LIBS += asyn</tt><br>
+        before the <br>
+        <em>xxx</em><tt>_LIBS += $(EPICS_BASE_IOC_LIBS)</tt></li><li>Add a <tt>bunchCurrentMonitorConfigure</tt> command to the application startup script.&nbsp; The arguments must appear in the order
+        shown below.<br>
+        <ol><li>The ASYN port name.&nbsp; Typically this is "BCM".<br>
+</li><li>The IPv4 address of the bunch current monitor FPGA.</li><li>The priority at which the port threads will run.&nbsp; A
+            value of 0 results in the default medium priority.</li>
+<li>The number assigned to the first bunch.&nbsp; Some sites start numbering from 0 others from 1.</li>
+<li>The number of bunches per turn.</li>
+<li>The number of samples per turn.</li>
+<li>The number of event receiver ticks per turn.</li>
+<li>The number of samples between adjacent writes to 'deinterleave' the acquired data.</li>
+<li>The event receiver code used to trigger an acquisition cycle.</li>
+<li>The event receiver code marking a true injection cycle.</li>
+<li>The number of event receiver clocks per second.</li>
+</ol></li><li>
+        
+        Load a database file or files describing the records associated
+        with the bunch current monitor. <br>
+</li>
+</ol>
+<br>
+<br>
+<p>
+</p>
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+</body></html>

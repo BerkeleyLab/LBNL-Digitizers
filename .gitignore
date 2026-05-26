@@ -22,12 +22,14 @@ _xilinx/
 *.elf.size
 
 # Bundled binary file with PL/PS config
-*BOOT.bin
+*.bin
 
 # BSP-generated directories
-software/app/bpm/bpm_*/
 software/app/hsd/hsd_*/
 software/app/bcm/bcm_*/
+
+# Generated git info files
+*gitHash.vh
 
 ######################
 # Modelsim

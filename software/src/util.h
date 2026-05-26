@@ -6,6 +6,13 @@
 #define _UTIL_H_
 
 #include <stdint.h>
+#include <lwip/ip4_addr.h>
+
+/*
+ * Convenient macros
+ */
+
+#define IP4_FORMAT(a,b,c,d) PP_HTONL(LWIP_MAKEU32(a,b,c,d))
 
 /*
  * Diagnostics

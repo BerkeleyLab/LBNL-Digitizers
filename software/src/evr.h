@@ -26,7 +26,7 @@
 
 typedef struct evrTimestamp {
     uint32_t secPastEpoch;
-    uint32_t ticks;
+    uint32_t fraction;
 } evrTimestamp;
 
 void evrInit(void);

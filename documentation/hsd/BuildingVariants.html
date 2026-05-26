@@ -1,0 +1,94 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8"><title>BuildingVariants</title></head><body>
+<h1>Introduction</h1>
+<p>The high speed digitizer application supports several variations<br>
+</p>
+<ul>
+  <li>ZCU111 or ZCU208 evaluation boards</li>
+  <li>AC or DC coupled ADC channels</li>
+  <li>Direct sampling digitizer or interleaved sampling bunch current monitor<br>
+  </li>
+</ul>
+<h1>ZCU111 or ZCU208 evaluation boards</h1>
+<p>These are completely separate Vivado/Vitis projects so the selection 
+is made when opening the project/workspace.&nbsp; The projects use 
+symbolic links with relative paths to share common source and thus must 
+have their top level directories located in the same directory.&nbsp; 
+The top level directories are named HighSpeedDigitizer and HSD_ZCU208, 
+respectively.<br>
+</p>
+<h1>AC or DC coupled ADC channels</h1>
+<p>In Vivado open the block design, double-click on the Zynq Ultrascale+
+ RF Data Convert block, then set the Link Coupling for the tiles of 
+interest.&nbsp; The LBNL analog front end card requires that all ADC 
+tiles be set to DC coupling.&nbsp; A BALUN transformer input must use AC coupling.<br>
+</p>
+<h1>Direct sampling digitizer or interleaved sampling bunch current monitor</h1>
+<p>The following instructions apply to the ZCU111 variant.&nbsp; The 
+required changes for building for a ZCU208 are not shown, but should be 
+fairly straightforward.<br>
+</p>
+<p>I've found that as of Xilinx tools 2020.1.1 (Linux) updating the 
+hardware specification requires that the old platform must be deleted 
+and a new platform project built from the new .xsa file.<br>
+After creating the new platform the BSP settings for the 'standalone on 
+psu_cortexa53_0' must be modified to add the metal, lwip, xilffs, and 
+xilpm libraries.<br>
+  <br>
+</p>
+
+<h2>Building a direct sampling digitizer<br>
+</h2>
+
+<ul>
+<li>Run the createVerilogIDX.sh script in the WorkspaceHSD/HighSpeedDigitizer/src
+ directory to create gpioIDX.v in the firmware source directory. Change 
+directories to the firmware source directory 
+(HighSpeedDigitizer/HighSpeedDigitizer.srcs/sources_1/hdl). Run the 
+startVivado.sh script to start a Vivado session.</li><li>Click the 'Run Synthesis' command and work through the synthesis, implementation, and bistream generation steps.</li><li>Export the hardware to HighSpeedDigitizer/HighSpeedDigitizer.xsa.</li><li>Start Vitis and set the workspace to HighSpeedDigitizer/WorkspaceHSD.</li><li>Update the HighSpeedDigitizerProject hardware specification from HighSpeedDigitizer/HighSpeedDigitizer.xsa.</li><li>Clean
+ and build all projects.&nbsp; Vitis sometimes gets dependencies wrong 
+so it may take a couple of passes to get everything built.<br>
+</li><li>Run 'startVivado.sh bash' in the WorkspaceHSD/HighSpeedDigitizer/src directory to start a shell session with Xilinx environment.</li><li>Run make in the WorkspaceHSD/HighSpeedDigitizer/scripts directory to create a bootable image.</li><li>Run programFlash.sh in the WorkspaceHSD/HighSpeedDigitizer/scripts
+ directory to download the bootable image created in the previous step 
+to the microSD card on the FPGA or mount a microSD card and copy the 
+bootable image to it.</li>
+<li>Run the pushImage.sh script in the 
+WorkspaceHSD/HighSpeedDigitizer/scripts directory to update the
+ bootable image on the ALS file server in the /vxboot/siochsd/head/FPGA
+ directory.</li>
+
+</ul>
+<h2>Building an interleaved sampling bunch current monitor<br>
+</h2>
+
+
+<ul>
+<li>Run the createVerilogIDX.sh script in the WorkspaceBCM/BunchCurrentMonitor/src
+ directory to create gpioIDX.v in the firmware source directory. Change 
+directories to the firmware source directory 
+(HighSpeedDigitizer/HighSpeedDigitizer.srcs/sources_1/hdl). Run the 
+startVivado.sh script to start a Vivado session.</li><li>Click the 'Run Synthesis' command and work through the synthesis, implementation, and bistream generation steps.</li><li>Export the hardware to HighSpeedDigitizer/BunchCurrentMonitor.xsa.</li><li>Start Vitis and set the workspace to HighSpeedDigitizer/WorkspaceBCM.</li><li>Update the BunchCurrentMonitor hardware specification from BunchCurrentMonitor/BunchCurrentMonitor.xsa.</li><li>Clean
+ and build all projects.&nbsp; Vitis sometimes gets dependencies wrong so it 
+may take a couple of passes to get everything built.<br>
+</li><li>Run 'startVivado.sh bash' in the 
+WorkspaceBCM/BunchCurrentMonitor/src directory to start a shell session 
+with Xilinx environment.</li><li>Run make in the WorkspaceBCM/BunchCurrentMonitor/scripts directory to create a bootable image.</li><li>Run programFlash.sh in the WorkspaceBCM/BunchCurrentMonitor/scripts
+ directory to download the bootable image created in the previous step 
+to the microSD card on the FPGA or mount a microSD card and copy the 
+bootable image to it.</li></ul>
+<h1>Updating Direct Sampling Digitizer Firmware</h1>
+<ul>
+  <li>Log in to an ALS machine and change directories to the /vxboot/siochsd/head/FPGA directory.</li>
+  <li>To update a single unit run the programFlash.sh script with the IP address of the unit to be updated as the only argument:<br>
+sh programFlash.sh 131.243.93.161</li>
+  <li>The updateAll script in that directory runs the programFlash.sh script for each unit.<br>
+  </li>
+</ul>
+<ul>
+
+</ul>
+
+
+
+</body></html>

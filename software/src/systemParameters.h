@@ -15,9 +15,11 @@ struct sysNetParms {
 
 struct sysNetConfig {
     unsigned char      ethernetMAC[8]; /* Pad to 4-byte boundary */
+    int                useDHCP;
     struct sysNetParms ipv4;
 };
 extern struct sysNetConfig netDefault;
+extern struct sysNetConfig currentNetConfig;
 
 extern struct systemParameters {
     struct sysNetConfig netConfig;

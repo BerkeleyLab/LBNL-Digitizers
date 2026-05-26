@@ -1,0 +1,105 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8"><title>High Speed Digitizer Hardware</title></head><body>
+<h1>Introduction</h1>
+<p>The high speed digitizer consists of a ZCU111 Xilinx RF-SOC 
+evaluation board with a custom analog front end (AFE) card and a front 
+panel LCD display.<span style="font-family: Times New Roman,Times,serif;"><br>
+  </span></p>
+<h1><span style="font-family: Times New Roman,Times,serif;">Specifications</span><span style="font-family: Times New Roman,Times,serif;"></span></h1>
+<ul>
+  <li><span style="font-weight: bold;">Channels:</span> 8</li>
+  <li><span style="font-weight: bold;">Bandwidth:</span> DC–4 GHz</li>
+  <li><span style="font-weight: bold;">Sampling Rate:</span> ~4GS/s (40 times timing system event rate)<br>
+</li>
+  <li><span style="font-weight: bold;">Resolution:</span> 12 bits</li>
+  <li><span style="font-weight: bold;">Range:</span> Programmable from ±125mV (-8dBm) to ±2V (+16dBm) full scale in 1dB steps. Higher amplitudes with external attenuato<span style="font-weight: bold;">r.</span></li>
+  <li><span style="font-weight: bold;">Input Impedance:</span> 50Ω fixed</li>
+  <li><span style="font-weight: bold;">Input Coupling:</span> Programmable DC/AC</li>
+  <li><span style="font-weight: bold;">Record Length:</span> ~64k points per channel</li>
+  <li><span style="font-weight: bold;">Calibration:</span>&nbsp; MEMS RF
+ multiplexer can connect amplifier input to a low noise programmable voltage reference for DC calibration, or to a pseudo-random
+ binary sequence (PRBS) training signal for ADC initialization.<br>
+  </li>
+</ul>
+<b id="docs-internal-guid-ae9471f6-7fff-6e0a-44a8-883734e95a15" style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0); font-style: normal; font-variant-caps: normal; letter-spacing: normal; orphans: auto; text-align: start; text-indent: 0px; text-transform: none; white-space: normal; widows: auto; word-spacing: 0px; -webkit-text-size-adjust: auto; -webkit-text-stroke-width: 0px; text-decoration: none; font-weight: normal;"></b>
+<h1>Description</h1>
+<p>The signal path for each channel is as follows.<br>
+</p>
+<ul>
+  <li>A pair of Schottky diodes provide protection against overvoltage 
+input signals. The diodes are connected to the +4.25 V and -3.5 V 
+supplies, respectively.<br>
+  </li>
+  <li>
+The input signal is passed though a 15 dB attenuator to limit its range to that acceptable to the following components.</li>
+  <li>The output of the attenuator is split with one path connected 
+directly to the RF multiplexer and one connected to the multiplexer 
+through a 100 nF capacitor.&nbsp; These paths provide DC and AC 
+coupling, respectively.</li>
+  <li>The RF multiplexer has four inputs.&nbsp; The first two are as 
+described above.&nbsp; The third is connected to a calibration DAC an 
+the fourth to a PRBS training signal.&nbsp; A single DAC and training 
+signal are connected to all eight multiplexers.&nbsp; The DAC and 
+training signal source can drive only a single 50Ω load so at most one 
+multiplexer at a time should be set to the DAC or training signal.</li>
+  <li>The output of the RF multiplexer is passed through a 16 dB attenuator.</li>
+  <li>The output of the attenuator is connected to the + input of a 
+differential-in, differential-out, amplifier.&nbsp; Until this point the
+ signal is single-ended with 50 Ω impedance.&nbsp; From here on the 
+signal is differential, 100 Ω.</li>
+  <li>The output of the first amplifier is taken through a pair of 
+impedance matching resistors to a second differential-in, 
+differential-out, amplifier.&nbsp; This one has  programmable gain over a
+ -6 to +26 dB range, set by an I<sup>2</sup>C connection to the FPGA. <br>
+  </li>
+  <li>The output of the second amplifier is taken through an optional 
+1.7 GHz first-order low-pass filter to the ADC inputs.&nbsp; By default 
+the capacitor for this filter is not installed.<br>
+  </li>
+</ul>
+<p><br>
+The differential signal processing components require power supplies at 
+several different levels to keep the common mode at correct 
+values.&nbsp; The first amplifier runs from ±2.5 V supplies and the 
+second from +3.75 V, -1.25 V supplies.&nbsp; One supply of each level 
+drives amplifiers for all the stages.&nbsp; A ferrite bead and extensive
+ decoupling limits the crosstalk through the power supply rails.<br>
+</p>
+<p>All power supplies are derived from the single 3.3 V supply provided 
+by the FPGA card.&nbsp; The 3.3V supply drives four power supply chains:<br>
+</p>
+<ul>
+  <li>A switching step-up regulator provides 5.5 V that is then passed 
+through another switching regulator to produce a 4.25 V supply to which 
+the positive protection diode of each input is connected.&nbsp; The 4.25
+ V supply also drives a linear regulator which produces the 3.75 V 
+supply for the second stage amplifiers.&nbsp; <br>
+  </li>
+  <li>A linear regulator produces the 2.5 V supply for the first stage amplifiers.&nbsp; <br>
+  </li>
+  <li>An inverting switching regulator provides a -3.5 V supply to which
+ the negative protection diode of each input is connected.&nbsp; The 
+-3.5 V supply in turn drives a linear regulator which produces the -2.5 V
+ supply for the first stage amplifiers.</li>
+  <li>An inverting switching regulator provides a -2.25 V supply which
+ in turn drives a linear regulator which produces the -1.25 V supply for 
+the second stage amplifiers.</li>
+</ul>
+<p>Other components on the board include:<br>
+</p>
+<ul>
+  <li>A pair of I<sup>2</sup>C port expanders to drive the RF 
+multiplexer switch selection lines.&nbsp; A port on one of the expanders
+ is used to read the serial number set by a DIP breakable shunt.</li>
+  <li>An IPMI-style EEPROM (256 bytes).</li>
+  <li>An I<sup>2</sup>C DAC providing a calibration voltage to each channel.</li>
+  <li>An FPGA output line driving an AC-coupled, low-pass filtered (~160
+ MHz), PRBS training signal provided to each channel.&nbsp; The RF-ADCs 
+require this signal for internal synchronization and level 
+adjustment.&nbsp; When the high speed digitizer is operating as a bunch 
+current monitor the PRBS signal is replaced with an orbit clock.<br>
+  </li>
+</ul>
+
+</body></html>

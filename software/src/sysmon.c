@@ -143,7 +143,7 @@ sysmonFetch(uint32_t *args)
 
     evrCurrentTime(&now);
     args[aIndex++] = now.secPastEpoch;
-    args[aIndex++] = now.ticks;
+    args[aIndex++] = now.fraction;
 
     for (i = 0 ; i < sizeof psInfo / sizeof psInfo[0] ; i++) {
         uint8_t vBuf[2] = {0}, iBuf[2] = {0};

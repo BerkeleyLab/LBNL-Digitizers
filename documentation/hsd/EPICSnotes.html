@@ -1,0 +1,1275 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>High Speed Digitizer Support</title>
+    <meta name="generator" content="amaya 8.5, see
+      http://www.w3.org/Amaya/">
+  </head>
+  <body>
+    <h1>Introduction</h1>
+    This support module provides ASYN drivers to control and acquire
+    data from the ALS high speed digitizer.<span style="font-weight:
+      bold;"></span>&nbsp; The module consists of C source, a database,
+    a <a href="#PythonClass">python client</a>, a <a href="#CommandLineExample">command line application</a> and
+    engineering screens.&nbsp; <br>
+    <p></p>
+    <h1>Database Development</h1>
+    <p>The example application distributed with this support module
+      comes with a database containing all the following records and EDM
+      screens to display them.&nbsp; All record names begin with the
+      macros <span style="font-family: monospace;">$(P)$(R)</span>.&nbsp;
+
+
+
+
+      Only the portion of the record name following these macros is
+      shown in the following tables.<br>
+    </p>
+    <h2><a name="WaveformInputRecords"></a>Waveform Input Records<br>
+    </h2>
+    Set SCAN="I/O Intr", DTYP=asynInt16ArrayIn, FTVL=FLOAT,
+    INP="@asyn($(PORT) <span style="font-style: italic;">xxx</span>)",
+    where <span style="font-style: italic;"></span> $(PORT) expands to
+    the port name in the highSpeedDigitizerConfigure command and <span style="font-style: italic;">xxx</span> is a numeric value&nbsp;
+    shown in the following table.&nbsp; Records should have TSE="-2"
+    since the time stamps are provided by the high speed digitizer
+    hardware and are the time at which the acquisition was
+    triggered.&nbsp; <span style="font-style: italic;"></span><br>
+    <br>
+    <table style=" text-align: left; margin-left: auto; margin-right:
+      auto; width: 90%; height: 78px;" border="1" cellspacing="2" cellpadding="2">
+      <tbody>
+        <tr>
+          <td style="text-align: center;"><span style="font-weight:
+              bold;">Name</span><br>
+          </td>
+          <th style="text-align: center;">
+            <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+            ASYN<br>
+            Subaddress<br>
+          </th>
+          <td style="text-align: center;"><b>NELM</b><br>
+          </td>
+          <th style="vertical-align: middle; text-align: center;">Description<br>
+          </th>
+        </tr>
+        <tr>
+          <td style="text-align: center;">In<span style="font-style:
+              italic;">i</span>:WF<br>
+          </td>
+          <td style="text-align: center;">0x300<span style="font-style:
+              italic;">c</span><br>
+          </td>
+          <td style="text-align: center;">131058<br>
+          </td>
+          <td style="text-align: left;">ADC values from the given input
+            (<span style="font-style: italic;">i</span> is from 1 to 8
+            and <span style="font-style: italic;">c</span> is 8-<span style="font-style: italic;">i</span>).&nbsp; Values are in volts.<br>
+</td>
+        </tr>
+      </tbody>
+    </table>
+    <br>
+    In "long segment" acquisition mode the waveform consists of 256
+    segments of 498 samples each so the NORD field will be 127488.&nbsp;
+    In "short segment" acquisition mode the waveform consists of 2048
+    segments of 50 samples each so the NORD field will be 102400.<br>
+    <br>
+    The mbbiDirect record ADC:busy, with DTYP=asynUInt32Digital,&nbsp;
+    INP="@asyn($(PORT) 0x0003)", polls the waveform recorders and reads
+    back the waveforms from all that have completed acquisition.&nbsp;
+    Typically SCAN=".5 second" or perhaps ".2 second".&nbsp; Bit 7 corresponds to input 1, bit 0 to input 8,<br>
+    <br>
+    <h2>Waveform Records<br>
+    </h2>
+    The LMX2594 frequency synthesizers which provide the RF ADC clock
+    are set to values appropriate for the Advanced Light Source storage
+    ring.&nbsp; Other sites can use the two records described in the
+    following table to set synthesizer register contents to values
+    appropriate for their installation.&nbsp; Set FTVL="LONG",
+    NELM="113", INP="@asyn($(PORT) <span style="font-style: italic;">xxx</span>)",
+
+
+
+    where <span style="font-style: italic;"></span> $(PORT) expands to
+    the port name in the highSpeedDigitizerConfigure command and <span style="font-style: italic;">xxx</span> is the numeric value&nbsp;
+    shown in the following table.&nbsp; A <a href="Firmware.html#lmx2594">script</a> is provided which can
+    write the registers based on the values read from a TICS Pro
+    file.&nbsp; The same script can also print the current register
+    values.&nbsp; Typically the script would be run once to set the
+    registers to the values provided by TICS Pro and then use the EPICS
+    autosave/restore facility to load the registers on subsequent FPGA
+    startups.<br>
+    <br>
+    <table style=" text-align: left; margin-left: auto; margin-right:
+      auto; width: 90%; height: 78px;" border="1" cellspacing="2" cellpadding="2">
+      <tbody>
+        <tr>
+          <td style="text-align: center;"><span style="font-weight:
+              bold;">Name</span><br>
+          </td>
+          <th style="text-align: center;"> ASYN<br>
+            Subaddress<br>
+          </th>
+          <td style="text-align: center;"><b>DTYP</b></td>
+          <th style="text-align: center;">Description<br>
+          </th>
+        </tr>
+        <tr>
+          <td style="text-align: center;">RF_ADC_CLK<br>
+          </td>
+          <td style="text-align: center;">0x4000<br>
+          </td>
+          <td style="text-align: center;">asynInt32ArrayOut</td>
+          <td style="text-align: left;">The value to write to the
+            LMX2594 registers in the order set by the Texas Instruments
+            TICS Pro application.<br>
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">RF_ADC_CLK_rbk</td>
+          <td style="text-align: center;">0x4100</td>
+          <td style="text-align: center;">asynInt32ArrayIn</td>
+          <td style="text-align: left;">The contents of the LMX2594
+            registers.<br>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <br>
+    <h2>Per-Input Acquisition Control/Status Records<br>
+    </h2>
+    &nbsp;Set DTYP=asynInt32 and INP/OUT="@asyn($(PORT) <span style="font-style: italic;">xxx</span>)", where <span style="font-style: italic;"></span> $(PORT) expands to the port
+    name in the highSpeedDigitizerConfigure command and <span style="font-style: italic;">xxx</span> is a numeric value as
+    described in the following table.&nbsp; The per input component of
+    the record names, <span style="font-style: italic;">i</span>,
+    varies from 1 to 8 and the per input component of the
+    addresses,&nbsp; <span style="font-style: italic;">c</span>, varies
+    from 7 to 0.&nbsp; Changes to the trigger, segmented acquisition and
+    bonding values are applied only at the transition from the disarmed
+    to the armed state.<span style="font-style: italic;"></span><span style="font-style: italic;"></span><span style="font-style:
+      italic;"></span><br>
+    <br>
+    <table style=" text-align: left; margin-left: auto; margin-right: auto; width: 90%;" border="1" cellspacing="2" cellpadding="2">
+      <tbody>
+        <tr>
+          <td style="text-align: center;"><span style="font-weight: bold;">Name</span><br>
+          </td>
+          <th style="text-align: center;">ASYN<br>
+            Subaddress<br>
+          </th>
+          <td style="text-align: center;"><span style="font-weight: bold;">Record</span><span style="font-weight: bold;"><br>
+            </span><span style="font-weight: bold;">Ty</span><span style="font-weight: bold;">pe</span><br>
+          </td>
+          <th style="vertical-align: middle; text-align: center;">Description<br>
+          </th>
+        </tr>
+        <tr>
+          <td style="text-align: center;">In<span style="font-style:
+              italic;">i</span>:arm</td>
+          <td style="text-align: center;">0x170<span style="font-style: italic;">c</span></td>
+          <td style="text-align: center;">bo<br>
+          </td>
+          <td style="text-align: left;">Arm/disarm (1/0) the waveform
+            recorder.</td>
+        </tr>
+        <tr>
+          <td style="vertical-align: top; text-align: center;"><span style="font-style: italic;"></span>In<span style="font-style: italic;">i</span>:rearm</td>
+          <td style="text-align: center;">–<br>
+          </td>
+          <td style="text-align: center;">bo</td>
+          <td style="vertical-align: top;">When set, automatically rearm
+            the waveform recorder after a waveform has been acquired.<br>
+          </td>
+        </tr>
+        <tr>
+          <td align="center" valign="middle"><span style="font-style:
+              italic;"></span>In<span style="font-style: italic;">i</span>:rearmSEQ</td>
+          <td style="text-align: center;">–<br>
+          </td>
+          <td style="text-align: center;">seq<br>
+          </td>
+          <td align="left" valign="middle">The DLY1 field of this record
+            sets the interval, in seconds, between the arrival of the
+            waveform and the rearm operation.<br>
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">In<span style="font-style:
+              italic;">i</span>:bonded</td>
+          <td style="text-align: center;">0x1E0<span style="font-style: italic;">c</span></td>
+          <td style="text-align: center;">bo<br>
+          </td>
+          <td style="text-align: left;">Set to assign acquisition
+            control to the last channel of each group of 4.&nbsp; Clear
+            to use this input's acquisition controls.<br>
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">In<span style="font-style:
+              italic;">i</span>:coupling</td>
+          <td style="text-align: center;">0x1C0<span style="font-style: italic;">c</span></td>
+          <td style="text-align: center;">mbbo<br>
+          </td>
+          <td style="text-align: left;">Set input coupling
+            DC/AC/Calibration/Training (0/1/2/3).<br>
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">In<span style="font-style:
+              italic;">i</span>:gain</td>
+          <td style="text-align: center;">0x180<span style="font-style: italic;">c</span></td>
+          <td style="text-align: center;">ao<br>
+          </td>
+          <td style="text-align: left;">Set programmable gain.&nbsp;
+            Range is -6 to +26 dB (factor of about 0.5 to 20) in steps
+            of 1 dB.<br>
+          </td>
+        </tr>
+        
+        <tr>
+          <td style="text-align: center;">In<span style="font-style:
+              italic;">i</span>:pretrigCount<br>
+          </td>
+          <td style="text-align: center;">0x160<span style="font-style: italic;">c</span><br>
+          </td>
+          <td style="text-align: center;">longout<br>
+          </td>
+          <td style="text-align: left;">Set number of pretrigger samples
+            to acquire.&nbsp; At least one pretrigger sample must be
+            acquired.&nbsp; The maximum number of pretrigger samples is
+            131024 in contiguous acquisition mode, 464 in long segmented
+            acquisition mode, and 8 in short segmented acquisition mode.
+          </td>
+        </tr>
+        <tr>
+  <td style="text-align: center;">In<span style="font-style:
+              italic;">i</span>:acqCount</td>
+  <td style="text-align: center;">0xF20<span style="font-style: italic;">c</span></td>
+  <td style="text-align: center;">longout</td>
+  <td style=" vertical-align: middle;">Set number of&nbsp; samples
+            to transfer from the FPGA to corresponding waveform record. 
+The actual number of samples transferred is further limited to the value
+ implied by the segmented/continuous acquisition mode as described in 
+the <a moz-do-not-send="true" href="#WaveformInputRecords">Waveform Input Records</a> documentation.&nbsp; The FPGA always acquires a full set of samples – this record affects only the transfer of data to the IOC.<br>
+  </td>
+</tr>
+<tr>
+          <td style="text-align: center;">In<span style="font-style:
+              italic;">i</span>:triggerEdge</td>
+          <td style="text-align: center;">0x1D0<span style="font-style: italic;">c</span></td>
+          <td style="text-align: center;">bo<br>
+          </td>
+          <td style="text-align: left;">Set rising/falling (0/1)
+            self-trigger edge.<br>
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">In<span style="font-style:
+              italic;">i</span>:triggerLevel</td>
+          <td style="text-align: center;">0x140<span style="font-style: italic;">c</span> </td>
+          <td style="text-align: center;">ao<br>
+          </td>
+          <td style="text-align: left;">Set self-trigger level, in volts.&nbsp; Setting a level outside the range of possible input signals disables self-triggering.<br>
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">In<span style="font-style:
+              italic;">i</span>:triggerMask</td>
+          <td style="text-align: center;">0x150<span style="font-style: italic;">c</span> </td>
+          <td style="text-align: center;">longout</td>
+          <td style="text-align: left;">Bitmap of triggers to
+            enable.&nbsp; Least significant bit enables software
+            triggers.&nbsp; The next more significant bit enables event
+            system trigger bus line 2, the next trigger bus line 3 and
+            so on up to event system trigger bus line 7.<br>
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">In<span style="font-style:
+              italic;">i</span>:segMode</td>
+          <td style="text-align: center;">0x110<span style="font-style: italic;">c</span></td>
+          <td style="text-align: center;">mbbo<br>
+          </td>
+          <td style="text-align: left;">Set
+            contiguous/long-segment/short-segment (0/1/2) acquisition.<br>
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">In<span style="font-style:
+              italic;">i</span>:earlySegIntvl</td>
+          <td style="text-align: center;">0x120<span style="font-style: italic;">c</span></td>
+          <td style="text-align: center;">longout</td>
+          <td style="text-align: left;">Set the number of ADC clocks
+            (typically the number of clocks per turn) between the
+            leading edges of the first five segments to be
+            acquired.&nbsp; The minimum value is one more than the segment length and the maximum value is 16383.<br>
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">In<span style="font-style:
+              italic;">i</span>:laterSegIntvl</td>
+          <td style="text-align: center;">0x130<span style="font-style: italic;">c</span></td>
+          <td style="text-align: center;">longout</td>
+          <td style="text-align: left;">Set the number of ADC clocks
+            (typically a multiple of the number of clocks per turn)
+            between the leading edges of the remaining segments.&nbsp;
+            The minimum value is one more than 6the segment length and the maximum value is 134217727.</td>
+        </tr><tr>
+  <td style="text-align: center;">In<span style="font-style:
+              italic;">i</span>:wfUpdates</td>
+  <td style="text-align: center;">–<br>
+  </td>
+  <td style="text-align: center;">ai<br>
+  </td>
+  <td style="vertical-align: middle; text-align: left;">Number of times that the In<span style="font-style:
+              italic;">i</span>:WF waveform record has been updated.<br>
+  </td>
+</tr>
+
+      </tbody>
+    </table>
+    <br>
+    Segmented acquisition applications usually fall into one of the
+    following two cases.<br>
+    <ol>
+      <li>Repetitive measurements in a circular machine<br>
+        In this case the segment intervals are set to an integer
+        multiple (1 to N) of the number of ADC clocks per
+        revolution.&nbsp; Either short or long segment acquisition is
+        used depending on the length of the signal of interest.<br>
+      </li>
+      <li>Lower effective sampling frequency to obtain data over a
+        longer interval<br>
+        In this case the segment intervals are set to provide a lower
+        effective sampling frequency and usually short segment
+        acquisition is used.&nbsp; Often all the samples in a segment
+        are then averaged to provide a single value at each effective
+        sampling point.<br>
+      </li>
+    </ol>
+    <h2>Event Receiver<br>
+    </h2>
+    The high speed digitizer includes an embedded event receiver for
+    maintaining synchronization with other diagnostics.&nbsp; Six
+    trigger outputs are available for triggering the waveform
+    recorders.&nbsp; DTYP=asynInt32 and OUT="@asyn($(PORT) <span style="font-style: italic;">xxx</span>)", where $(PORT) expands to
+    the port name in the highSpeedDigitizerConfigure command and <span style="font-style: italic;">xxx</span> is a numeric value as
+    described in the following table.<br>
+    <br>
+    <table style=" text-align: left; width: 80%; margin-left: auto;
+      margin-right: auto;" border="1" cellspacing="2" cellpadding="2">
+      <tbody>
+        <tr>
+          <td style="text-align: center;"><span style="font-weight:
+              bold;">Name</span><br>
+          </td>
+          <th style="text-align: center;">ASYN<br>
+            Subaddress<br>
+          </th>
+          <td style="text-align: center; vertical-align: middle;"><span style="font-weight: bold;">Record</span><span style="font-weight: bold;"><br>
+            </span><span style="font-weight: bold;">Type</span><br>
+          </td>
+          <th style="vertical-align: middle; text-align: center;">Description<br>
+          </th>
+        </tr>
+        <tr>
+          <td style="text-align: center;">EVR:trig<span style="font-style: italic;">x</span>delay<br>
+          </td>
+          <td style="text-align: center;">0x1A0<span style="font-style:
+              italic;">x</span><br>
+          </td>
+          <td style="text-align: center;">longout<br>
+          </td>
+          <td style="vertical-align: top;">Delay, in event system clock
+            steps, on event receiver trigger output <span style="font-style: italic;">x</span> (2 through 7). <br>
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">EVR:event<span style="font-style: italic;">xx</span>trig</td>
+          <td style="text-align: center;">0x19<span style="font-style:
+              italic;">yy</span><br>
+          </td>
+          <td style="text-align: center;">longout</td>
+          <td style="vertical-align: top;">Bitmap specifying the
+            waveform recorder trigger line(s) to activate when event <span style="font-style: italic;">xx</span> arrives where <span style="font-style: italic;">xx</span> varies from 1
+            through 254 with corresponding hexadecimal value <span style="font-style: italic;">yy</span> from 01 through
+            FE.&nbsp; Only bits 2 through 7 of the value are used.<br>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <br>
+    <h2>Long Input Records</h2>
+    &nbsp;Set DTYP=asynInt32 and INP="@asyn($(PORT) <span style="font-style: italic;">xxx</span>)", where <span style="font-style: italic;"></span> $(PORT) expands to the port
+    name in the highSpeedDigitizerConfigure command and <span style="font-style: italic;">xxx</span> is a numeric value as
+    described in the following table.<br>
+    &nbsp; <br>
+    <table style=" text-align: left; margin-left: auto; margin-right:
+      auto; width: 90%;" border="1" cellspacing="2" cellpadding="2">
+      <tbody>
+        <tr>
+          <td style="text-align: center;"><span style="font-weight:
+              bold;">Name</span><br>
+          </td>
+          <th style="text-align: center;">ASYN<br>
+            Subaddress<br>
+          </th>
+          <th style="vertical-align: middle; text-align: center;">Description<br>
+          </th>
+        </tr>
+        <tr>
+          <td align="center" valign="middle">Cmd<i>x</i>RetryCount<br>
+          </td>
+          <td style="text-align: center;">0xF00<i>x</i><br>
+          </td>
+          <td valign="middle">Number of commands sent to the high speed
+            digitizer that were acknowledged after <i>x</i> retries,
+            where <i>x</i> ranges from 0 to 4, inclusive.&nbsp;
+            Typically configured with SCAN="10 second". </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;"><span style="font-style:
+              italic;"><span style="font-style: italic;"></span></span>CmdFailedCount<span style="font-style: italic;"></span><br>
+          </td>
+          <td style="text-align: center;">0xF005<span style="font-style:
+              italic;"></span><br>
+          </td>
+          <td style="text-align: left;">Number of commands sent to the
+            high speed digitizer that were never acknowledged.&nbsp;
+            Typically configured with SCAN="10 second". </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">sysmonTrig_</td>
+          <td style="text-align: center;">0x2000</td>
+          <td style="text-align: left; vertical-align: middle;">Processing
+
+
+
+            this record initiates a readback of high speed digitizer
+            hardware status, temperatures, voltages and currents. The
+            values read are pushed to several other SCAN="I/O Intr"
+            records.&nbsp; Typically configured with SCAN="2 second",
+            PINI=YES.<br>
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">lmx2594<br>
+          </td>
+          <td style="text-align: center;">0x0002<br>
+          </td>
+          <td style="vertical-align: middle; text-align: left;">One 
+nibble (4 bits)
+            of lock status for each LMX2594 frequency synthesizer.&nbsp;
+            0=Vtune at low limit, 1=Invalid state, 2=Locked, 3=Vtune at
+            high limit. Least significant nibble is LMX2594 for first
+            four ADCs, second nibble for last four ADCs, third nibble 
+for all
+            DACs. &nbsp; Reading the lock status adds to the jitter on 
+the synthesizer output so this record is processed only on IOC startup 
+and FPGA reconnect, or on explicit request.<br>
+</td>
+        </tr>
+      </tbody>
+    </table>
+    <br>
+    <h2>Output Records<br>
+    </h2>
+    Set DTYP=asynInt32 and OUT="@asyn($(PORT) <span style="font-style:
+      italic;">xxx</span>)", where <span style="font-style: italic;"></span>
+    $(PORT) expands to the port name in the highSpeedDigitizerConfigure
+    command and <span style="font-style: italic;">xxx</span> is a
+    numeric value as described in the following table.<br>
+    <br>
+    <table style=" text-align: left; margin-left: auto; margin-right: auto; width: 90%;" border="1" cellspacing="2" cellpadding="2">
+      <tbody>
+        <tr>
+          <td style="text-align: center;"><span style="font-weight:
+              bold;">Name</span><br>
+          </td>
+          <th style="text-align: center;">ASYN<br>
+            Subaddress<br>
+          </th>
+          <td style="text-align: center;"><span style="font-weight:
+              bold;">Reco</span><span style="font-weight: bold;">rd</span><span style="font-weight: bold;"><br>
+            </span><span style="font-weight: bold;">Type</span><br>
+          </td>
+          <th style="vertical-align: middle; text-align: center;">Description<br>
+          </th>
+        </tr>
+        <tr>
+          <td style="text-align: center;">clrPowerup_<br>
+          </td>
+          <td style="text-align: center;">0x1000<br>
+          </td>
+          <td style="text-align: center;">longout<br>
+          </td>
+          <td style="text-align: left;">Part of the update on reconnect
+            mechanism.&nbsp; Clears the FPGA 'power up' status.<br>
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">softTrigger</td>
+          <td style="text-align: center;">0x1001<br>
+          </td>
+          <td style="text-align: center;">longout<br>
+          </td>
+          <td style="text-align: left;">Generate waveform recorder
+            software trigger when processed.&nbsp; Value is unimportant.
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">reboot<br>
+          </td>
+          <td style="text-align: center;">0x1F00<br>
+          </td>
+          <td style="text-align: center;">longout<br>
+          </td>
+          <td style="text-align: left;">Writing, in order, 1, 100,
+            10000, forces an FPGA reset.<br>
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">evrClkPerTurn<br>
+          </td>
+          <td style="text-align: center;">0x1F01<br>
+          </td>
+          <td style="text-align: center;">longout<br>
+          </td>
+          <td style="text-align: left;">Number
+            of event receiver clocks in a turn.&nbsp; Used for
+            turn-synchronous acquisition.<br>
+          </td>
+        </tr><tr>
+  <td style="text-align: center;">trainingTone<br>
+  </td>
+  <td style="text-align: center;">0x1F02<br>
+  </td>
+  <td style="text-align: center;">bo<br>
+  </td>
+  <td style="text-align: left;">Enable training tone continuously (1) or only when required for ADC retraining (0).<br>
+  </td>
+</tr>
+<tr>
+  <td style="text-align: center;">calDAC<br>
+  </td>
+  <td style="text-align: center;">0x1F03<br>
+  </td>
+  <td style="text-align: center;">longout<br>
+  </td>
+  <td style="text-align: left;">Value of calibration DAC when DAC is not being used to calibrate a channel after a gain change.<br>
+  </td>
+</tr>
+<tr>
+  <td style="text-align: center;">noCalibration_<br>
+  </td>
+  <td style="text-align: center;">0xF000<br>
+  </td>
+  <td style="text-align: center;">bo<br>
+  </td>
+  <td style="text-align: left;">Apply/Ignore 
+(0/1) calibration readings.&nbsp; The waveform values are in units of 
+raw ADC samples when the calibration readings are ignored.<br>
+  </td>
+</tr>
+
+      </tbody>
+    </table>
+    <br>
+    <h2>System Monitor Input Records<br>
+    </h2>
+    Set SCAN="I/O Intr", DTYP=asynInt32 and INP="@asyn($(PORT) <i>xxx</i>)",
+
+
+
+    where <span style="font-style: italic;"></span> $(PORT) expands to
+    the port name in the highSpeedDigitizerConfigure command and <span style="font-style: italic;">xxx</span> is a numeric value&nbsp; as
+    described in the following table.<span style="font-style: italic;"></span>&nbsp;
+
+
+
+    Records are processed by $(P)$(R)sysmonTrig_ processing.&nbsp; All
+    temperatures are in degrees Celsius.&nbsp; The per input component of
+    the record names, <span style="font-style: italic;">i</span>,
+    varies from 1 to 8 and the per input component of the
+    addresses,&nbsp; <span style="font-style: italic;">c</span>, varies
+    from 7 to 0. <br>
+    <span style="font-weight: bold;"></span><br>
+    <table style=" text-align: left; margin-left: auto; margin-right: auto; width: 90%;" border="1" cellspacing="2" cellpadding="2">
+      <tbody>
+        <tr>
+          <td style="text-align: center;"><span style="font-weight:
+              bold;">Name</span><br>
+          </td>
+          <th style="text-align: center;">ASYN<br>
+            Subaddress<br>
+          </th>
+          <td style="text-align: center;"><span style="font-weight: bold;">Record</span><span style="font-weight: bold;"><br>
+            </span><span style="font-weight: bold;">Type</span><br>
+          </td>
+          <th style="vertical-align: middle; text-align: center;">Description<br>
+          </th>
+        </tr>
+        <tr>
+          <td style="text-align: center;">VccINT:V </td>
+          <td style="text-align: center;">0x2102<br>
+          </td>
+          <td style="text-align: center;">ai<br>
+          </td>
+          <td style="text-align: left;">FPGA Vcc INT supply voltage.<br>
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">VccINT:I </td>
+          <td style="text-align: center;">0x2402<br>
+          </td>
+          <td style="text-align: center;">ai</td>
+          <td style="text-align: left;">FPGA Vcc INT supply current. </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">VccINT_IO:V<br>
+          </td>
+          <td style="text-align: center;">0x2103</td>
+          <td style="text-align: center;">ai</td>
+          <td style="text-align: left;">FPGA Vcc INT I/O BRAM supply
+            voltage.<br>
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">VccINT_IO:I </td>
+          <td style="text-align: center;">0x2403 </td>
+          <td style="text-align: center;">ai</td>
+          <td style="text-align: left;">FPGA Vcc INT I/O BRAM supply
+            current. </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">Vcc1V8:V<br>
+          </td>
+          <td style="text-align: center;">0x2104 </td>
+          <td style="text-align: center;">ai</td>
+          <td style="text-align: left;">FPGA 1.8V supply voltage<span style="font-style: italic;"></span>. </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">Vcc1V8:I</td>
+          <td style="text-align: center;">0x2404</td>
+          <td style="text-align: center;">ai</td>
+          <td style="text-align: left;">FPGA 1.8V supply current. </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">Vcc1V2:V</td>
+          <td style="text-align: center;">0x2105</td>
+          <td style="text-align: center;">ai</td>
+          <td style="text-align: left;">FPGA 1.2V supply voltage<span style="font-style: italic;"></span>. </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">Vcc1V2:I</td>
+          <td style="text-align: center;">0x2405</td>
+          <td style="text-align: center;">ai</td>
+          <td style="text-align: left;">FPGA 1.2V supply current. </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">FMCVadj:V </td>
+          <td style="text-align: center;">0x2106 </td>
+          <td style="text-align: center;">ai</td>
+          <td style="text-align: left;">FMC Vadj supply voltage<span style="font-style: italic;"></span>. </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">FMCVadj:I</td>
+          <td style="text-align: center;">0x2406 </td>
+          <td style="text-align: center;">ai</td>
+          <td style="text-align: left;">FMC Vadj supply current. </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">MGTAvcc:V </td>
+          <td style="text-align: center;">0x2107 </td>
+          <td style="text-align: center;">ai</td>
+          <td style="text-align: left;">MGT analog Vcc voltage<span style="font-style: italic;"></span>. </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">MGTAVcc:I </td>
+          <td style="text-align: center;">0x2407</td>
+          <td style="text-align: center;">ai</td>
+          <td style="text-align: left;">MGT analog Vcc current. </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">MGT1V2:V</td>
+          <td style="text-align: center;">0x2108 </td>
+          <td style="text-align: center;">ai</td>
+          <td style="text-align: left;">MGT 1.2V supply voltage<span style="font-style: italic;"></span>. </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">MGT1V2:I </td>
+          <td style="text-align: center;">0x2408 </td>
+          <td style="text-align: center;">ai</td>
+          <td style="text-align: left;">MGT 1.2V supply current. </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">MGT1V8:V </td>
+          <td style="text-align: center;">0x2109 </td>
+          <td style="text-align: center;">ai</td>
+          <td style="text-align: left;">MGT 1.8V supply voltage<span style="font-style: italic;"></span>. </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">MGT1V8:I </td>
+          <td style="text-align: center;">0x2409 </td>
+          <td style="text-align: center;">ai</td>
+          <td style="text-align: left;">MGT 1.8V supply current<span style="font-style: italic;"></span>. </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">VccINT_RF:V </td>
+          <td style="text-align: center;">0x210A </td>
+          <td style="text-align: center;">ai</td>
+          <td style="text-align: left;">RF section Vcc INT supply
+            voltage.<br>
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">VccINT_RF:V </td>
+          <td style="text-align: center;">0x240A </td>
+          <td style="text-align: center;">ai</td>
+          <td style="text-align: left;">RF section Vcc INT supply
+            current.</td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">DAC_AVtt:V<br>
+          </td>
+          <td style="text-align: center;">0x210B </td>
+          <td style="text-align: center;">ai</td>
+          <td style="text-align: left;">DAC analog Vtt supply voltage.<br>
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">DAC_AVtt:I</td>
+          <td style="text-align: center;">0x240B </td>
+          <td style="text-align: center;">ai</td>
+          <td style="text-align: left;">DAC analog Vtt supply current.</td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">DAC_AVccAUX:V</td>
+          <td style="text-align: center;">0x210C </td>
+          <td style="text-align: center;">ai</td>
+          <td style="text-align: left;">DAC analog auxiliary Vcc supply
+            voltage.<br>
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">DAC_AVccAUX:I</td>
+          <td style="text-align: center;">0x240C </td>
+          <td style="text-align: center;">ai</td>
+          <td style="text-align: left;">DAC analog auxiliary Vcc supply
+            current.</td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">ADC_AVcc:V<br>
+          </td>
+          <td style="text-align: center;">0x210D </td>
+          <td style="text-align: center;">ai</td>
+          <td style="text-align: left;">ADC analog Vcc supply voltage.<br>
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">ADC_AVcc:I </td>
+          <td style="text-align: center;">0x240D </td>
+          <td style="text-align: center;">ai</td>
+          <td style="text-align: left;">ADC analog Vcc supply current. </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">ADC_AVccAUX:V<br>
+          </td>
+          <td style="text-align: center;">0x210E </td>
+          <td style="text-align: center;">ai</td>
+          <td style="text-align: left;">ADC auxiliary analog Vcc supply
+            voltage. </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">ADC_AVccAUX:I</td>
+          <td style="text-align: center;">0x240E</td>
+          <td style="text-align: center;">ai</td>
+          <td style="text-align: left;">ADC auxiliary analog Vcc supply
+            current. </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">DAC_AVcc:V</td>
+          <td style="text-align: center;">0x210F </td>
+          <td style="text-align: center;">ai</td>
+          <td style="text-align: left;">DAC analog Vcc supply voltage.</td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">DAC_AVcc:I</td>
+          <td style="text-align: center;">0x240F</td>
+          <td style="text-align: center;">ai</td>
+          <td style="text-align: left;">DAC analog Vcc supply current.</td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">Board12V:V<br>
+          </td>
+          <td style="text-align: center;">0x2110<br>
+          </td>
+          <td style="text-align: center;">ai</td>
+          <td style="text-align: left;">Board raw 12V supply voltage.<br>
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">Util3V3:V<br>
+          </td>
+          <td style="text-align: center;">0x2111<br>
+          </td>
+          <td style="text-align: center;">ai</td>
+          <td style="text-align: left;">Utility 3.3V supply voltage.<br>
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">Util3V3:I</td>
+          <td style="text-align: center;">0x2211</td>
+          <td style="text-align: center;">ai</td>
+          <td style="text-align: left;">Utility 3.3V supply current.</td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">PL:temp<br>
+          </td>
+          <td style="text-align: center;">0x2112<br>
+          </td>
+          <td style="text-align: center;">ai</td>
+          <td style="text-align: left;">FPGA programmable logic
+            temperature.<br>
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">PL:temp</td>
+          <td style="text-align: center;">0x2212 </td>
+          <td style="text-align: center;">ai</td>
+          <td style="text-align: left;">FPGA processing system
+            temperature.</td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">ADC_AXI_CLK<br>
+          </td>
+          <td style="text-align: center;">0x2013</td>
+          <td style="text-align: center;">ai</td>
+          <td style="text-align: left;">ADC AXI clock frequency (ADC
+            sampling clock frequency / 8).<br>
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">evrStatus_<br>
+          </td>
+          <td style="text-align: center;">0x2014<br>
+          </td>
+          <td style="text-align: center;">longin<br>
+</td>
+          <td style="text-align: left;">EVR status bits (Bit 0=SROC
+            synced to heartbeat, Bit 1=heartbeat event present, Bit
+            2=PPS event present).<br>
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">SFP:temp<br>
+          </td>
+          <td style="text-align: center;">0x2315<br>
+          </td>
+          <td style="text-align: center;">ai</td>
+          <td style="text-align: left;">EVR SFP temperature.<br>
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">SFP:Vcc</td>
+          <td style="text-align: center;">0x2215</td>
+          <td style="text-align: center;">ai</td>
+          <td style="text-align: left;">EVR SFP supply voltage.</td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">SFP:RxPower</td>
+          <td style="text-align: center;">0x2216</td>
+          <td style="text-align: center;">ai</td>
+          <td style="text-align: left;">EVR SFP received power.</td>
+        </tr>
+        <tr>
+  <td style="text-align: center;">U68:temp<br>
+  </td>
+  <td style="text-align: center;">0x2117<br>
+  </td>
+  <td style="text-align: center;">ai<br>
+  </td>
+  <td style="text-align: left;">Regulator U68 temperature.<br>
+  </td>
+</tr>
+<tr>
+  <td style="text-align: center;">U70:temp</td>
+  <td style="text-align: center;">0x2217</td>
+  <td style="text-align: center;">ai</td>
+  <td style="text-align: left;">Regulator U70 temperature.</td>
+</tr>
+<tr>
+  <td style="text-align: center;">U74:temp</td>
+  <td style="text-align: center;">0x2118</td>
+  <td style="text-align: center;">ai</td>
+  <td style="text-align: left;">Regulator U74 temperature.</td>
+</tr>
+<tr>
+  <td style="text-align: center;">U75:temp</td>
+  <td style="text-align: center;">0x2218</td>
+  <td style="text-align: center;">ai</td>
+  <td style="text-align: left;">Regulator U75 temperature.</td>
+</tr>
+<tr>
+  <td style="text-align: center;">U53:temp</td>
+  <td style="text-align: center;">0x2119</td>
+  <td style="text-align: center;">ai</td>
+  <td style="text-align: left;">Regulator U53 temperature.</td>
+</tr>
+<tr>
+  <td style="text-align: center;">U55:temp</td>
+  <td style="text-align: center;">0x2219</td>
+  <td style="text-align: center;">ai</td>
+  <td style="text-align: left;">Regulator U55 temperature.</td>
+</tr>
+<tr>
+  <td style="text-align: center;">U57:temp</td>
+  <td style="text-align: center;">0x211A</td>
+  <td style="text-align: center;">ai</td>
+  <td style="text-align: left;">Regulator U57 temperature.</td>
+</tr>
+<tr>
+          <td style="text-align: center;">sysrefSync<br>
+          </td>
+          <td style="text-align: center;">0x201B</td>
+          <td style="text-align: center;">longin<br>
+          </td>
+          <td style="text-align: left;">SYSREF synchronization status.
+            Bit 31 is set if the SYSREF signal has ever been
+            unsynchronized with respect to the AXI ADC clock. &nbsp; Bit
+            15 is set if the SYSREF signal has ever been unsynchronized
+            with respect to the FPGA_REFCLK_OUT clock.&nbsp; The value
+            in bits 23:16 is one less than the number of ADC AXI clocks
+            per SYSREF interval.&nbsp; The value in bits 7:0 is one less
+            than the number of FPGA_REFCLK_OUT clocks per SYSREF
+            interval. </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">rfADCstatus<br>
+          </td>
+          <td style="text-align: center;">0x201C<br>
+          </td>
+          <td style="text-align: center;">longin<br>
+          </td>
+          <td style="text-align: left;">Bitmap with two bits per ADC
+            channel.&nbsp; The lower bit in each pair is set when the
+            corresponding ADC channel is in an over range (clipping)
+            state.&nbsp; The upper bit in each pair is set when the
+            corresponding ADC channel is in an over voltage state.&nbsp;
+            The two least significant bits correspond to the first ADC
+            channel.&nbsp; Over voltage conditions should be avoided
+            since they they are an indication that the signal at the ADC
+            input is nearing, or at, a level which could damage the
+            chip.<br>
+          </td>
+        </tr><tr>
+  <td style="text-align: center;">mgtSyncLost<br>
+  </td>
+  <td style="text-align: center;">0x211D<br>
+  </td>
+  <td style="text-align: center;">longin<br>
+  </td>
+  <td style="text-align: left;">Number of times that event receiver multi-gigabit transceiver lost synchronization.<br>
+  </td>
+</tr>
+<tr>
+  <td style="text-align: center;">mgtRxSlide<br>
+  </td>
+  <td style="text-align: center;">0x221D<br>
+  </td>
+  <td style="text-align: center;">longin<br>
+  </td>
+  <td style="text-align: left;">Number of event receiver multi-gigabit transceiver receiver bit-slide requests.<br>
+  </td>
+</tr>
+<tr>
+  <td style="text-align: center;">In<span style="font-style:
+              italic;">i</span>:min</td>
+  <td style="text-align: center;">0x300<span style="font-style: italic;">c</span><br>
+  </td>
+  <td style="text-align: center;">longin<br>
+  </td>
+  <td style="text-align: left;">Minimum ADC reading since the last readback.<br>
+  </td>
+</tr>
+<tr>
+  <td style="vertical-align: middle; text-align: center;">In<span style="font-style:
+              italic;">i</span>:max</td>
+  <td style="text-align: center;">0x30<span style="font-style: italic;">8</span><span style="font-style: italic;"></span><span style="font-style: italic;"><span style="font-style: italic;"></span><span style="font-style: italic;"></span>c</span></td>
+  <td style="text-align: center;">longin<br>
+  </td>
+  <td style="text-align: left;">Maximum ADC reading since the last readback.<br>
+  </td>
+</tr>
+
+      </tbody>
+    </table>
+    <br>
+    The sysrefSync status shows the status of the two stage sampling of
+    the FPGA_REFCLK_OUT_C signal as described in PG269 (v2.1) Zynq
+    UltraScale+ RFSoC RF Data Converter, in particular page 105:
+    Clocking for Multi-Tile Synchronization figures 81 and 83.<br>
+    <br>
+    <h2>Hardware Information Input Records</h2>
+    <p>Processed on IOC startup and FPGA reconnect.<br>
+    </p>
+    <table style=" text-align: left; margin-left: auto; margin-right: auto; width: 90%;" border="1" cellspacing="2" cellpadding="2">
+      <tbody>
+        <tr>
+          <td style="text-align: center;"><span style="font-weight:
+              bold;">Name</span><br>
+          </td>
+          <td style="text-align: center;"><span style="font-weight: bold;">ASYN</span><span style="font-weight: bold;"><br>
+  </span><span style="font-weight: bold;">Address</span><br>
+</td>
+<th style="text-align: center;">Record<br>
+Type<br>
+          </th>
+          <th style="text-align: left;">Description<br>
+          </th>
+        </tr>
+        <tr>
+          <td style="text-align: center;">firmwareBuildDate</td>
+          <td style="text-align: center;">0x0000<br>
+</td>
+<td style="text-align: center;">stringin</td>
+          <td style="text-align: left;">Date on which the firmware was
+            built.&nbsp; INP="@asyn($(PORT) 0x0000)".<br>
+          </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;">softwareBuildDate</td>
+          <td style="text-align: center;">0x0001<br>
+</td>
+<td style="text-align: center;">stringin</td>
+          <td style="text-align: left;">Date on which the software was
+            built.&nbsp; INP="@asyn($(PORT) 0x0001)".</td>
+        </tr><tr>
+  <td style="text-align: center;">DFEsn<br>
+  </td>
+  <td style="text-align: center;">0x0004<br>
+  </td>
+  <td style="text-align: center;">longin<br>
+  </td>
+  <td style="text-align: left;">Digital board serial number<br>
+  </td>
+</tr>
+<tr>
+  <td style="text-align: center;">AFEsn<br>
+  </td>
+  <td style="text-align: center;">0x0005<br>
+  </td>
+  <td style="text-align: center;">longin<br>
+  </td>
+  <td style="text-align: left;">Analog front-end board serial number.<br>
+  </td>
+</tr>
+
+      </tbody>
+    </table>
+    <br>
+    <h2><a name="reconnect"></a>FPGA update on reconnect<br>
+    </h2>
+    The IOC attempts to automatically restore FPGA settings following an
+    FPGA restart.&nbsp; This is achieved through a calcout record
+    ($(P)$(R)reconnChk_) that monitors the STAT field of a
+    periodically-scanned readback record ($(P)$(R)sysmonTrig_) and
+    causes a number of event and fanout records<span style="font-style:
+      italic;"> </span>to process when that status returns to 0 or when
+    the FPGA 'power up' condition is detected.&nbsp; The fanout records
+    in turn cause the various input and output records to process and
+    read from or send their values to the FPGA.<br>
+    <br>
+    <h1>Using high speed digitizer support in an application</h1>
+    <p>Several files need minor modifications to use high speed
+      digitizer support in an application.</p>
+    <ol>
+      <li>Add the full path to the high speed digitizer support
+        directory to the application <tt>configure/RELEASE</tt> file:<br>
+        <tt>HSD=</tt><em>xxxx</em><tt>/modules/instrument/highSpeedDigitizer/</tt><tt>&lt;release&gt;</tt><br>
+        Where <tt>&lt;release&gt;</tt> is the release number of of the
+        high speed digitizer support. You'll need to provide a similar
+        line for the ASYN support module.</li>
+      <li>Add instrument support to application database definition file<br>
+        The application database definition file must include the
+        database definition files for the high speed digitizer. There
+        are two ways that this can be done:
+        <ul>
+          <li>If you are building your application database definition
+            file the old-fashioned way from an <em>xxx</em><tt>Include.dbd</tt>
+            file you include the additional database definitions in that
+            file:<br>
+            <tt>include "base.dbd"</tt><br>
+            <tt>include "highSpeedDigitizerSup.dbd"</tt><br>
+          </li>
+          <li>If you are building your application database definition
+            file from the application Makefile you specify the
+            additional database definitions there:<br>
+            <em>xxx</em><tt>_DBD += base.dbd</tt><br>
+            <em>xxx</em><tt>_DBD += highSpeedDigitizerSup.dbd</tt><br>
+          </li>
+        </ul>
+      </li>
+      <li>Add the highSpeedDigitizerSup support libraries to the
+        application<br>
+        You must link the highSpeedDigitizerSup support library and the
+        ASYN support library with the application. Add the following
+        lines to the application Makefile: <br>
+        <em>xxx</em><tt>_LIBS += highSpeedDigitizer</tt><br>
+        <em>xxx</em><tt>_LIBS += asyn</tt><br>
+        before the <br>
+        <em>xxx</em><tt>_LIBS += $(EPICS_BASE_IOC_LIBS)</tt></li>
+      <li>Add a <tt>highSpeedDigitizerConfigure</tt> command to the
+        application startup script.&nbsp; The arguments must appear in
+        the order shown below.<br>
+        <ol>
+          <li>The ASYN port name.<br>
+          </li>
+          <li>The IPv4 address of the high speed digitizer FPGA.</li>
+          <li>The priority at which the port threads will run.&nbsp; A
+            value of 0 results in the default medium priority.</li>
+<li>The number of event receiver clocks per second.</li>
+
+        </ol>
+      </li>
+      <li> Load a database file or files describing the records
+        associated with the high speed digitizer. <br>
+      </li>
+    </ol>
+    <br>
+    <h1><a name="PythonClass"></a>High Speed Digitizer Python Class</h1>
+    This class uses the <a href="https://cars9.uchicago.edu/software/python/pyepics3/pv.html">PyEpics</a>
+    support module and provides support for controlling a high speed
+    digitizer. <br>
+    <h2>Instantiation</h2>
+    <p>class <span style="font-weight: bold;">HighSpeedDigitizer</span>(recordNamePrefix,
+
+
+
+      inputList [, callback=None [, connection_timeout=2.0]])<br>
+    </p>
+    <ul>
+      <li><span style="font-weight: bold;">recordNamePrefix</span>(<span style="font-style: italic;">string</span>) – the prefix of the
+        high speed digitizer record names.</li>
+      <li><span style="font-weight: bold;">inputList</span> (<span style="font-style: italic;">tuple or list)</span> – digitizer
+        channels to be controlled and read.</li>
+      <li><span style="font-weight: bold;">callback</span> (<span style="font-style: italic;">callable, tuple, list or None)</span>
+        – user-defined callback function on changes to waveform records'
+        value or state.</li>
+      <li><span style="font-weight: bold;">connection</span>_timeout (<span style="font-style: italic;">float or None</span>) – time (in
+        seconds) to wait for connection before giving up.</li>
+    </ul>
+    <p style="margin-left: 40px;">Refer to the PyEpics support module
+      documentation for details on the <a href="https://cars9.uchicago.edu/software/python/pyepics3/pv.html#pv-callbacks-label">callback</a>
+      parameter.&nbsp; A message is sent to sys.stderr and a ValueError
+      exception is raised if a process variable can not be connected.<br>
+    </p>
+    <h2>Methods</h2>
+    <p> Most methods provide simple 1:1 mapping to corresponding channel
+      access get or put operations.<br>
+    </p>
+    <p>The following 'get' methods take a single integer input argument
+      specifying the waveform recorder from which the value is to be
+      read. Don't attempt to get the bonded status of inputs that are
+      the base of a bonding group (inputs 4 and 8).<br>
+    </p>
+    <div style="margin-left: 40px;">
+      <ul>
+        <li><span style="font-weight: bold;">getGain</span> (<span style="font-style: italic;">input(integer)</span>)</li>
+        <li><span style="font-weight: bold;">getCoupling</span> (<span style="font-style: italic;">input(integer)</span>) – returns
+          mbbi enumeration string (DC, AC, Calibration, Training)</li>
+        <li><span style="font-weight: bold;">getOffset</span> (<span style="font-style: italic;">input(integer)</span>)</li>
+        <li><span style="font-weight: bold;">getPretriggerCount</span> (<span style="font-style: italic;">input(integer)</span>)</li>
+        <li><span style="font-weight: bold;">getTriggerEdge</span> (<span style="font-style: italic;">input(integer)</span>) – returns
+          mbbi enumeration string (Rising, Falling)</li>
+        <li><span style="font-weight: bold;">getTriggerMask</span> (<span style="font-style: italic;">input(integer))</span></li>
+        <li><span style="font-weight: bold;">getTriggerLevel</span> (<span style="font-style: italic;">input(integer)</span>) – returns self-trigger level, in volts.<br>
+</li>
+        <li><span style="font-weight: bold;">getBonded</span> (<span style="font-style: italic;">input(integer)</span>)</li>
+        <li><span style="font-weight: bold;">getSegmode</span> (<span style="font-style: italic;">input(integer)</span>)</li>
+        <li><span style="font-weight: bold;">getRearm</span> (<span style="font-style: italic;">input(integer)</span>)</li>
+        <li><span style="font-weight: bold;">busy</span> (<span style="font-style: italic;">input(integer)</span>) - returns
+          1 if the&nbsp; waveform recorder has been armed and is waiting
+          for a trigger or is acquiring data, otherwise returns 0.</li>
+      </ul>
+    </div>
+    <p>The <span style="font-style: italic;">input</span> argument to
+      each of the following 'put' methods can be one of three
+      forms.&nbsp; A single numeric argument puts the value to the
+      specified waveform recorder. A numeric list or tuple argument puts
+      the value to all specified waveform recorders.&nbsp; An argument
+      of <span style="font-style: italic;">None</span> puts the value
+      to all the waveform recorders specified when the high speed
+      digitizer object was instantiated.&nbsp; Don't attempt to put the
+      bonded status of inputs that are the base of a bonding group
+      (inputs 4 and 8).<br>
+    </p>
+    <div style="margin-left: 40px;">
+      <ul>
+        <li><span style="font-weight: bold;">putGain</span> (<span style="font-style: italic;">input(integer, tuple, list or
+            None), value(integer)</span>)</li>
+        <li><span style="font-weight: bold;">putCoupling</span> (<span style="font-style: italic;">input(integer, tuple, list or
+            None), value(integer or enumeration string)</span>)</li>
+        <li><span style="font-weight: bold;">putOffset</span> <span style="font-style: italic;">(input(integer, tuple, list or
+            None), value(float)</span>)</li>
+        <li><span style="font-weight: bold;">putPretriggerCount</span> (<span style="font-style: italic;">input(integer, tuple, list or
+            None), value(integer)</span>)</li>
+        <li><span style="font-weight: bold;">putTriggerEdge</span> (<span style="font-style: italic;">input(integer, tuple, list or
+            None), value(integer or enumeration string)</span>)</li>
+        <li><span style="font-weight: bold;">putTriggerMask</span> (<span style="font-style: italic;">input(integer, tuple, list or
+            None), value(integer)</span>)</li>
+        <li><span style="font-weight: bold;">putTriggerLevel</span> (<span style="font-style: italic;">input(integer, tuple, list or
+            None), value(float)</span>)</li>
+        <li><span style="font-weight: bold;">putBonded</span> (<span style="font-style: italic;">input(integer, tuple, list or
+            None), value(integer)</span>)&nbsp; Attempts to bond the
+          base input of a group (input 4 or 8) will be ignored.<br>
+        </li>
+        <li><span style="font-weight: bold;">putSegmode</span> (<span style="font-style: italic;">input(integer, tuple, list or
+            None), value(integer)</span>)</li>
+        <li><span style="font-weight: bold;">putRearm</span>(<span style="font-style: italic;">input(integer, tuple, list or
+            None), value(integer)</span>)</li>
+        <li><span style="font-weight: bold;">arm</span> (<span style="font-style: italic;">input(integer, tuple, list or
+            None)</span>)&nbsp; Attempts to arm bonded channels will be
+          ignored.<br>
+        </li>
+        <li><span style="font-weight: bold;">disarm</span> (<span style="font-style: italic;">input(integer, tuple, list or
+            None)</span>)<br>
+        </li>
+      </ul>
+    </div>
+    <p>Access to waveform data is provided by the following two methods
+      or by specifying a callback function that will be called whenever
+      new data arrive.<br>
+    </p>
+    <div style="margin-left: 40px;">
+      <ul>
+        <li><span style="font-weight: bold;">waveformPV</span> (<span style="font-style: italic;">input((integer)</span>) –
+          returns the PV object for the specified input.</li>
+        <li><span style="font-weight: bold;">waveformsDict</span>() –
+          returns a dictionary whose keys are the input numbers and
+          values are the PV object for that input.<br>
+        </li>
+      </ul>
+    </div>
+    <p>The <span style="font-weight: bold;">restore</span>() method
+      restores all waveform recorder settings, other than rearm and arm
+      settings, to the values they had when the instance was
+      instantiated.<br>
+    </p>
+    <h2><a name="CommandLineExample"></a>Command Line Example</h2>
+    <p>&nbsp; The HighSpeedDigitizer.py source contains an example
+      command line application:<br>
+    </p>
+    <div style="margin-left: 40px;">
+      <pre><code>&gt; python scripts/HighSpeedDigitizer.py -h<br>usage: HighSpeedDigitizer.py [-h] [-a {0,1,2}] [-b] [-e EVENT] [-f FIRST]<br>                             [-g GAIN] [-i INPUTS] [-l LEVEL] [-o OFILE]<br>                             [-p PRETRIGGERCOUNT] [-r RECORDPREFIX] [-s] [-t]<br><br>Grab a set of waveforms.<br><br>optional arguments:<br>  -h, --help            show this help message and exit<br>  -a {0,1,2}, --acquisitionMode {0,1,2}<br>                        Acquisition mode (0=contiguous, 1=long segments,<br>                        2=short segments) (default: 0)<br>  -b, --bond            Bond input channels (default: False)<br>  -e EVENT, --event EVENT<br>                        Event trigger (default: 0)<br>  -f FIRST, --first FIRST<br>                        First input channel (default: 1)<br>  -g GAIN, --gain GAIN  Programmable amplifier gain (dB) (default: -6)<br>  -i INPUTS, --inputs INPUTS<br>                        Number of input channels (default: 4)<br>  -l LEVEL, --level LEVEL<br>                        Trigger level (V) (default: 10)<br>  -o OFILE, --ofile OFILE<br>                        Output file (default is stdout) (default: None)<br>  -p PRETRIGGERCOUNT, --pretriggerCount PRETRIGGERCOUNT<br>                        Pretrigger sample count (default: 8)<br>  -r RECORDPREFIX, --recordPrefix RECORDPREFIX<br>                        Record name prefix (default: LI0:HSD01:)<br>  -s, --soft            Software-triggered acquisition (default: False)<br>  -t, --timestamps      Print waveform time stamps at end of acquisition<br>                        (default: False)<br><br></code><code></code><br>
+
+<pre><br></pre></pre>
+    </div>
+    <pre><br></pre>
+    <h2></h2>
+    <p> </p>
+  
+
+
+</body></html>

@@ -38,7 +38,7 @@ and redirect stdout/stderr to a file so you can inspect it later:
 
 ```bash
 ARM_TOOLCHAIN_LOCATION=/media/Xilinx/Vivado/2020.1/Vitis/2020.1/gnu/aarch64/lin/aarch64-none
-(time make PLATFORM=<PLATFORM_NAME> APP=<APP_NAME> CROSS_COMPILE=${ARM_TOOLCHAIN_LOCATION}/bin/aarch64-none-elf-; date) 2>&1 | tee make_output
+(time make PLATFORM=<PLATFORM_NAME> APP=<APP_NAME> GW_VARIANT=<GW_VARIANT> CROSS_COMPILE=${ARM_TOOLCHAIN_LOCATION}/bin/aarch64-none-elf-; date) 2>&1 | tee make_output
 ```
 
 For now the following combinations of PLATFORM and APP are supported:
@@ -48,11 +48,18 @@ For now the following combinations of PLATFORM and APP are supported:
 |       hsd      |    x   |    x   |
 |       bcm      |    x   |        |
 
-So, for example, to generate the HSD application for the ZCU111 board:
+For now the following combinations of GW_VARIANT and APP are supported:
+
+| APP / GW_VARIANT |   ac   |   dc   |
+|:----------------:|:------:|:------:|
+|       hsd        |        |        |
+|       bcm        |    x   |    x   |
+
+So, for example, to generate the HSD application  you must specify `GW_VARIANT = `:
 
 ```bash
 ARM_TOOLCHAIN_LOCATION=/media/Xilinx/Vivado/2020.1/Vitis/2020.1/gnu/aarch64/lin/aarch64-none
-(time make PLATFORM=zcu111 APP=hsd CROSS_COMPILE=${ARM_TOOLCHAIN_LOCATION}/bin/aarch64-none-elf-; date) 2>&1 | tee make_output
+(time make PLATFORM=zcu111 APP=hsd GW_VARIANT= CROSS_COMPILE=${ARM_TOOLCHAIN_LOCATION}/bin/aarch64-none-elf-; date) 2>&1 | tee make_output
 ```
 
 ### Deploying
@@ -61,6 +68,15 @@ To deploy the gateware and the software we can use a variety of
 methods. For development, JTAG is being used. Remember to check
 the DIP switches on development boards and ensure the switches
 are set to JTAG mode and NOT SD Card mode.
+
+IMPORTANT NOTE: The board will first try to request an IP via DHCP, if it's
+compiled with LWIP_DHCP enabled. If that fails, then it will fallback to IP
+address `192.168.1.10/24`.
+
+If LWIP_DHCP is disabled, then it will use static IP address and the embedded
+software will use the `IP Address`, `IP Netmask` and `IP Gateway` from the
+configured Flash memory. If not configured or Flash memory corrupted, the
+default IP 192.168.1.128/24 will be used.
 
 #### Deploying gateware
 
