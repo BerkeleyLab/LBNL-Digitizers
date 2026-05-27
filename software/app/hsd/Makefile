@@ -47,6 +47,7 @@ __SRC_FILES = \
 	rfclk.c \
 	sysmon.c \
 	sysref.c \
+	serdes.c \
 	systemParameters.c \
 	tftp.c \
 	user_mgt_refclk.c \
@@ -75,6 +76,7 @@ __HDR_FILES = \
 	rfclk.h \
 	sysmon.h \
 	sysref.h \
+	serdes.h \
 	systemParameters.h \
 	tftp.h \
 	user_mgt_refclk.h \

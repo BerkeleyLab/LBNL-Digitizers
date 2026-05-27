@@ -28,6 +28,7 @@
 #include "systemParameters.h"
 #include "user_mgt_refclk.h"
 #include "util.h"
+#include "serdes.h"
 
 enum consoleMode { consoleModeCommand,
                    consoleModeLogReplay,
@@ -208,7 +209,7 @@ cmdDEBUG(int argc, char **argv)
     if (debugFlags & DEBUGFLAG_RESYNC_ADC) rfADCsync();
     if (sFlag) {
         systemParameters.startupDebugFlags = debugFlags;
-        systemParametersStash();
+        systemParametersFetchEEPROM();
         printf("Startup debug flags: 0x%x\n", debugFlags);
     }
     return 0;
@@ -257,7 +258,7 @@ netQueryCallback(int argc, char **argv)
     if (argc == 1) {
         if (strcasecmp(argv[0], "Y") == 0) {
             systemParameters.netConfig.ipv4 = ipv4;
-            systemParametersStash();
+            systemParametersFetchEEPROM();
             consoleMode = consoleModeCommand;
             return;
         }
@@ -330,7 +331,7 @@ macQueryCallback(int argc, char **argv)
     if (argc == 1) {
         if (strcasecmp(argv[0], "Y") == 0) {
             memcpy(systemParameters.netConfig.ethernetMAC,macBuf, sizeof macBuf);
-            systemParametersStash();
+            systemParametersFetchEEPROM();
             consoleMode = consoleModeCommand;
             return;
         }
@@ -339,7 +340,7 @@ macQueryCallback(int argc, char **argv)
             return;
         }
     }
-    printf("   ETHERNET ADDRESS: %s\n", formatMAC(&macBuf));
+    printf("   ETHERNET ADDRESS: %s\n", formatMAC(&macBuf, sizeof(macBuf)));
     if ((consoleMode == consoleModeMacQuery)
      || (memcmp(systemParameters.netConfig.ethernetMAC,macBuf,sizeof macBuf))) {
         printf("Write parameters to flash (y or n)? ");
@@ -525,7 +526,7 @@ cmdUMGT(int argc, char **argv)
             else if (offsetPPM < -3500) offsetPPM = -3500;
             if (userMGTrefClkAdjust(systemParameters.userMGTrefClkOffsetPPM)) {
                 systemParameters.userMGTrefClkOffsetPPM = offsetPPM;
-                systemParametersStash();
+                systemParametersFetchEEPROM();
             }
         }
     }

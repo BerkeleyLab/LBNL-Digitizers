@@ -28,6 +28,7 @@
 #include "systemParameters.h"
 #include "tftp.h"
 #include "util.h"
+#include "serdes.h"
 
 static void
 sfpString(const char *name, int offset)
@@ -108,14 +109,14 @@ int
 main(void)
 {
     int isRecovery;
-    unsigned char *enetMAC;
-    const struct sysNetParms *ipv4;
     static ip_addr_t ipaddr, netmask, gateway;
     static struct netif netif;
 
     /* Set up infrastructure */
     init_platform();
     platform_enable_interrupts();
+    /* Must be called before filesystemReadbacks() */
+    systemParametersSetDefaults();
     isRecovery = resetRecoverySwitchPressed();
 
     /* Announce our presence */
@@ -129,25 +130,17 @@ main(void)
 
     /* Get configuration settings */
     iicInit();
-    systemParametersReadback();
-    if (isRecovery) {
-        printf("==== Recovery mode -- Using default network parameters ====\n");
-        enetMAC = netDefault.ethernetMAC;
-        ipv4 = &netDefault.ipv4;
-    }
-    else {
-        enetMAC = systemParameters.netConfig.ethernetMAC;
-        ipv4 = &systemParameters.netConfig.ipv4;
-    }
+    /* Readback configurations from filesystem, if available */
+    filesystemReadbacks();
 
     /*
      * Set default IPv4 configs based on system parameters file and
      * DHCP
      */
-    setDefaultIPv4Address(&currentNetConfig,
+    setDefaultNetAddress(&currentNetConfig,
             &systemParameters.netConfig,
-            &netDefault, isRecovery);
-    drawIPv4Address(&currentNetConfig.ipv4.address, isRecovery);
+            &netDefault, isRecovery,
+            NULL, 0);
 
     /* Set up hardware */
     sysmonInit();
@@ -207,24 +200,31 @@ main(void)
     currentNetConfig.ipv4.gateway = netif.gw.addr;
 
     printf("Network:\n");
-    printf("       MAC: %s\n", formatMAC(currentNetConfig.ethernetMAC));
+    printf("       MAC: %s\n", formatMAC(currentNetConfig.ethernetMAC,
+                sizeof(currentNetConfig.ethernetMAC)));
     showNetworkConfiguration(&currentNetConfig.ipv4);
+    drawIPv4Address(&currentNetConfig.ipv4.address, isRecovery);
     displayShowStatusLine("");
 
     /* Set up communications and acquisition */
     epicsInit();
     tftpInit();
     acquisitionInit();
-    for (int i = 0 ; i < CFG_ADC_PHYSICAL_COUNT ; i++) { afeSetGain(i, 16); }
+
+    for (int i = 0 ; i < CFG_ADC_PHYSICAL_COUNT ; i++) {
+        afeSetGain(i, 16);
+    }
 
     /*
      * Main processing loop
      */
     printf("DFE serial number: %03d\n", serialNumberDFE());
     printf("AFE serial number: %03d\n", afeGetSerialNumber());
+
     if (displayGetMode() == DISPLAY_MODE_STARTUP) {
         displaySetMode(DISPLAY_MODE_PAGES);
     }
+
     for (;;) {
         checkForReset();
         acquisitionCrank();

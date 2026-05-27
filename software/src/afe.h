@@ -24,8 +24,8 @@ void afeEnableTrainingTone(int enable);
 int lmh6401GetRegister(unsigned int channel, int r);
 void afeShow(void);
 int afeFetchCalibration(unsigned int channel, uint32_t *buf);
-void afeFetchEEPROM(void);
-void afeStashEEPROM(void);
+int afeFetchEEPROM(void);
+int afeStashEEPROM(void);
 int afeMicrovoltsToCounts(unsigned int channel, int microVolts);
 int afeFetchADCextents(uint32_t *buf);
 

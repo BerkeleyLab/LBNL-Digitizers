@@ -290,6 +290,7 @@ acquisitionMeanFetch(uint32_t *buf, int capacity, int channel, int triggerChanne
     csr_idx = REG(GPIO_IDX_ADC_0_CSR, channel);
     data_idx = REG(GPIO_IDX_ADC_0_DATA, channel);
     prop_idx = REG(GPIO_IDX_ADC_0_PROP, channel);
+    (void) prop_idx;
 
     segMode = acqConfig[triggerChannel].segMode;
     samplesPerSegment = (segMode == SEGMODE_CONTIGUOUS)? CONTINUOUS_ACQUISITION_SAMPLES : (
