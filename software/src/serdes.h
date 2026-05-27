@@ -13,9 +13,6 @@ int   parseIP(const char *str, void *val);
 char *formatMAC(const void *val, size_t size);
 int   parseMAC(const char *str, void *val);
 
-char *formatIP(const void *val, size_t size);
-int parseIP(const char *str, void *val);
-
 char *formatDouble(void *val, size_t size);
 int parseDouble(const char *str, void *val);
 

@@ -28,6 +28,7 @@
 #include "systemParameters.h"
 #include "tftp.h"
 #include "util.h"
+#include "serdes.h"
 
 static void
 sfpString(const char *name, int offset)

@@ -12,6 +12,7 @@
 #include "st7789v.h"
 #include "tftp.h"
 #include "util.h"
+#include "afe.h"
 #include "systemParameters.h"
 
 #define TFTP_PORT 69
@@ -56,6 +57,11 @@ static struct fileInfo fileTable[] = {
                                                     systemParametersStashEEPROM,
                                                     systemParametersCommit,
                                                     systemParametersCommit},
+   {AFE_EEPROM_NAME, "AFE EEPROM",
+                                                    afeFetchEEPROM,
+                                                    afeStashEEPROM,
+                                                    dummyCommit,
+                                                    dummyCommit},
    {"BOOT.bin", "Bitsream + Software image",
                                                     dummyPreTransmit,
                                                     dummyPostReceive,
