@@ -28,6 +28,7 @@
 struct fileInfo {
     const char *name;
     const char *description;
+    int       initializeOnBoot;
     int       (*preTransmit)(void);
     int       (*postReceive)(void);
     void      (*commit)(void);
@@ -49,22 +50,28 @@ static void dummyCommit(void)
 
 static struct fileInfo fileTable[] = {
    {"SCREEN.ppm", "SCREEN grab",
+                                                    0,
                                                     st7789vGrabScreen,
                                                     dummyPostReceive,
+                                                    dummyCommit,
                                                     dummyCommit},
    {SYSTEM_PARAMETERS_NAME, "System parameters",
+                                                    1,
                                                     systemParametersFetchEEPROM,
                                                     systemParametersStashEEPROM,
                                                     systemParametersCommit,
                                                     systemParametersCommit},
    {AFE_EEPROM_NAME, "AFE EEPROM",
+                                                    0,
                                                     afeFetchEEPROM,
                                                     afeStashEEPROM,
                                                     dummyCommit,
                                                     dummyCommit},
    {"BOOT.bin", "Bitsream + Software image",
+                                                    0,
                                                     dummyPreTransmit,
                                                     dummyPostReceive,
+                                                    dummyCommit,
                                                     dummyCommit},
 };
 
@@ -365,12 +372,13 @@ tftp_recv_callback(void *arg, struct udp_pcb *pcb, struct pbuf *p,
 void
 filesystemReadbacks(void)
 {
-    int i, bytesTrans;
+    int i, bytesTrans, initializeOnBoot = 0;
 
     for (i = 0 ; i < FILE_TABLE_SIZE ; i++) {
         bytesTrans = 0;
+        initializeOnBoot = fileTable[i].initializeOnBoot;
         int (*funcPostReceive)(void) = fileTable[i].postReceive;
-        if (funcPostReceive) {
+        if (funcPostReceive && initializeOnBoot) {
             bytesTrans = (*funcPostReceive)();
             if (bytesTrans < 0) {
                 printf("%s (%s): Error reading back file\n",
@@ -384,7 +392,7 @@ filesystemReadbacks(void)
 
         void (*funcCommit)(void) = fileTable[i].commit;
         void (*funcDefaults)(void) = fileTable[i].defaults;
-        if (funcCommit && bytesTrans > 0) {
+        if (funcCommit && initializeOnBoot && bytesTrans > 0) {
             (*funcCommit)();
         }
         else if (funcDefaults) {
