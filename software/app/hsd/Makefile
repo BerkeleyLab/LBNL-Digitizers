@@ -140,11 +140,11 @@ INCLUDE_FLAGS = $(addprefix -I, $(INCLUDE_DIRS))
 
 .PHONY: all clean bsp
 
-vpath *.c $(SW_SRC_DIR) $(ST7789V_DIR) $(TARGET_DIR)
-vpath *.h $(SW_SRC_DIR) $(ST7789V_DIR) $(TARGET_DIR)
-vpath *.o $(SW_SRC_DIR) $(ST7789V_DIR)
-vpath *.bif $(SW_HSD_SCRIPTS_DIR)
-vpath *.bif.in $(SW_HSD_SCRIPTS_DIR)
+vpath %.c $(SW_SRC_DIR) $(ST7789V_DIR) $(TARGET_DIR)
+vpath %.h $(SW_SRC_DIR) $(ST7789V_DIR) $(TARGET_DIR)
+vpath %.o $(SW_SRC_DIR) $(ST7789V_DIR)
+vpath %.bif $(SW_HSD_SCRIPTS_DIR)
+vpath %.bif.in $(SW_HSD_SCRIPTS_DIR)
 
 %softwareBuildDate.h: $(SRC_FILES) $(HDR_FILES)
 	sh $(SW_HSD_SCRIPTS_DIR)/setSoftwareBuildDate.sh > $@
